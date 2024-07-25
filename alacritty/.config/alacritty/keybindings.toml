@@ -1,0 +1,34 @@
+[keyboard]
+bindings = [
+  { key = "T", mods = "Alt|Control", chars = "\u000ec" }, # new tab
+  { key = "I", mods = "Alt|Control", chars = "\u000eI" }, # install
+  { key = "D", mods = "Alt|Control", chars = "\u000ed" }, # detach
+
+  { key = "S", mods = "Alt|Control", chars = "\u000eL" }, # toggle session
+
+  { key = "L", mods = "Alt|Control", chars = "\u000ew" }, # list sessions
+
+  { key = "R", mods = "Alt|Control", chars = "\u000e," }, # rename tab
+
+  { key = "K", mods = "Alt|Control", chars = "\u000en" }, # next tab
+  { key = "J", mods = "Alt|Control", chars = "\u000ep" }, # prev tab
+
+  { key = "K", mods = "Alt|Control|Shift", chars = "\u000e>" }, # move to new tab
+  { key = "J", mods = "Alt|Control|Shift", chars = "\u000e<" }, # move to prev tab
+
+  { key = "V", mods = "Control|Alt", chars = "\u000e%" }, # split window vertically
+  { key = "H", mods = "Control|Alt", chars = "\u000e\"" }, # split window horizontally
+
+  { key = "Key1", mods = "Alt|Control", chars = "\u000e1" }, # select tmux window 1
+  { key = "Key2", mods = "Alt|Control", chars = "\u000e2" }, #                ... 2
+  { key = "Key3", mods = "Alt|Control", chars = "\u000e3" }, #                ... 3
+  { key = "Key4", mods = "Alt|Control", chars = "\u000e4" }, #                ... 4
+  { key = "Key5", mods = "Alt|Control", chars = "\u000e5" }, #                ... 5
+  { key = "Key6", mods = "Alt|Control", chars = "\u000e6" }, #                ... 6
+  { key = "Key7", mods = "Alt|Control", chars = "\u000e7" }, #                ... 7
+  { key = "Key8", mods = "Alt|Control", chars = "\u000e8" }, #                ... 8
+  { key = "Key9", mods = "Alt|Control", chars = "\u000e9" }, #                ... 8
+
+
+  # { key = "A", mods = "Alt|Control", chars = "\u001es" }, # save session
+]

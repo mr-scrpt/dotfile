@@ -1,0 +1,319 @@
+# Basic Settings
+# set shell zsh
+set hidden true
+set ignorecase true
+set drawbox
+set icons
+set sortby ctime
+set reverse!
+set ignorecase true
+# set nopreview
+# set ratios 1
+# set info size:time
+# Custom Functions
+# set previewer ueberzug
+# set cleaner ctpvclear
+# &ctpv -s $id
+# &ctpvquit $id
+set previewer ~/.config/lf/preview
+# set cleaner ~/.config/lf/cleaner
+#set previewer ~/.config/lf/_scope.sh
+set scrolloff 10
+
+# set shell zsh
+# set shellopts '-euy'
+# set ifs "\n"
+# set filesep "\n"  # default already
+
+# cmd open &{{
+#     case $(file --mime-type -Lb $f) in
+#         text/*) lf -remote "send $id \$$EDITOR \$fx";;
+#         *) for f in $fx; do $OPENER $f > /dev/null 2> /dev/null & done;;
+#     esac
+# }}
+#
+# cmd chmod ${{
+#   printf "Mode Bits: "
+#   read ans
+#
+#   for file in "$fx"
+#   do
+#     chmod $ans $file
+#   done
+#
+#   lf -remote 'send reload'
+# }}
+#
+#
+# # compress current file or selected files with tar and gunzip
+# cmd tar ${{
+#     set -f
+#     mkdir $1
+#     cp -r $fx $1
+#     tar czf $1.tar.gz $1
+#     rm -rf $1
+# }}
+#
+# # compress current file or selected files with zip
+# cmd zip ${{
+#     set -f
+#     mkdir $1
+#     cp -r $fx $1
+#     zip -r $1.zip $1
+#     rm -rf $1
+# }}
+#
+# # cmd moveto ${{
+# # 	clear
+# # 	tput cup $(($(tput lines)/3))
+# # 	tput bold
+# # 	set -f
+# #
+# # 	clear
+# # 	echo "Move to where?"
+# # 	dest="$(find "$HOME/Project/" "$HOME/Downloads/" -type d | fzf --prompt='Move to: ' --preview='ls {}' | sed 's|~|$HOME|')"
+# #
+# # 	if [ -n "$dest" ]; then
+# # 		for x in $fx; do
+# # 			eval mv -iv "$x" "$dest"
+# # 		done
+# #
+# # 		osascript -e 'display notification "🚚 File(s) moved." with title "File(s) moved to '"$dest"'"'
+# # 	else
+# # 		osascript -e 'display notification "🚫 Operation canceled." with title "Move operation"'
+# # 	fi
+# # }}
+# # cmd moveto ${{
+# # 	clear
+# # 	tput cup $(($(tput lines)/3))
+# # 	tput bold
+# # 	set -f
+# #
+# # 	clear
+# # 	echo "Move to where?"
+# #
+# # 	# Чтение путей из файла moveto_paths и формирование команды find
+# # 	paths=()
+# # 	while IFS= read -r line; do
+# # 		paths+=("$line")
+# # 	done < "$HOME/.config/lf/moveto_paths"
+# #
+# # 	# Формирование команды find с учетом путей из файла
+# # 	dest="$(eval find "${paths[@]}" -type d | fzf --prompt='Move to: ' --preview='ls {}' | sed 's|~|$HOME|')"
+# #
+# # 	if [ -n "$dest" ]; then
+# # 		for x in $fx; do
+# # 			eval mv -iv "$x" "$dest"
+# # 		done
+# #
+# # 		osascript -e 'display notification "🚚 File(s) moved." with title "File(s) moved to '"$dest"'"'
+# # 	else
+# # 		osascript -e 'display notification "🚫 Operation canceled." with title "Move operation"'
+# # 	fi
+# # }}
+#
+# cmd moveto ${{
+# 	clear
+# 	tput cup $(($(tput lines)/3))
+# 	tput bold
+# 	set -f
+#
+# 	clear
+# 	echo "Move to where?"
+#
+# 	# Используйте fzf для выбора целевой директории
+# 	dest="$(fzf --prompt='Move to: ' --preview='ls {}' | sed 's|~|$HOME|')"
+#
+# 	if [ -n "$dest" ]; then
+# 		# Перемещение файлов в выбранную директорию
+# 		for x in $fx; do
+# 			eval mv -iv "$x" "$dest"
+# 		done
+#
+# 		# Вывод уведомления об успешном перемещении
+# 		osascript -e 'display notification "🚚 File(s) moved." with title "File(s) moved to '"$dest"'"'
+# 	else
+# 		# Вывод уведомления об отмене операции
+# 		osascript -e 'display notification "🚫 Operation canceled." with title "Move operation"'
+# 	fi
+# }}
+#
+# # cmd moveto ${{
+# # 	clear
+# # 	tput cup $(($(tput lines)/3))
+# # 	tput bold
+# # 	set -f
+# #
+# # 	clear
+# # 	echo "Move to where?"
+# #
+# # 	# Чтение путей из файла moveto_paths и формирование команды find
+# # 	paths=()
+# # 	while IFS= read -r line; do
+# # 		paths+=("$line")
+# # 	done < "$HOME/.config/lf/moveto_paths"
+# #
+# # 	# Формирование команды find с учетом путей из файла
+# # 	dest="$(eval find "${paths[@]}" -type d | fzf --prompt='Move to: ' --preview 'clear && ll {}' --preview-window '~3'  | sed 's|~|$HOME|')"
+# #
+# # 	if [ -n "$dest" ]; then
+# # 		for x in $fx; do
+# # 			eval mv -iv "$x" "$dest"
+# # 		done
+# #
+# # 		osascript -e 'display notification "🚚 File(s) moved." with title "File(s) moved to '"$dest"'"'
+# # 	else
+# # 		osascript -e 'display notification "🚫 Operation canceled." with title "Move operation"'
+# # 	fi
+# # }}
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+# # # compress current file or selected files with tar and gunzip
+# # cmd tar ${{
+# #     set -f
+# #     mkdir $1
+# #     cp -r $fx $1
+# #     tar czf $1.tar.gz $1
+# #     rm -rf $1
+# # }}
+#
+# # # compress current file or selected files with zip
+# # cmd zip ${{
+# #     set -f
+# #     mkdir $1
+# #     cp -r $fx $1
+# #     zip -r $1.zip $1
+# #     rm -rf $1
+# # }}
+#
+#
+#
+# cmd mkdir ${{
+#   printf "Directory Name: "
+#   read ans
+#   mkdir $ans
+# }}
+#
+# cmd mkfile ${{
+#   printf "File Name: "
+#   read ans
+#   $EDITOR $ans
+# }}
+#
+# cmd drag-and-drop &dragon-drop -a -x $fx --end-exit
+#
+# cmd openFileWithVim ${{
+#   nvim $f;
+# }}
+#
+# cmd openFolderWithVim ${{
+#   nvim .;
+# }}
+#
+#
+# # cmd setwallpaper %cp "$f" ~/.config/wall.jpg && xwallpaper --zoom "$f"
+#
+# # /* cmd trash ${{ */
+# # /*   trash-put "$f" */
+# # /* }} */
+#
+# # Archive bindings
+# cmd unarchive ${{
+#   case "$f" in
+#       *.zip) unzip "$f" ;;
+#       *.tar.gz) tar -xzvf "$f" ;;
+#       *.tar.bz2) tar -xjvf "$f" ;;
+#       *.tar) tar -xvf "$f" ;;
+#       *) echo "Unsupported format" ;;
+#   esac
+# }}
+#
+# # cmd zip %zip -r "$f" "$f"
+# # cmd tar %tar cvf "$f.tar" "$f"
+# cmd targz %tar cvzf "$f.tar.gz" "$f"
+# cmd tarbz2 %tar cjvf "$f.tar.bz2" "$f"
+#
+# # Trash bindings
+# cmd trash ${{
+#   files=$(printf "$fx" | tr '\n' ';')
+#   while [ "$files" ]; do
+#     file=${files%%;*}
+#
+#     trash "$(basename "$file")"
+#     if [ "$files" = "$file" ]; then
+#       files=''
+#     else
+#       files="${files#*;}"
+#     fi
+#   done
+# }}
+#
+# cmd z %{{
+#     result="$(zoxide query --exclude "${PWD}" -- "$1")"
+#     lf -remote "send ${id} cd '${result}'"
+# }}
+#
+# cmd zi ${{
+#     result="$(zoxide query -i -- "$1""
+#     lf -remote "send ${id} cd '${result}'"
+# }}
+#
+# # cmd restore_trash ${{
+# #   trash-restore
+# # }}
+#
+# # Bindings
+# # Remove some defaults
+# map m
+# map o
+# map n
+# map "'"
+# map '"'
+# map d
+# map M moveto
+# # map c $vscodium "$f"
+# # Archive Mappings
+# map az zip
+# map at tar
+# map ag targz
+# map ab targz
+# map au unarchive
+#
+# # Basic Functions
+# map . set hidden!
+# map p paste
+# map x cut
+# map y copy
+# map dD trash
+# map <enter> open
+# map R reload
+# map mf mkfile
+# map md mkdir
+# # map bg setwallpaper
+# map C clear
+#
+#
+# # Open
+#
+# map ov openFileWithVim
+# map of openFolderWithVim
+#
+# map dg drag-and-drop
+#
+#
+# map gd cd ~/Downloads
+# map gp cd ~/project
+# map gs cd ~/solution
+# map gc cd ~/.config
+# map ge cd ~/education
+# map gm cd /Volumes
+# map gz z
+# # map gzi zi

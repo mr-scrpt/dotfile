@@ -1,0 +1,27 @@
+return {
+	-- "rcarriga/nvim-dap-ui",
+	-- event = { "BufReadPre", "BufNewFile" },
+	-- config = function()
+	-- 	require("dapui").setup()
+	--
+	-- 	local dap, dapui = require("dap"), require("dapui")
+	-- 	local map = function(keys, func, desc)
+	-- 		vim.keymap.set("n", keys, func, { desc = "DAP UI: " .. desc })
+	-- 	end
+	--
+	-- 	map("<leader>bu", dapui.toggle, "Toggle UI Debug")
+	--
+	-- 	dap.listeners.after.event_initialized["dapui_config"] = function()
+	-- 		dapui.open({})
+	-- 	end
+	-- 	dap.listeners.before.event_terminated["dapui_config"] = function()
+	-- 		dapui.close({})
+	-- 	end
+	-- 	dap.listeners.before.event_exited["dapui_config"] = function()
+	-- 		dapui.close({})
+	-- 	end
+	-- end,
+	-- dependencies = {
+	-- 	"mfussenegger/nvim-dap",
+	-- },
+}

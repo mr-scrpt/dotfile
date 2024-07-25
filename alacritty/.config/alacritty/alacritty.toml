@@ -1,0 +1,29 @@
+live_config_reload = true
+import = [
+  "~/.config/alacritty/catppuccin/catppuccin-mocha.toml",
+  "~/.config/alacritty/keybindings.toml"
+]
+
+
+[env]
+TERM = "xterm-256color"
+
+[font]
+size = 13.0
+
+[font.normal]
+family = "JetBrains Mono"
+style = "Regular"
+
+[mouse]
+hide_when_typing = true
+
+[window]
+decorations = "buttonless"
+dynamic_padding = false
+opacity = 0.94
+option_as_alt = "Both"
+
+[window.padding]
+x = 6
+y = 10

@@ -1,0 +1,47 @@
+#!/bin/sh
+tmux new -s "$1" -d
+tmux select-window -t 1
+tmux rename-window ' nvim'
+tmux send-keys -t "$pane" 'cd ~/.config/nvim && clear' Enter
+
+tmux new-window;
+tmux rename-window '  allacrity'
+tmux send-keys -t "$pane" 'cd ~/.config/alacritty && clear' Enter
+
+tmux new-window;
+tmux rename-window '  tmux'
+tmux send-keys -t "$pane" 'cd ~/.config/tmux && clear' Enter
+
+tmux new-window;
+tmux rename-window ' fish'
+tmux send-keys -t "$pane" 'cd ~/.config/fish && clear' Enter
+
+tmux new-window;
+tmux rename-window ' hypr'
+tmux send-keys -t "$pane" 'cd ~/.config/hypr && clear' Enter
+
+tmux new-window;
+tmux rename-window ' waybar'
+tmux send-keys -t "$pane" 'cd ~/.config/waybar && clear' Enter
+
+tmux new-window;
+tmux rename-window ' lf'
+tmux send-keys -t "$pane" 'cd ~/.config/lf && clear' Enter
+
+# tmux new-window;
+# tmux rename-window ' file-manager'
+# tmux send-keys -t "$pane" 'cd ~/.local/share/lf' Enter
+
+tmux new-window;
+tmux rename-window '  bin'
+tmux send-keys -t "$pane" 'cd ~/.config/bin && clear' Enter
+
+tmux new-window;
+tmux rename-window ' other'
+tmux send-keys -t "$pane"
+
+tmux select-window -t 1
+# tmux split-window -v 'ipython'
+# tmux split-window -h
+# tmux new-window 'mutt'
+tmux -2 attach-session -d

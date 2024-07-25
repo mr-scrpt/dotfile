@@ -1,0 +1,38 @@
+return {
+	-- "mfussenegger/nvim-dap",
+	-- event = { "BufReadPre", "BufNewFile" },
+	-- config = function()
+	-- 	local ok, dap = pcall(require, "dap")
+	--
+	-- 	local map = function(keys, func, desc)
+	-- 		vim.keymap.set("n", keys, func, { desc = "DAP: " .. desc })
+	-- 	end
+	-- 	map("<leader>bb", dap.toggle_breakpoint, "Toggle [B]reakpoint")
+	-- 	map("<leader>bc", dap.continue, "[C]ontinue")
+	-- 	map("<leader>bn", dap.step_over, "[N]ext")
+	-- 	map("<leader>br", dap.clear_breakpoints, "[B]reakpoints [R]emove")
+	--
+	-- 	if not ok then
+	-- 		return
+	-- 	end
+	-- 	dap.configurations.typescript = {
+	-- 		{
+	-- 			type = "node2",
+	-- 			name = "node attach",
+	-- 			request = "attach",
+	-- 			program = "${file}",
+	-- 			cwd = vim.fn.getcwd(),
+	-- 			sourceMaps = true,
+	-- 			protocol = "inspector",
+	-- 		},
+	-- 	}
+	-- 	dap.adapters.node2 = {
+	-- 		type = "executable",
+	-- 		command = "node-debug2-adapter",
+	-- 		args = {},
+	-- 	}
+	-- end,
+	-- dependencies = {
+	-- 	"mxsdev/nvim-dap-vscode-js",
+	-- },
+}
