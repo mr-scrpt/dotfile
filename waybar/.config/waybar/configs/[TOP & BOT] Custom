@@ -53,18 +53,24 @@
 "margin-bottom": 1,
 
 
+"modules-left": [
+	"bluetooth",
+	"tray",
+	"custom/swaync",
+],
+
 "modules-center": [
 	"custom/blink",
 ],
 
 "modules-right": [
 	"custom/separator#blank_1",
-	"custom/swaync",
 	"mpris",
-	"tray",
 	],
 
 }]
 
 ]
+
+
 

@@ -4,9 +4,13 @@ tmux select-window -t 1
 tmux rename-window ' nvim'
 tmux send-keys -t "$pane" 'cd ~/dotfile/nvim/.config/nvim && clear' Enter
 
+# tmux new-window;
+# tmux rename-window '  allacrity'
+# tmux send-keys -t "$pane" 'cd ~/dotfile/alacritty/.config/alacritty && clear' Enter
+
 tmux new-window;
-tmux rename-window '  allacrity'
-tmux send-keys -t "$pane" 'cd ~/dotfile/alacritty/.config/alacritty && clear' Enter
+tmux rename-window '  kitty'
+tmux send-keys -t "$pane" 'cd ~/dotfile/kitty/.config/kitty && clear' Enter
 
 tmux new-window;
 tmux rename-window '  tmux'

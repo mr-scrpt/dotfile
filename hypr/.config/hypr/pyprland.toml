@@ -5,33 +5,8 @@ plugins = [
   "magnify",
 ]
 
-# [scratchpads.filemanager]
-# animation = "fromTop"
-# command = "kitty --class kitty-dropterm -e fish -l -c lfnc"
-# class = "kitty-dropterm"
-# size = "75% 50%"
-
-# [scratchpads.term]
-# animation = "fromTop"
-# command = "alacritty --class kitty-dropterm"
-# class = "kitty-dropterm"
-# size = "60% 50%"
-
-# [scratchpads.helper]
-# animation = "fromRight"
-# command = "alacritty --class kitty-dropterm"
-# class = "kitty-dropterm"
-# size = "40% 50%"
-
-# [scratchpads.btop]
-# animation = "fromTop"
-# command = "kitty --class kitty-dropterm -e btop"
-# class = "kitty-dropterm"
-# size = "60% 50%"
-
-[scratchpads.thunar]
+[scratchpads.term]
 animation = "fromTop"
-command = "thunar"
-class = "thunar-dropterm"
-size = "60% 50%"
-
+command = "kitty --class kitty-dropterm"
+class = "kitty-dropterm"
+size = "75% 60%"
