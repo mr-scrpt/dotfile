@@ -39,7 +39,7 @@ return {
 		},
 	},
 
-	config = function()
+	config = function(t)
 		local neotree = require("neo-tree")
 		neotree.setup({
 			popup_border_style = "rounded",

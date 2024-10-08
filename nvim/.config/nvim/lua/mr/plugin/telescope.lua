@@ -23,9 +23,25 @@ return {
 				["ui-select"] = {
 					require("telescope.themes").get_dropdown(),
 				},
+				fzf = {
+					fuzzy = true,
+					override_generic_sorter = true,
+					override_file_sorter = true,
+					case_mode = "smart_case",
+				},
 			},
 			defaults = {
 				path_display = { "truncate " },
+				vimgrep_arguments = {
+					"rg",
+					"--color=never",
+					"--no-heading",
+					"--with-filename",
+					"--line-number",
+					"--column",
+					"--smart-case",
+					"-i",
+				},
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous, -- move to prev result
@@ -33,6 +49,9 @@ return {
 						["<C-s>"] = actions.send_selected_to_qflist + actions.open_qflist, -- only selected to quickfix
 						-- ["<C-q>"] = actions.smart_send_to_qflist, -- not work
 						["<c-x>"] = actions.delete_buffer,
+					},
+					n = {
+						["d"] = actions.delete_buffer,
 					},
 				},
 			},
@@ -42,9 +61,17 @@ return {
 		pcall(require("telescope").load_extension, "fzf")
 		pcall(require("telescope").load_extension, "ui-select")
 
+		local opt = require("telescope.themes").get_ivy({
+			sort_lastused = true,
+		})
+
+		local function theme_wrapper(telescope_command)
+			return function()
+				telescope_command(opt)
+			end
+		end
 		-- set keymaps
 		-- local keymap = vim.keymap -- for conciseness
-
 		local map = function(keys, func, desc, mode)
 			mode = mode or "n"
 			vim.keymap.set(mode, keys, func, { desc = "Telescope: " .. desc })
@@ -55,19 +82,18 @@ return {
 		-- keymap.set("n", "<leader>fr", builtin.oldfiles, { desc = "Fuzzy find recent files" })
 		-- keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Fuzzy find recent files" })
 		-- keymap.set("n", "<leader>fc", builtin.grep_string, { desc = "Find string under cursor in cwd" })
-
 		map("<leader>sh", builtin.help_tags, "[S]earch [H]elp")
 		map("<leader>sk", builtin.keymaps, "[S]earch [K]eymaps")
+
 		map("<leader>sf", builtin.find_files, "[S]earch [F]iles")
-		-- vim.keymap.set("n", "<leader>si", builtin.builtin, { desc = "[S]earch [S]elect Telescope" })
 		map("<leader>sw", builtin.grep_string, "[S]earch current [W]ord")
 		map("<leader>ssc", builtin.lsp_document_symbols, "[S]earch [S]ymbols [C]urrent document")
 		map("<leader>ssp", builtin.lsp_dynamic_workspace_symbols, "[S]earch [S]ymbols in [P]roject")
-		map("<leader>sg", builtin.live_grep, "[S]earch by [G]rep")
+		map("<leader>sg", theme_wrapper(builtin.live_grep), "[S]earch by [G]rep")
 		map("<leader>sd", builtin.diagnostics, "[S]earch [D]iagnostics")
 		map("<leader>sr", builtin.resume, "[S]earch [R]esume")
 		map("<leader>s.", builtin.oldfiles, '[S]earch Recent Files ("." for repeat)')
-		map("<leader>sb", builtin.buffers, "[S] Find existing [B]uffers")
+		map("<leader>sb", theme_wrapper(builtin.buffers), "[S] Find existing [B]uffers")
 		map("<leader>/", builtin.current_buffer_fuzzy_find, "[/] Fuzzily search in current buffer")
 
 		-- Slightly advanced example of overriding default behavior and theme
