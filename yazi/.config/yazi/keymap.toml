@@ -1,4 +1,25 @@
 [manager]
 prepend_keymap = [
-	{ on = "<A-t>", run = 'shell --interactive', desc = "Just for test!" },
+	# { on = "<A-t>", run = 'shell --interactive', desc = "Just for test!" },
+	# Go [T]o folder
+	{on= ["T", "d"], run = "cd ~/Downloads", desc = "Go Downloads"},
+	{on= ["T", "p"], run = "cd ~/Project", desc = "Go Projects"},
+	{on= ["T", "c", "d"], run = "cd ~/dotfile", desc = "Go Config DOTFILES"},
+	{on= ["T", "c", "n"], run = "cd ~/.config", desc = "Go Config NATIVE"},
+
+	# Plugins
+	{on=["l"], run = "plugin --sync smart-enter", desc = "Enter the child directory, or open the file"},
+	{on="p", run = "plugin --sync smart-paste", desc = "Paste into the hovered directory or CWD"},
+
+	# Drag and Drop
+	{ on = [ "<C-n>" ], run = '''
+	shell 'ripdrag "$@" -x 2>/dev/null &' --confirm
+	''' },
+
+	# Yank into clipboard
+	{ on = "y", run = ['''
+	shell 'for path in "$@"; do echo "file://$path"; done | wl-copy -t text/uri-list' --confirm
+	''', 'yank'], desc = "yank to clipboard"},
 ]
+
+

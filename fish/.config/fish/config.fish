@@ -13,7 +13,7 @@ if status is-interactive
     # aliases
 
     alias c="clear"
-    alias pgadmin4="sudo python3 /usr/lib/pgadmin4/pgAdmin4.py"
+    # alias pgadmin4="sudo python3 /usr/lib/pgadmin4/pgAdmin4.py"
     # alias y="yazi"
 
 
