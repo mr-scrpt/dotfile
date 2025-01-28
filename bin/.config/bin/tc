@@ -1,27 +1,46 @@
 #!/bin/bash
 
-# Скрипт для создания tmux-сессии в выбранной через zoxide директории
-
-# Выбор директории через zoxide
 selected_dir=$(zoxide query -i)
 
-# Если выбор отменен (пустой результат)
 if [ -z "$selected_dir" ]; then
-    echo "Директория не выбрана. Выход."
+    echo "Directory not selected."
     exit 1
 fi
 
-# Переход в выбранную директорию
 cd "$selected_dir" || exit
 
-# Запрос названия сессии
-read -r -p "Введите название для tmux-сессии: " session_name
+while true; do
+    read -r -p "Enter tmux session name: " session_name
 
-# Проверка ввода
-if [ -z "$session_name" ]; then
-    echo "Название сессии не может быть пустым!"
-    exit 1
-fi
+    if [ -z "$session_name" ]; then
+        echo "Session name cannot be empty."
+        continue
+    fi
 
-# Запуск вашего tmux-скрипта
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+        echo "Session '$session_name' already exists! Please choose another name."
+    else
+        break
+    fi
+done
+
 tdev "$session_name"
+# #!/bin/bash
+#
+# selected_dir=$(zoxide query -i)
+#
+# if [ -z "$selected_dir" ]; then
+#     echo "Directory not selected."
+#     exit 1
+# fi
+#
+# cd "$selected_dir" || exit
+#
+# read -r -p "Enter tmux session name: " session_name
+#
+# if [ -z "$session_name" ]; then
+#     echo "Session name cannot be empty."
+#     exit 1
+# fi
+#
+# tdev "$session_name"

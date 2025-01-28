@@ -33,6 +33,15 @@ return {
 					-- required for Windows users
 					use_absolute_path = true,
 				},
+				-- openai = {
+				-- 	endpoint = "https://api.deepseek.com/v1",
+				-- 	model = "deepseek-chat",
+				-- 	timeout = 30000, -- Timeout in milliseconds
+				-- 	temperature = 0,
+				-- 	max_tokens = 4096,
+				-- 	-- optional
+				-- 	api_key_name = "DEEPSEEK_API_KEY", -- default OPENAI_API_KEY if not set
+				-- },
 			},
 		},
 		{
