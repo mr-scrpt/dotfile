@@ -1,0 +1,160 @@
+local trigger_text = "%%"
+
+return {
+	-- "saghen/blink.cmp",
+	-- -- optional: provides snippets for the snippet source
+	-- dependencies = {
+	-- 	{ "L3MON4D3/LuaSnip", version = "v2.*", dependencies = { "rafamadriz/friendly-snippets" } },
+	-- 	"moyiz/blink-emoji.nvim",
+	-- },
+	--
+	-- -- dependencies = { "rafamadriz/friendly-snippets", { "L3MON4D3/LuaSnip", version = "v2.*" } },
+	--
+	-- -- use a release tag to download pre-built binaries
+	-- version = "*",
+	-- -- AND/OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+	-- -- build = 'cargo build --release',
+	-- -- If you use nix, you can build from source using latest nightly rust with:
+	-- -- build = 'nix run .#build-plugin',
+	--
+	-- ---@module 'blink.cmp'
+	-- ---@type blink.cmp.Config
+	-- opts = {
+	-- 	-- 'default' for mappings similar to built-in completion
+	-- 	-- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
+	-- 	-- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
+	-- 	-- See the full "keymap" documentation for information on defining your own keymap.
+	-- 	keymap = { preset = "default" },
+	-- 	snippets = { preset = "luasnip" },
+	--
+	-- 	appearance = {
+	-- 		-- Sets the fallback highlight groups to nvim-cmp's highlight groups
+	-- 		-- Useful for when your theme doesn't support blink.cmp
+	-- 		-- Will be removed in a future release
+	-- 		use_nvim_cmp_as_default = true,
+	-- 		-- Set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+	-- 		-- Adjusts spacing to ensure icons are aligned
+	-- 		nerd_font_variant = "mono",
+	-- 	},
+	--
+	-- 	-- Default list of enabled providers defined so that you can extend it
+	-- 	-- elsewhere in your config, without redefining it, due to `opts_extend`
+	-- 	-- sources = {
+	-- 	-- 	default = { "lsp", "path", "snippets", "buffer" },
+	-- 	-- },
+	-- 	sources = vim.tbl_deep_extend("force", {}, {
+	-- 		default = { "lsp", "snippets" },
+	-- 		providers = {
+	-- 			lsp = {
+	-- 				name = "lsp",
+	-- 				enabled = true,
+	-- 				module = "blink.cmp.sources.lsp",
+	-- 				-- kind = "LSP",
+	-- 				-- When linking markdown notes, I would get snippets and text in the
+	-- 				-- suggestions, I want those to show only if there are no LSP
+	-- 				-- suggestions
+	-- 				--
+	-- 				-- Enabled fallbacks as this seems to be working now
+	-- 				-- Disabling fallbacks as my snippets wouldn't show up when editing
+	-- 				-- lua files
+	-- 				-- fallbacks = { "snippets", "buffer" },
+	-- 				score_offset = 90, -- the higher the number, the higher the priority
+	-- 			},
+	-- 			path = {
+	-- 				name = "Path",
+	-- 				module = "blink.cmp.sources.path",
+	-- 				score_offset = 25,
+	-- 				-- When typing a path, I would get snippets and text in the
+	-- 				-- suggestions, I want those to show only if there are no path
+	-- 				-- suggestions
+	-- 				fallbacks = { "snippets", "buffer", "emoji" },
+	-- 				opts = {
+	-- 					trailing_slash = false,
+	-- 					label_trailing_slash = true,
+	-- 					get_cwd = function(context)
+	-- 						return vim.fn.expand(("#%d:p:h"):format(context.bufnr))
+	-- 					end,
+	-- 					show_hidden_files_by_default = true,
+	-- 				},
+	-- 			},
+	-- 			buffer = {
+	-- 				name = "Buffer",
+	-- 				enabled = true,
+	-- 				max_items = 3,
+	-- 				module = "blink.cmp.sources.buffer",
+	-- 				min_keyword_length = 4,
+	-- 				score_offset = 15, -- the higher the number, the higher the priority
+	-- 			},
+	-- 			snippets = {
+	-- 				name = "snippets",
+	-- 				enabled = true,
+	-- 				-- max_items = 8,
+	-- 				min_keyword_length = 2,
+	-- 				module = "blink.cmp.sources.snippets",
+	-- 				score_offset = 85, -- the higher the number, the higher the priority
+	-- 				-- Only show snippets if I type the trigger_text characters, so
+	-- 				-- to expand the "bash" snippet, if the trigger_text is ";" I have to
+	-- 				should_show_items = function()
+	-- 					local col = vim.api.nvim_win_get_cursor(0)[2]
+	-- 					local before_cursor = vim.api.nvim_get_current_line():sub(1, col)
+	-- 					-- NOTE: remember that `trigger_text` is modified at the top of the file
+	-- 					return before_cursor:match(trigger_text .. "%w*$") ~= nil
+	-- 				end,
+	-- 				-- After accepting the completion, delete the trigger_text characters
+	-- 				-- from the final inserted text
+	-- 				transform_items = function(_, items)
+	-- 					local col = vim.api.nvim_win_get_cursor(0)[2]
+	-- 					local before_cursor = vim.api.nvim_get_current_line():sub(1, col)
+	-- 					local trigger_pos = before_cursor:find(trigger_text .. "[^" .. trigger_text .. "]*$")
+	-- 					if trigger_pos then
+	-- 						for _, item in ipairs(items) do
+	-- 							item.textEdit = {
+	-- 								newText = item.insertText or item.label,
+	-- 								range = {
+	-- 									start = { line = vim.fn.line(".") - 1, character = trigger_pos - 1 },
+	-- 									["end"] = { line = vim.fn.line(".") - 1, character = col },
+	-- 								},
+	-- 							}
+	-- 						end
+	-- 					end
+	-- 					-- NOTE: After the transformation, I have to reload the luasnip source
+	-- 					-- Otherwise really crazy shit happens and I spent way too much time
+	-- 					-- figurig this out
+	-- 					vim.schedule(function()
+	-- 						require("blink.cmp").reload("snippets")
+	-- 					end)
+	-- 					return items
+	-- 				end,
+	-- 			},
+	-- 			-- Example on how to configure dadbod found in the main repo
+	-- 			-- https://github.com/kristijanhusak/vim-dadbod-completion
+	-- 			-- dadbod = {
+	-- 			-- 	name = "Dadbod",
+	-- 			-- 	module = "vim_dadbod_completion.blink",
+	-- 			-- 	score_offset = 85, -- the higher the number, the higher the priority
+	-- 			-- },
+	-- 			-- https://github.com/moyiz/blink-emoji.nvim
+	-- 			emoji = {
+	-- 				module = "blink-emoji",
+	-- 				name = "Emoji",
+	-- 				score_offset = 15, -- the higher the number, the higher the priority
+	-- 				opts = { insert = true }, -- Insert emoji (default) or complete its name
+	-- 			},
+	-- 		},
+	-- 		-- command line completion, thanks to dpetka2001 in reddit
+	-- 		-- https://www.reddit.com/r/neovim/comments/1hjjf21/comment/m37fe4d/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+	-- 		cmdline = function()
+	-- 			local type = vim.fn.getcmdtype()
+	-- 			if type == "/" or type == "?" then
+	-- 				return { "buffer" }
+	-- 			end
+	-- 			if type == ":" then
+	-- 				return { "cmdline" }
+	-- 			end
+	-- 			return {}
+	-- 		end,
+	-- 	}),
+	-- },
+	--
+	-- opts_extend = { "sources.default" },
+}

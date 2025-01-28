@@ -5,23 +5,3 @@ tmux split-window -h
 tmux send-keys -t "$TMUX_PANE" "yazi" C-m
 tmux send-keys -t "$((TMUX_PANE - 1))" "yazi" C-m
 tmux -2 attach-session -d
-# tmux send-keys -t "$SESSION_NAME:0.1" "yazi" C-m
-# # Проверяем, передано ли имя сессии
-# if [ $# -eq 0 ]; then
-#     echo "Пожалуйста, укажите имя сессии tmux"
-#     exit 1
-# fi
-#
-# SESSION_NAME="$1"
-#
-# # Создаем новую сессию tmux с yazi в первой панели
-# tmux new-session -d -s "$SESSION_NAME" "yazi"
-#
-# # Создаем вторую панель с yazi
-# tmux split-window -h -t "$SESSION_NAME" "yazi"
-#
-# # Выбираем первую панель
-# tmux select-pane -t "$SESSION_NAME:0.0"
-#
-# # Прикрепляемся к сессии
-# tmux attach-session -t "$SESSION_NAME"

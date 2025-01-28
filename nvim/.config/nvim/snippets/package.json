@@ -1,11 +1,11 @@
 {
-  "name": "user snippets",
+  "name": "personal-snippets",
   "engines": {
     "vscode": "^1.11.0"
   },
   "contributes": {
     "snippets": [
-    {
+      {
         "language": "javascript",
         "path": "./snippet.json"
       },
@@ -20,6 +20,7 @@
       {
         "language": "typescriptreact",
         "path": "./snippet.json"
-      }]
+      }
+    ]
   }
 }

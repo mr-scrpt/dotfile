@@ -11,6 +11,8 @@ return {
 
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+		local capabilities = cmp_nvim_lsp.default_capabilities()
+		-- local capabilities = require("blink.cmp").get_lsp_capabilities()
 
 		-- local opts = { noremap = true, silent = true }
 		local on_attach = function(_, bufnr)
@@ -78,7 +80,9 @@ return {
 			map("dn", vim.diagnostic.goto_next, "Go to [D]iagnostic [N]ext message")
 			map("de", vim.diagnostic.open_float, "Show [D]iagnostic [E]rror messages")
 			map("dl", vim.diagnostic.setloclist, "Open [D]iagnostic quick[L]ist")
+
 			map("dc", vim.lsp.buf.hover, "Show [D]iagnostic [C]urrent information")
+			-- map("dt", "<cmd>Telescope lsp_definitions<CR>", "Show type [D]efinition with [T]elescope")
 
 			map("<M-CR>", require("actions-preview").code_actions, "Show code actions")
 
@@ -138,7 +142,6 @@ return {
 		end
 
 		-- used to enable autocompletion (assign to every lsp server config)
-		local capabilities = cmp_nvim_lsp.default_capabilities()
 
 		-- Change the Diagnostic symbols in the sign column (gutter)
 		-- (not in youtube nvim video)
@@ -162,6 +165,34 @@ return {
 		-- lspconfig["tsserver"].setup({
 		-- 	capabilities = capabilities,
 		-- 	on_attach = on_attach,
+		-- })
+		-- lspconfig["ts_ls"].setup({
+		-- 	settings = {
+		-- 		typescript = {
+		-- 			inlayHints = {
+		-- 				includeInlayParameterNameHints = "all",
+		-- 				includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+		-- 				includeInlayFunctionParameterTypeHints = true,
+		-- 				includeInlayVariableTypeHints = true,
+		-- 				includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+		-- 				includeInlayPropertyDeclarationTypeHints = true,
+		-- 				includeInlayFunctionLikeReturnTypeHints = true,
+		-- 				includeInlayEnumMemberValueHints = true,
+		-- 			},
+		-- 		},
+		-- 		javascript = {
+		-- 			inlayHints = {
+		-- 				includeInlayParameterNameHints = "all",
+		-- 				includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+		-- 				includeInlayFunctionParameterTypeHints = true,
+		-- 				includeInlayVariableTypeHints = true,
+		-- 				includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+		-- 				includeInlayPropertyDeclarationTypeHints = true,
+		-- 				includeInlayFunctionLikeReturnTypeHints = true,
+		-- 				includeInlayEnumMemberValueHints = true,
+		-- 			},
+		-- 		},
+		-- 	},
 		-- })
 
 		-- configure css server
