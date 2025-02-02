@@ -1,5 +1,5 @@
 #!/bin/sh
-tmux new -s "$1" -d
+tmux new -s "config" -d
 tmux select-window -t 1
 tmux rename-window ' nvim'
 tmux send-keys -t "$pane" 'cd ~/dotfile/nvim/.config/nvim && clear' Enter
