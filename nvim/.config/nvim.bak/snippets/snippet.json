@@ -68,6 +68,13 @@
     ],
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },
+  "console.log": {
+    "key": "console.log",
+    "prefix": "cl",
+    "body": ["console.log('output_log: $2 =>>>', $1)"],
+    "description": "create console log snippet",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
   "const": {
     "key": "const",
     "prefix": "cn",
@@ -75,11 +82,28 @@
     "description": "create console log snippet",
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },
-  "console.log": {
-    "key": "console.log",
-    "prefix": "cl",
-    "body": ["console.log('output_log: $2 =>>>', $1)"],
-    "description": "create console log snippet",
+  "reactFunctionalComponentWithData": {
+    "key": "reactFunctionalComponent",
+    "prefix": "rfcd",
+    "body": [
+      "import { FC } from 'react'",
+      "import { classNames } from 'shared/lib/classNames'",
+      "import { ${1:${TM_FILENAME_BASE}}Props } from '../type/props.type'",
+      "import cls from './${1:${TM_FILENAME_BASE}}.module.scss'",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}}:FC<${1:${TM_FILENAME_BASE}}Props> = (props) => {",
+      "const { className} = props",
+      "",
+      "const cls${1:${TM_FILENAME_BASE}} = classNames('', [className], {})",
+      "  return (",
+      "    <div className={cls${1:${TM_FILENAME_BASE}}}>",
+      "",
+      "</div>",
+      "  )",
+      "}",
+      ""
+    ],
+    "description": "Creates a React Functional Component with ES7 module system",
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },
   "exportType": {
@@ -92,6 +116,627 @@
     "key": "exportInterface",
     "prefix": "expint",
     "body": ["export interface ${1:first} {${2:second}}"],
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactClassComponent": {
+    "key": "typescriptReactClassComponent",
+    "prefix": "tsrcc",
+    "description": "Creates a React component class with ES7 module system and TypeScript interfaces",
+    "body": [
+      "import React, { Component } from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "type State = {}",
+      "",
+      "export default class ${1:${TM_FILENAME_BASE}} extends Component<Props, State> {",
+      "  state = {}",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}"
+    ],
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactClassExportComponent": {
+    "key": "typescriptReactClassExportComponent",
+    "prefix": "tsrce",
+    "body": [
+      "import React, { Component } from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "type State = {}",
+      "",
+      "class ${1:${TM_FILENAME_BASE}} extends Component<Props, State> {",
+      "  state = {}",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React component class with ES7 module system and TypeScript interfaces",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactFunctionalExportComponent": {
+    "key": "typescriptReactFunctionalExportComponent",
+    "prefix": "tsrfce",
+    "body": [
+      "import React from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "function ${1:${TM_FILENAME_BASE}}({}: Props) {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Functional Component with ES7 module system and TypeScript interface",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactFunctionalComponent": {
+    "key": "typescriptReactFunctionalComponent",
+    "prefix": "tsrfc",
+    "body": [
+      "import React from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "export default function ${1:${TM_FILENAME_BASE}}({}: Props) {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}"
+    ],
+    "description": "Creates a React Functional Component with ES7 module system and TypeScript interface",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactArrowFunctionExportComponent": {
+    "key": "typescriptReactArrowFunctionExportComponent",
+    "prefix": "tsrafce",
+    "body": [
+      "import React from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = (props: Props) => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Arrow Function Component with ES7 module system and TypeScript interface",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactArrowFunctionComponent": {
+    "key": "typescriptReactArrowFunctionComponent",
+    "prefix": "tsrafc",
+    "body": [
+      "import React from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = (props: Props) => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}"
+    ],
+    "description": "Creates a React Arrow Function Component with ES7 module system and TypeScript interface",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactClassPureComponent": {
+    "key": "typescriptReactClassPureComponent",
+    "prefix": "tsrpc",
+    "body": [
+      "import React, { PureComponent } from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "export default class ${1:${TM_FILENAME_BASE}} extends PureComponent<Props> {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}"
+    ],
+    "description": "Creates a React pure component class with ES7 module system and TypeScript interface",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactClassExportPureComponent": {
+    "key": "typescriptReactClassExportPureComponent",
+    "prefix": "tsrpce",
+    "body": [
+      "import React, { PureComponent } from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "class ${1:${TM_FILENAME_BASE}} extends PureComponent<Props> {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React pure component class with ES7 module system and TypeScript interface",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactClassComponentRedux": {
+    "key": "typescriptReactClassComponentRedux",
+    "prefix": "tsrcredux",
+    "body": [
+      "import { connect } from 'react-redux'",
+      "import React, { Component } from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "type State = {}",
+      "",
+      "export class ${1:${TM_FILENAME_BASE}} extends Component<Props, State> {",
+      "  state = {}",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "const mapStateToProps = (state) => ({})",
+      "",
+      "const mapDispatchToProps = {}",
+      "",
+      "export default connect(mapStateToProps, mapDispatchToProps)(${1:${TM_FILENAME_BASE}})"
+    ],
+    "description": "Creates a React component class with connected redux and ES7 module system and TypeScript interfaces",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactNativeArrowFunctionComponent": {
+    "key": "typescriptReactNativeArrowFunctionComponent",
+    "prefix": "tsrnf",
+    "body": [
+      "import { View, Text } from 'react-native'",
+      "import React from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = (props: Props) => {",
+      "  return (",
+      "    <View>",
+      "      <Text>${1:first}</Text>",
+      "    </View>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Native Arrow Function Component with ES7 module system in TypeScript",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "typescriptReactNativeArrowFunctionComponentWithStyles": {
+    "key": "typescriptReactNativeArrowFunctionComponentWithStyles",
+    "prefix": "tsrnfs",
+    "body": [
+      "import { StyleSheet, Text, View } from 'react-native'",
+      "import React from 'react'",
+      "",
+      "type Props = {}",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = (props: Props) => {",
+      "  return (",
+      "    <View>",
+      "      <Text>${1:first}</Text>",
+      "    </View>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}",
+      "",
+      "const styles = StyleSheet.create({})"
+    ],
+    "description": "Creates a React Native Arrow Function Component with ES7 module system, TypeScript interface and StyleSheet",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactArrowFunctionComponent": {
+    "key": "reactArrowFunctionComponent",
+    "prefix": "rafc",
+    "body": [
+      "import React from 'react'",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}} = () => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      ""
+    ],
+    "description": "Creates a React Arrow Function Component with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactArrowFunctionComponentWithPropTypes": {
+    "key": "reactArrowFunctionComponentWithPropTypes",
+    "prefix": "rafcp",
+    "body": [
+      "import React from 'react'",
+      "import PropTypes from 'prop-types'",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = props => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "${1:${TM_FILENAME_BASE}}.propTypes = {}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Arrow Function Component with ES7 module system with PropTypes",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactArrowFunctionExportComponent": {
+    "key": "reactArrowFunctionExportComponent",
+    "prefix": "rafce",
+    "body": [
+      "import React from 'react'",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = () => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Arrow Function Component with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassComponent": {
+    "key": "reactClassComponent",
+    "prefix": "rcc",
+    "body": [
+      "import React, { Component } from 'react'",
+      "",
+      "export default class ${1:${TM_FILENAME_BASE}} extends Component {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      ""
+    ],
+    "description": "Creates a React component class with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassComponentPropTypes": {
+    "key": "reactClassComponentPropTypes",
+    "prefix": "rccp",
+    "body": [
+      "import PropTypes from 'prop-types'",
+      "import React, { Component } from 'react'",
+      "",
+      "export default class ${1:${TM_FILENAME_BASE}} extends Component {",
+      "  static propTypes = {${2:second}: ${3:third}}",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      ""
+    ],
+    "description": "Creates a React component class with PropTypes and ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassComponentRedux": {
+    "key": "reactClassComponentRedux",
+    "prefix": "rcredux",
+    "body": [
+      "import React, { Component } from 'react'",
+      "import { connect } from 'react-redux'",
+      "",
+      "export class ${1:${TM_FILENAME_BASE}} extends Component {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "const mapStateToProps = (state) => ({})",
+      "",
+      "const mapDispatchToProps = {}",
+      "",
+      "export default connect(mapStateToProps, mapDispatchToProps)(${1:${TM_FILENAME_BASE}})"
+    ],
+    "description": "Creates a React component class with connected redux and ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassComponentReduxPropTypes": {
+    "key": "reactClassComponentReduxPropTypes",
+    "prefix": "rcreduxp",
+    "body": [
+      "import PropTypes from 'prop-types'",
+      "import React, { Component } from 'react'",
+      "import { connect } from 'react-redux'",
+      "",
+      "export class ${1:${TM_FILENAME_BASE}} extends Component {",
+      "  static propTypes = {",
+      "    ${2:second}: ${3:third}",
+      "  }",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "const mapStateToProps = (state) => ({})",
+      "",
+      "const mapDispatchToProps = {}",
+      "",
+      "export default connect(mapStateToProps, mapDispatchToProps)(${1:${TM_FILENAME_BASE}})"
+    ],
+    "description": "Creates a React component class with PropTypes with connected redux and ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassExportComponent": {
+    "key": "reactClassExportComponent",
+    "prefix": "rce",
+    "body": [
+      "import React, { Component } from 'react'",
+      "",
+      "export class ${1:${TM_FILENAME_BASE}} extends Component {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React component class with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassExportComponentWithPropTypes": {
+    "key": "reactClassExportComponentWithPropTypes",
+    "prefix": "rcep",
+    "body": [
+      "import PropTypes from 'prop-types'",
+      "import React, { Component } from 'react'",
+      "",
+      "export class ${1:${TM_FILENAME_BASE}} extends Component {",
+      "  static propTypes = {}",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React component class with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassExportPureComponent": {
+    "key": "reactClassExportPureComponent",
+    "prefix": "rpce",
+    "body": [
+      "import React, { PureComponent } from 'react'",
+      "",
+      "export class ${1:${TM_FILENAME_BASE}} extends PureComponent {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React pure component class with ES7 module system export",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassPureComponent": {
+    "key": "reactClassPureComponent",
+    "prefix": "rpc",
+    "body": [
+      "import React, { PureComponent } from 'react'",
+      "",
+      "export default class ${1:${TM_FILENAME_BASE}} extends PureComponent {",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      ""
+    ],
+    "description": "Creates a React pure component class with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactClassPureComponentWithPropTypes": {
+    "key": "reactClassPureComponentWithPropTypes",
+    "prefix": "rpcp",
+    "body": [
+      "import PropTypes from 'prop-types'",
+      "import React, { PureComponent } from 'react'",
+      "",
+      "export default class ${1:${TM_FILENAME_BASE}} extends PureComponent {",
+      "  static propTypes = {}",
+      "",
+      "  render() {",
+      "    return (",
+      "      <div>${1:first}</div>",
+      "    )",
+      "  }",
+      "}",
+      ""
+    ],
+    "description": "Creates a React component class with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionMemoComponent": {
+    "key": "reactFunctionMemoComponent",
+    "prefix": "rmc",
+    "body": [
+      "import React, { memo } from 'react'",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = memo(() => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "})",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Memo Function Component with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionMemoComponentWithPropTypes": {
+    "key": "reactFunctionMemoComponentWithPropTypes",
+    "prefix": "rmcp",
+    "body": [
+      "import PropTypes from 'prop-types'",
+      "import React, { memo } from 'react'",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = memo((props) => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "})",
+      "",
+      "${1:${TM_FILENAME_BASE}}.propTypes = {}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "Creates a React Memo Function Component with ES7 module system with PropTypes",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionalComponent": {
+    "key": "reactFunctionalComponent",
+    "prefix": "rfc",
+    "body": [
+      "import React from 'react'",
+      "",
+      "export default function ${1:${TM_FILENAME_BASE}}() {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      ""
+    ],
+    "description": "Creates a React Functional Component with ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionalComponentRedux": {
+    "key": "reactFunctionalComponentRedux",
+    "prefix": "rfcredux",
+    "body": [
+      "import React from 'react'",
+      "import { connect } from 'react-redux'",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}} = (props) => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "const mapStateToProps = (state) => ({})",
+      "",
+      "const mapDispatchToProps = {}",
+      "",
+      "export default connect(mapStateToProps, mapDispatchToProps)(${1:${TM_FILENAME_BASE}})"
+    ],
+    "description": "Creates a React functional component with connected redux and ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionalComponentReduxPropTypes": {
+    "key": "reactFunctionalComponentReduxPropTypes",
+    "prefix": "rfcreduxp",
+    "body": [
+      "import PropTypes from 'prop-types'",
+      "import React from 'react'",
+      "import { connect } from 'react-redux'",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}} = (props) => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "${1:${TM_FILENAME_BASE}}.propTypes = {",
+      "  ${2:second}: PropTypes.${3:third}",
+      "}",
+      "",
+      "const mapStateToProps = (state) => ({})",
+      "",
+      "const mapDispatchToProps = {}",
+      "",
+      "export default connect(mapStateToProps, mapDispatchToProps)(${1:${TM_FILENAME_BASE}})"
+    ],
+    "description": "DEPRECATED: Creates a React functional component with PropTypes with connected redux and ES7 module system",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionalComponentWithPropTypes": {
+    "key": "reactFunctionalComponentWithPropTypes",
+    "prefix": "rfcp",
+    "body": [
+      "import React from 'react'",
+      "import PropTypes from 'prop-types'",
+      "",
+      "function ${1:${TM_FILENAME_BASE}}(props) {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      "",
+      "${1:${TM_FILENAME_BASE}}.propTypes = {}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}",
+      ""
+    ],
+    "description": "Creates a React Functional Component with ES7 module system with PropTypes",
+    "scope": "typescript,typescriptreact,javascript,javascriptreact"
+  },
+  "reactFunctionalExportComponent": {
+    "key": "reactFunctionalExportComponent",
+    "prefix": "rfce",
+    "body": [
+      "import { FC, HTMLAttributes } from 'react'",
+      "",
+      "interface ${1:${TM_FILENAME_BASE}}Props extends HTMLAttributes<HTMLDivElement> {}",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = (props) => {",
+      "  return (",
+      "    <div>${1:first}</div>",
+      "  )",
+      "}",
+      ""
+    ],
+    "description": "Creates a React Functional Component with ES7 module system",
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },
   "consoleAssert": {

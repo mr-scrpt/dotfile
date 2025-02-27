@@ -1,31 +1,50 @@
 #!/bin/sh
-tmux new -s "$1" -d
-tmux select-window -t 1
-tmux rename-window ' editor'
-tmux send-keys -t "$pane" 'nvim' Enter
 
-tmux new-window;
-tmux rename-window ' server'
-tmux send-keys -t "$pane"
+create_session() {
+  local session_name="$1"
 
-tmux new-window;
-tmux rename-window ' infra'
-tmux send-keys -t "$pane"
+  # Создаем новую сессию в фоновом режиме
+  tmux new -s "$session_name" -d
 
-tmux new-window;
-tmux rename-window ' terminal'
-tmux send-keys -t "$pane"
+  # Настраиваем первое окно (editor)
+  tmux select-window -t "$session_name:1"
+  tmux rename-window -t "$session_name:1" ' editor'
+  tmux send-keys -t "$session_name:1" 'nvim' Enter
 
-tmux new-window;
-tmux rename-window ' docker'
-tmux send-keys -t "$pane"
+  # Создаем и настраиваем остальные окна
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:2" ' server'
 
-tmux new-window;
-tmux rename-window ' file-manager'
-tmux send-keys -t "$pane" 'yy' Enter
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:3" ' infra'
 
-tmux select-window -t 1
-# tmux split-window -v 'ipython'
-# tmux split-window -h
-# tmux new-window 'mutt'
-tmux -2 attach-session -d
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:4" ' terminal'
+
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:5" ' docker'
+
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:6" ' file-manager'
+  tmux send-keys -t "$session_name:6" 'yy' Enter
+
+  # Возвращаемся к первому окну
+  tmux select-window -t "$session_name:1"
+}
+
+# Проверяем, передано ли имя сессии
+if [ -z "$1" ]; then
+  echo "Usage: tdev <session-name>"
+  exit 1
+fi
+
+# Проверяем, находимся ли мы внутри tmux сессии
+if [ -n "$TMUX" ]; then
+  # Если мы в tmux, создаём новую сессию и переключаемся на неё
+  create_session "$1"
+  tmux switch-client -t "$1"
+else
+  # Если мы не в tmux, создаём сессию и присоединяемся к ней
+  create_session "$1"
+  tmux -2 attach-session -t "$1"
+fi

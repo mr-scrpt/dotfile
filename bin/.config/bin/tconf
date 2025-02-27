@@ -1,51 +1,69 @@
 #!/bin/sh
-tmux new -s "config" -d
-tmux select-window -t 1
-tmux rename-window ' nvim'
-tmux send-keys -t "$pane" 'cd ~/dotfile/nvim/.config/nvim && clear' Enter
 
-# tmux new-window;
-# tmux rename-window '  allacrity'
-# tmux send-keys -t "$pane" 'cd ~/dotfile/alacritty/.config/alacritty && clear' Enter
+create_session() {
+  local session_name="config"
 
-tmux new-window;
-tmux rename-window '  kitty'
-tmux send-keys -t "$pane" 'cd ~/dotfile/kitty/.config/kitty && clear' Enter
+  # Проверяем, существует ли сессия
+  tmux has-session -t "$session_name" 2>/dev/null
+  if [ $? -eq 0 ]; then
+    echo "Session $session_name already exists"
+    return
+  fi
 
-tmux new-window;
-tmux rename-window '  tmux'
-tmux send-keys -t "$pane" 'cd ~/dotfile/tmux/.config/tmux && clear' Enter
+  # Создаем новую сессию
+  tmux new -s "$session_name" -d
 
-tmux new-window;
-tmux rename-window ' fish'
-tmux send-keys -t "$pane" 'cd ~/dotfile/fish/.config/fish && clear' Enter
+  # Настраиваем окна
+  tmux rename-window -t "$session_name:1" ' nvim'
+  tmux send-keys -t "$session_name:1" 'cd ~/dotfile/nvim/.config/nvim && clear' Enter
 
-tmux new-window;
-tmux rename-window ' hypr'
-tmux send-keys -t "$pane" 'cd ~/dotfile/hypr/.config/hypr && clear' Enter
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:2" '  kitty'
+  tmux send-keys -t "$session_name:2" 'cd ~/dotfile/kitty/.config/kitty && clear' Enter
 
-tmux new-window;
-tmux rename-window ' waybar'
-tmux send-keys -t "$pane" 'cd ~/dotfile/waybar/.config/waybar && clear' Enter
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:3" '  tmux'
+  tmux send-keys -t "$session_name:3" 'cd ~/dotfile/tmux/.config/tmux && clear' Enter
 
-tmux new-window;
-tmux rename-window ' yazi'
-tmux send-keys -t "$pane" 'cd ~/dotfile/yazi/.config/yazi && clear' Enter
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:4" ' fish'
+  tmux send-keys -t "$session_name:4" 'cd ~/dotfile/fish/.config/fish && clear' Enter
 
-# tmux new-window;
-# tmux rename-window ' file-manager'
-# tmux send-keys -t "$pane" 'cd ~/.local/share/lf' Enter
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:5" ' hypr'
+  tmux send-keys -t "$session_name:5" 'cd ~/dotfile/hypr/.config/hypr && clear' Enter
 
-tmux new-window;
-tmux rename-window '  bin'
-tmux send-keys -t "$pane" 'cd ~/dotfile/bin/.config/bin && clear' Enter
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:6" ' hypr_config'
+  tmux send-keys -t "$session_name:6" 'cd ~/.config/hypr/ && clear' Enter
 
-tmux new-window;
-tmux rename-window ' other'
-tmux send-keys -t "$pane"
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:7" ' waybar'
+  tmux send-keys -t "$session_name:7" 'cd ~/dotfile/waybar/.config/waybar && clear' Enter
 
-tmux select-window -t 1
-# tmux split-window -v 'ipython'
-# tmux split-window -h
-# tmux new-window 'mutt'
-tmux -2 attach-session -d
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:8" ' yazi'
+  tmux send-keys -t "$session_name:8" 'cd ~/dotfile/yazi/.config/yazi && clear' Enter
+
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:9" '  bin'
+  tmux send-keys -t "$session_name:9" 'cd ~/dotfile/bin/.config/bin && clear' Enter
+
+  tmux new-window -t "$session_name"
+  tmux rename-window -t "$session_name:10" ' other'
+  tmux send-keys -t "$session_name:10" 'cd ~' Enter
+
+  # Возвращаемся к первому окну
+  tmux select-window -t "$session_name:1"
+}
+
+# Основная логика скрипта
+if [ -n "$TMUX" ]; then
+  # Если мы в tmux
+  create_session
+  tmux switch-client -t "config"
+else
+  # Если мы не в tmux
+  create_session
+  tmux attach-session -t "config"
+fi

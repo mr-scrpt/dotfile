@@ -1,46 +1,113 @@
 #!/bin/bash
 
 selected_dir=$(zoxide query -i)
-
 if [ -z "$selected_dir" ]; then
-    echo "Directory not selected."
-    exit 1
+  echo "Directory not selected."
+  exit 1
 fi
-
 cd "$selected_dir" || exit
 
+# Получаем последний и предпоследний каталоги из пути и заменяем точки на подчеркивания
+last_dir=$(basename "$selected_dir" | tr '.' '_')
+parent_dir=$(basename "$(dirname "$selected_dir")" | tr '.' '_')
+
+# Создаем массив опций для выбора
+options=(
+  "Use last directory name: $(gum style --foreground 2 "$last_dir")"
+  "Use parent directory name: $(gum style --foreground 2 "$parent_dir")"
+  "Enter custom name"
+)
+
 while true; do
-    read -r -p "Enter tmux session name: " session_name
+  # Используем gum choose для интерактивного выбора
+  choice=$(printf "%s\n" "${options[@]}" | gum choose \
+    --header="Choose session name option:" \
+    --cursor.foreground="99" \
+    --cursor.background="none" \
+    --selected.background="none")
 
-    if [ -z "$session_name" ]; then
-        echo "Session name cannot be empty."
-        continue
-    fi
+  # Проверяем выбранную опцию и извлекаем имя директории
+  case "$choice" in
+  *"$last_dir"*)
+    session_name=$last_dir
+    ;;
+  *"$parent_dir"*)
+    session_name=$parent_dir
+    ;;
+  "Enter custom name")
+    session_name=$(gum input --prompt="Enter tmux session name: " --placeholder="session name")
+    session_name=$(echo "$session_name" | tr '.' '_')
+    ;;
+  *)
+    # Если пользователь нажал Ctrl+C или не выбрал ничего
+    echo "No option selected."
+    exit 1
+    ;;
+  esac
 
-    if tmux has-session -t "$session_name" 2>/dev/null; then
-        echo "Session '$session_name' already exists! Please choose another name."
-    else
-        break
-    fi
+  if [ -z "$session_name" ]; then
+    echo "Session name cannot be empty."
+    continue
+  fi
+
+  if tmux has-session -t "$session_name" 2>/dev/null; then
+    echo "Session '$session_name' already exists! Please choose another name."
+    continue
+  else
+    break
+  fi
 done
 
 tdev "$session_name"
-# #!/bin/bash
-#
 # selected_dir=$(zoxide query -i)
-#
 # if [ -z "$selected_dir" ]; then
-#     echo "Directory not selected."
-#     exit 1
+#   echo "Directory not selected."
+#   exit 1
 # fi
-#
 # cd "$selected_dir" || exit
 #
-# read -r -p "Enter tmux session name: " session_name
+# # Получаем последний и предпоследний каталоги из пути и заменяем точки на подчеркивания
+# last_dir=$(basename "$selected_dir" | tr '.' '_')
+# parent_dir=$(basename "$(dirname "$selected_dir")" | tr '.' '_')
 #
-# if [ -z "$session_name" ]; then
+# while true; do
+#   echo "Choose session name option:"
+#   echo "1) Use last directory name: $last_dir"
+#   echo "2) Use parent directory name: $parent_dir"
+#   echo "3) Enter custom name"
+#   read -r -p "Select option (1-3) [1]: " choice
+#
+#   # Если просто нажат Enter, используем значение по умолчанию
+#   choice=${choice:-1}
+#
+#   case $choice in
+#   1)
+#     session_name=$last_dir
+#     ;;
+#   2)
+#     session_name=$parent_dir
+#     ;;
+#   3)
+#     read -r -p "Enter tmux session name: " session_name
+#     session_name=$(echo "$session_name" | tr '.' '_')
+#     ;;
+#   *)
+#     echo "Invalid option. Please select 1, 2, or 3."
+#     continue
+#     ;;
+#   esac
+#
+#   if [ -z "$session_name" ]; then
 #     echo "Session name cannot be empty."
-#     exit 1
-# fi
+#     continue
+#   fi
+#
+#   if tmux has-session -t "$session_name" 2>/dev/null; then
+#     echo "Session '$session_name' already exists! Please choose another name."
+#     continue
+#   else
+#     break
+#   fi
+# done
 #
 # tdev "$session_name"

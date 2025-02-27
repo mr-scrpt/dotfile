@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Получаем информацию о всех окнах и обрабатываем её
+hyprctl clients -j | jq -r '.[] | "\(.class): workspace (\(.workspace.id)) position (\(.at[0]),\(.at[1])) size (\(.size[0])x\(.size[1]))"' | while read -r line; do
+  echo "# Window: $line"
+
+  # Форматируем данные для использования в скрипте layout
+  class=$(echo "$line" | cut -d':' -f1)
+  workspace=$(echo "$line" | grep -o "workspace ([0-9]*)" | tr -d "workspace (" | tr -d ")")
+  pos_x=$(echo "$line" | grep -o "position ([0-9]*," | tr -d "position (" | tr -d ",")
+  pos_y=$(echo "$line" | grep -o ",[0-9]*)" | tr -d ",)")
+  size_w=$(echo "$line" | grep -o "size ([0-9]*x" | tr -d "size (" | tr -d "x")
+  size_h=$(echo "$line" | grep -o "x[0-9]*)" | tr -d "x" | tr -d ")")
+
+  echo "wait_for_window \"$class\" \"$class\""
+  echo "hyprctl dispatch workspace $workspace"
+  echo "hyprctl dispatch movewindow \"address ${pos_x}x${pos_y}\""
+  echo "hyprctl dispatch resizewindow \"exact ${size_w} ${size_h}\""
+  echo ""
+done

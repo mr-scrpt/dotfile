@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Устанавливаем настройки для предсказуемого размещения
+hyprctl keyword general:no_cursor_warps true
+hyprctl dispatch splitratio 1.0
+
+# 1. Запускаем kitty
+hyprctl dispatch movecursor 500 500 # Курсор влево
+/usr/bin/kitty &
+sleep 0.7
+
+# 2. Запускаем первый zen
+hyprctl dispatch movecursor 2000 500 # Курсор вправо
+zen-browser &
+sleep 0.7
+
+# 5. Переключаемся на kitty (влево)
+hyprctl dispatch movefocus l
+sleep 0.7
+
+# 4. Запускаем chromium
+hyprctl dispatch movecursor 500 500 # Курсор влево
+/usr/bin/chromium-browser &
+sleep 0.7
+
+# 5. Переключаемся на zen (вправо)
+hyprctl dispatch movefocus r
+sleep 0.7
+
+# 6. Запускаем второй zen-browser
+hyprctl dispatch movecursor 2000 500 # Курсор вправо
+zen-browser &
+sleep 0.7
+
+# 7. Изменяем размер активного zen
+# Семь раз вправо
+hyprctl dispatch resizeactive 550 0
+
+# Два раза вверх
+hyprctl dispatch resizeactive 0 -100
+
+# 8. Переключаемся на chromium (влево)
+hyprctl dispatch movefocus l
+sleep 0.7
+
+# 9. Изменяем размер chromium
+# Два раза вверх
+hyprctl dispatch resizeactive 0 -100
+
+# Возвращаем настройки по умолчанию
+hyprctl keyword general:no_cursor_warps false
