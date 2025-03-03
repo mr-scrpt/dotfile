@@ -1,0 +1,65 @@
+# Тапы Homebrew
+tap "homebrew/bundle"
+tap "homebrew/services"
+tap "jesseduffield/lazygit"
+tap "koekeishiya/formulae"
+tap "arl/arl"
+
+# Системные утилиты и менеджеры пакетов
+brew "git"                   # Система контроля версий
+brew "gh"                    # GitHub CLI
+brew "nvm"                   # Менеджер версий Node.js
+brew "pnpm"                  # Быстрый и эффективный менеджер пакетов для Node.js
+brew "fontconfig"            # Библиотека для конфигурации и настройки шрифтов
+cask "sf-symbol"             # Символы
+brew "trash"                 # CLI утилита для перемещения файлов в корзину (используется neo-tree.nvim)
+brew "gum"                   # Glamour shell script
+
+# Терминал и командная оболочка
+brew "starship"              # Кастомизируемый командный промпт
+brew "tmux"                  # Терминальный мультиплексор
+brew "gitmux"                # Плагин для tmux, отображает текущую ветку
+brew "fish"                  # Дружественная интерактивная оболочка (Fish shell)
+cask "kitty"                 # Быстрый, функциональный эмулятор терминала на GPU
+
+# Утилиты для навигации и просмотра файлов
+brew "fd"                    # Простая и быстрая альтернатива 'find'
+brew "tree"                  # Отображение директорий в виде дерева
+brew "zoxide"                # Умная навигация по директориям (альтернатива 'cd')
+brew "bat"                   # Улучшенная версия 'cat' с подсветкой синтаксиса
+brew "fzf"                   # Интерактивный поиск по файлам
+brew "eza"                   # Современная альтернатива команде 'ls'
+brew "yazi"                  # Файловый менеджер для терминала
+brew "ripgrep"               # Быстрый поиск текста в файлах (альтернатива grep)
+brew "jq"                    # Работа с JSON в командной строке
+brew "koekeishiya/formulae/skhd" # Управление с клавиатуры
+
+# Управление окнами и клавиатурой
+brew "yabai"                 # Тайловый менеджер окон для macOS
+brew "skhd"                  # Горячие клавиши для macOS
+cask "karabiner-elements"    # Настройка клавиатуры для macOS
+
+# Инструменты разработки
+brew "neovim"                # Улучшенный Vim редактор
+brew "wget"                  # Утилита для загрузки из интернета
+brew "stow"                  # Управление символическими ссылками (для dotfiles)
+brew "jesseduffield/lazygit/lazygit" # TUI для Git
+
+# Мониторинг и информация о системе
+brew "htop"                  # Интерактивный просмотр процессов
+brew "neofetch"              # Информация о системе с отображением ASCII-арта
+
+# Браузеры и веб-разработка
+cask "google-chrome"         # Веб-браузер от Google
+cask "arc"                   # Современный браузер с уникальным UI
+cask "postman"               # Платформа для тестирования API
+
+# Приложения для повышения продуктивности
+cask "raycast"               # Улучшенный запуск приложений и автоматизация
+
+# Медиа и связь
+cask "vlc"                   # Универсальный медиаплеер
+cask "telegram"              # Мессенджер для общения
+
+# IDE и редакторы кода
+cask "visual-studio-code"    # Популярный редактор кода от Microsoft

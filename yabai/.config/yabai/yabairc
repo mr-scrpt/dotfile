@@ -1,0 +1,90 @@
+#!/usr/bin/env sh
+
+# ██╗   ██╗ █████╗ ██████╗  █████╗ ██╗
+# ╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗██║
+#  ╚████╔╝ ███████║██████╔╝███████║██║
+#   ╚██╔╝  ██╔══██║██╔══██╗██╔══██║██║
+#    ██║   ██║  ██║██████╔╝██║  ██║██║
+#    ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝
+# A tiling window manager for macOS
+# https://github.com/koekeishiya/yabai
+
+# Load all the variables I need from the yabai_env.sh file
+source "$HOME/.config/yabai/yabai_env.sh"
+
+sudo yabai --load-sa
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+
+
+###############################################################################
+#                                 Paddings
+###############################################################################
+yabai -m config window_gap 15
+yabai -m config top_padding 15
+yabai -m config bottom_padding 15
+yabai -m config left_padding 15
+yabai -m config right_padding 15
+
+###############################################################################
+#                                 Settings
+###############################################################################
+yabai -m config layout bsp
+yabai -m config mouse_follows_focus on
+yabai -m config focus_follows_mouse autofocus
+
+###############################################################################
+#                            Приложения для управления
+###############################################################################
+
+# Список приложений, которые должны быть прозрачными
+# Добавляйте новые приложения, разделяя их вертикальной чертой |
+
+# Список приложений, которые не нужно контролировать через yabai
+apps_mgoff=(
+    "System Preferences"
+    "System Settings"
+    "VLC"
+    "Hubstaff"
+    "Archive Utility"
+    "Wally"
+    "Pika"
+    "balenaEtcher"
+    "Creative Cloud"
+    "Logi Options"
+    "Alfred Preferences"
+    "App Store"
+    "Activity Monitor"
+    "KeePassXC"
+    "Calculator"
+    "Dictionary"
+    "mpv"
+    "System Information"
+)
+
+###############################################################################
+#                               Transparency
+###############################################################################
+# Включаем поддержку прозрачности
+yabai -m config window_opacity on
+yabai -m config window_opacity_duration 0.0
+
+transparent_apps="kitty|Safari"
+yabai -m rule --add app="^(${transparent_apps})$" opacity=$opacity_value
+yabai -m rule --add app!="^(${transparent_apps})$" opacity=1.0
+
+###############################################################################
+#                          Управление окнами (rules)
+###############################################################################
+
+# Добавляем правила для приложений, которые не нужно контролировать
+for app in "${apps_mgoff[@]}"; do
+    yabai -m rule --add app="^${app}$" manage=off
+done
+
+# Специальные правила с дополнительными параметрами
+yabai -m rule --add label="Finder" app="^Finder$" title="(Co(py|nnect)|Move|Info|Pref)" manage=off
+yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off
+yabai -m rule --add label="Software Update" title="Software Update" manage=off
+yabai -m rule --add label="About This Mac" app="System Information" title="About This Mac" manage=off
+
+echo "yabai configuration loaded.."

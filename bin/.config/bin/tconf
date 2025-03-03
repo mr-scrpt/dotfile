@@ -13,49 +13,51 @@ create_session() {
   # Создаем новую сессию
   tmux new -s "$session_name" -d
 
-  # Настраиваем окна
-  tmux rename-window -t "$session_name:1" ' nvim'
-  tmux send-keys -t "$session_name:1" 'cd ~/dotfile/nvim/.config/nvim && clear' Enter
 
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:2" '  kitty'
-  tmux send-keys -t "$session_name:2" 'cd ~/dotfile/kitty/.config/kitty && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:3" '  tmux'
-  tmux send-keys -t "$session_name:3" 'cd ~/dotfile/tmux/.config/tmux && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:4" ' fish'
-  tmux send-keys -t "$session_name:4" 'cd ~/dotfile/fish/.config/fish && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:5" ' hypr'
-  tmux send-keys -t "$session_name:5" 'cd ~/dotfile/hypr/.config/hypr && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:6" ' hypr_config'
-  tmux send-keys -t "$session_name:6" 'cd ~/.config/hypr/ && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:7" ' waybar'
-  tmux send-keys -t "$session_name:7" 'cd ~/dotfile/waybar/.config/waybar && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:8" ' yazi'
-  tmux send-keys -t "$session_name:8" 'cd ~/dotfile/yazi/.config/yazi && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:9" '  bin'
-  tmux send-keys -t "$session_name:9" 'cd ~/dotfile/bin/.config/bin && clear' Enter
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:10" ' other'
-  tmux send-keys -t "$session_name:10" 'cd ~' Enter
-
-  # Возвращаемся к первому окну
+    # Определяем конфигурации для окон: [имя окна]:[путь]
+  # Номера окон будут браться из индекса массива + 1
+  windows=(
+    "  nvim:nvim"
+    "  kitty:kitty"
+    "  tmux:tmux"
+    "  fish:fish"
+    "  waybar:waybar"
+    "  yazi:yazi"
+    "  bin:bin"
+    "  brew:brew"
+    "  yabai:yabai"
+    "  skhd:skhd"
+    " 󱓀 karabiner:karabiner"
+    " 󰝡 other:other"
+  )
+  
+  # Особое окно, которое будет иметь номер 15
+  special_window="󰝡 other:"
+  
+  # Создаем окна через цикл
+  for i in "${!windows[@]}"; do
+    window_number=$((i + 1))
+    window_config="${windows[$i]}"
+    
+    # Разбиваем строку на имя и путь
+    IFS=':' read -r name path <<< "$window_config"
+    
+    # Для первого окна не нужно создавать новое, только переименовать
+    if [ "$window_number" = "1" ]; then
+      tmux rename-window -t "$session_name:1" "$name"
+    else
+      tmux new-window -t "$session_name" -n "$name"
+      tmux move-window -s "$session_name" -t "$session_name:$window_number"
+    fi
+    
+    # Отправляем команды
+    tmux send-keys -t "$session_name:$window_number" "cd ~/dotfile/$path/.config/$path" Enter
+    tmux send-keys -t "$session_name:$window_number" "clear" Enter
+  done
+  
   tmux select-window -t "$session_name:1"
 }
+
 
 # Основная логика скрипта
 if [ -n "$TMUX" ]; then

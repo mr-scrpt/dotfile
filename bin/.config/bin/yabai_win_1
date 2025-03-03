@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Получаем ID окон приложений
+chrome_id=$(yabai -m query --windows | jq '.[] | select(.app=="Google Chrome") | .id' | head -1)
+arc_id1=$(yabai -m query --windows | jq '.[] | select(.app=="Arc") | .id' | head -1)
+kitty_id=$(yabai -m query --windows | jq '.[] | select(.app=="kitty") | .id' | head -1)
+arc_id2=$(yabai -m query --windows | jq '.[] | select(.app=="Arc") | .id' | head -2 | tail -1)
+
+# Проверяем, что все окна найдены
+if [ -z "$chrome_id" ] || [ -z "$arc_id1" ] || [ -z "$kitty_id" ] || [ -z "$arc_id2" ]; then
+    echo "Ошибка: не все требуемые окна найдены"
+    echo "Chrome: $chrome_id"
+    echo "Arc 1: $arc_id1"
+    echo "kitty: $kitty_id"
+    echo "Arc 2: $arc_id2"
+    exit 1
+fi
+
+# Устанавливаем позиции окон
+# Chrome вверху слева
+yabai -m window $chrome_id --grid 2:2:0:0:1:1
+
+# Arc 1 вверху справа
+yabai -m window $arc_id1 --grid 2:2:1:0:1:1
+
+# Kitty внизу слева
+yabai -m window $kitty_id --grid 2:2:0:1:1:1
+
+# Arc 2 внизу справа
+yabai -m window $arc_id2 --grid 2:2:1:1:1:1
+
+echo "Окна успешно расположены!"

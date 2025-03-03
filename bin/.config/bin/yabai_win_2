@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Получаем ID окон
+echo "Получаем ID окон..."
+chrome_id=$(yabai -m query --windows | jq -r '.[] | select(.app == "Google Chrome" and ."is-visible" == true) | .id' | head -n 1)
+arc1_id=$(yabai -m query --windows | jq -r '.[] | select(.app == "Arc" and ."is-visible" == true) | .id' | head -n 1)
+kitty_id=$(yabai -m query --windows | jq -r '.[] | select(.app == "kitty" and ."is-visible" == true) | .id' | head -n 1)
+arc2_id=$(yabai -m query --windows | jq -r '.[] | select(.app == "Arc" and ."is-visible" == true) | .id' | sed -n '2p')
+
+# Проверяем, что все окна найдены
+echo "Найденные окна:"
+echo "Chrome: $chrome_id"
+echo "Arc 1: $arc1_id"
+echo "Kitty: $kitty_id"
+echo "Arc 2: $arc2_id"
+
+# Переключаемся в режим float
+echo "Переключаемся в режим float..."
+yabai -m space --layout float
+
+# Небольшая пауза для применения изменений
+sleep 0.5
+
+# Получаем размеры экрана
+display_info=$(yabai -m query --displays --display)
+display_width=$(echo $display_info | jq '.frame.w')
+display_height=$(echo $display_info | jq '.frame.h')
+
+# Вычисляем размеры окон
+half_width=$(echo "$display_width / 2" | bc)
+half_height=$(echo "$display_height / 2" | bc)
+
+# Позиционируем окна в точных позициях
+echo "Позиционируем Chrome (вверху слева)..."
+yabai -m window $chrome_id --move abs:0:0
+yabai -m window $chrome_id --resize abs:$half_width:$half_height
+
+echo "Позиционируем Arc 1 (вверху справа)..."
+yabai -m window $arc1_id --move abs:$half_width:0
+yabai -m window $arc1_id --resize abs:$half_width:$half_height
+
+echo "Позиционируем Kitty (внизу слева)..."
+yabai -m window $kitty_id --move abs:0:$half_height
+yabai -m window $kitty_id --resize abs:$half_width:$half_height
+
+echo "Позиционируем Arc 2 (внизу справа)..."
+yabai -m window $arc2_id --move abs:$half_width:$half_height
+yabai -m window $arc2_id --resize abs:$half_width:$half_height
+
+# Небольшая пауза перед контролируемым переключением
+sleep 1
+
+# Контролируемый переход в bsp
+echo "Выполняем контролируемый переход в bsp..."
+
+# Сначала создаем правила для фиксации окон на месте
+echo "Создаем временные правила для окон..."
+yabai -m rule --add app="Google Chrome" grid="2:2:0:0:1:1" label="chrome_rule"
+yabai -m rule --add app="Arc" grid="2:2:1:0:1:1" label="arc1_rule"
+yabai -m rule --add app="kitty" grid="2:2:0:1:1:1" label="kitty_rule"
+yabai -m rule --add app="Arc" grid="2:2:1:1:1:1" label="arc2_rule"
+
+# Переключаемся в режим bsp
+echo "Переключаемся в режим bsp..."
+yabai -m space --layout bsp
+
+# Сохраняем текущее расположение в файл для диагностики
+mkdir -p ~/yabai_logs
+yabai -m query --windows >~/yabai_logs/windows_after_bsp.json
+
+# Фокусируемся на каждом окне в определенном порядке, чтобы контролировать переключение
+echo "Фокусируемся на окнах в нужном порядке..."
+yabai -m window $chrome_id --focus
+sleep 0.2
+yabai -m window $arc1_id --focus
+sleep 0.2
+yabai -m window $kitty_id --focus
+sleep 0.2
+yabai -m window $arc2_id --focus
+sleep 0.2
+
+# Проверяем и корректируем позиции, если они изменились
+echo "Проверяем и корректируем позиции..."
+
+# Используем --swap для корректировки, если потребуется
+current_windows=$(yabai -m query --windows)
+
+# Определяем текущие позиции окон
+define_position() {
+  local id=$1
+  local pos=$(echo "$current_windows" | jq -r ".[] | select(.id == $id) | 
+                \"\(.frame.x):\(.frame.y)\"")
+  local x=${pos%%:*}
+  local y=${pos##*:}
+
+  # Определяем квадрант
+  if ((x < half_width)); then
+    if ((y < half_height)); then
+      echo "top_left"
+    else
+      echo "bottom_left"
+    fi
+  else
+    if ((y < half_height)); then
+      echo "top_right"
+    else
+      echo "bottom_right"
+    fi
+  fi
+}
+
+# Получаем текущие позиции
+chrome_pos=$(define_position $chrome_id)
+arc1_pos=$(define_position $arc1_id)
+kitty_pos=$(define_position $kitty_id)
+arc2_pos=$(define_position $arc2_id)
+
+echo "Текущие позиции:"
+echo "Chrome: $chrome_pos (должен быть top_left)"
+echo "Arc 1: $arc1_pos (должен быть top_right)"
+echo "Kitty: $kitty_pos (должен быть bottom_left)"
+echo "Arc 2: $arc2_pos (должен быть bottom_right)"
+
+# Удаляем временные правила
+echo "Удаляем временные правила..."
+yabai -m rule --remove chrome_rule
+yabai -m rule --remove arc1_rule
+yabai -m rule --remove kitty_rule
+yabai -m rule --remove arc2_rule
+
+echo "Позиционирование окон завершено!"

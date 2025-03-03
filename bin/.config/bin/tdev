@@ -6,27 +6,39 @@ create_session() {
   # Создаем новую сессию в фоновом режиме
   tmux new -s "$session_name" -d
 
-  # Настраиваем первое окно (editor)
-  tmux select-window -t "$session_name:1"
-  tmux rename-window -t "$session_name:1" ' editor'
-  tmux send-keys -t "$session_name:1" 'nvim' Enter
+ declare -a windows=(
+    " :editor:nvim"
+    " :server:"
+    " :terminal:"
+    " :infra:"
+    " :file-manager:yy"
+    " :docker:"
+  )
 
-  # Создаем и настраиваем остальные окна
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:2" ' server'
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:3" ' infra'
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:4" ' terminal'
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:5" ' docker'
-
-  tmux new-window -t "$session_name"
-  tmux rename-window -t "$session_name:6" ' file-manager'
-  tmux send-keys -t "$session_name:6" 'yy' Enter
+  for i in "${!windows[@]}"; do
+    window_number=$((i + 1))
+    window_config="${windows[$i]}"
+    
+    # Разбиваем строку на иконку, название и команду
+    IFS=':' read -r icon title command <<< "$window_config"
+    
+    # Полное название окна будет состоять из иконки и названия
+    window_name=" $icon $title"
+    
+    # Для первого окна не нужно создавать новое, только переименовать
+    if [ "$window_number" = "1" ]; then
+      tmux rename-window -t "$session_name:1" "$window_name"
+    else
+      tmux new-window -t "$session_name"
+      tmux rename-window -t "$session_name:$window_number" "$window_name"
+    fi
+    
+    # Если указана команда, выполняем её
+    if [ -n "$command" ]; then
+      tmux send-keys -t "$session_name:$window_number" "$command" Enter
+    fi
+  done
+  
 
   # Возвращаемся к первому окну
   tmux select-window -t "$session_name:1"

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Создаем временную директорию для загрузки
+TEMP_DIR=$(mktemp -d)
+FONT_DIR="$HOME/.local/share/fonts"
+
+echo "Создание директории для шрифтов, если она не существует..."
+mkdir -p "$FONT_DIR"
+
+echo "Получение списка всех доступных Nerd Fonts..."
+RELEASE_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest"
+DOWNLOAD_URL="https://github.com/ryanoasis/nerd-fonts/releases/download"
+
+# Получаем последнюю версию
+LATEST_VERSION=$(curl -L -s -I "$RELEASE_URL" | grep -i "^location:" | sed -E 's/.*\/v?([^\/]+)$/\1/' | tr -d '\r\n')
+echo "Последняя версия Nerd Fonts: $LATEST_VERSION"
+
+echo "Загрузка и установка всех Nerd Fonts. Это может занять время..."
+cd "$TEMP_DIR"
+
+# Получаем список всех шрифтов
+FONT_LIST=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" | grep "browser_download_url.*zip" | cut -d : -f 2,3 | tr -d \")
+
+# Скачиваем и устанавливаем каждый шрифт
+for font_url in $FONT_LIST; do
+    font_name=$(basename "$font_url" .zip)
+    echo "Загрузка $font_name..."
+    curl -L -O "$font_url"
+    echo "Распаковка $font_name.zip..."
+    unzip -q "$font_name.zip" -d "$font_name"
+    echo "Установка $font_name в $FONT_DIR..."
+    cp -r "$font_name"/*.ttf "$FONT_DIR" 2>/dev/null || true
+    cp -r "$font_name"/*.otf "$FONT_DIR" 2>/dev/null || true
+    rm -rf "$font_name" "$font_name.zip"
+done
+
+echo "Обновление кэша шрифтов..."
+fc-cache -f
+
+echo "Очистка временных файлов..."
+rm -rf "$TEMP_DIR"
+
+echo "Установка завершена! Все Nerd Fonts установлены в $FONT_DIR"
