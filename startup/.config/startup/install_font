@@ -1,0 +1,168 @@
+#!/bin/bash
+
+# Проверка наличия необходимых утилит
+echo "Проверка необходимых утилит..."
+for cmd in curl unzip fc-cache gum; do
+  if ! command -v $cmd &>/dev/null; then
+    echo "Утилита $cmd не найдена. Устанавливаем необходимые пакеты..."
+    sudo dnf install -y curl unzip fontconfig gum
+    break
+  fi
+done
+
+# Создаем временную директорию для загрузки
+TEMP_DIR=$(mktemp -d)
+FONT_DIR="$HOME/.local/share/fonts/NerdFonts"
+
+# Создаем директорию для шрифтов
+mkdir -p "$FONT_DIR"
+echo "Шрифты будут установлены в: $FONT_DIR"
+
+# Используем фиксированную версию для избежания зависаний
+NERD_FONTS_VERSION="3.3.0"
+echo "Используемая версия Nerd Fonts: v$NERD_FONTS_VERSION"
+
+# Полный список доступных шрифтов Nerd Fonts
+NERD_FONTS=(
+  "3270"
+  "Agave"
+  "AnonymousPro"
+  "Arimo"
+  "AurulentSansMono"
+  "BigBlueTerminal"
+  "BitstreamVeraSansMono"
+  "CascadiaCode"
+  "CodeNewRoman"
+  "Cousine"
+  "DaddyTimeMono"
+  "DejaVuSansMono"
+  "DroidSansMono"
+  "EnvyCodeR"
+  "FantasqueSansMono"
+  "FiraCode"
+  "FiraMono"
+  "Go-Mono"
+  "Gohu"
+  "Hack"
+  "Hasklig"
+  "HeavyData"
+  "Hermit"
+  "IBMPlexMono"
+  "Inconsolata"
+  "InconsolataGo"
+  "InconsolataLGC"
+  "Iosevka"
+  "JetBrainsMono"
+  "Lekton"
+  "LiberationMono"
+  "Meslo"
+  "Monofur"
+  "Monoid"
+  "Mononoki"
+  "MPlus"
+  "Noto"
+  "OpenDyslexic"
+  "Overpass"
+  "ProFont"
+  "ProggyClean"
+  "RobotoMono"
+  "ShareTechMono"
+  "SourceCodePro"
+  "SpaceMono"
+  "Terminus"
+  "Tinos"
+  "Ubuntu"
+  "UbuntuMono"
+  "VictorMono"
+)
+
+# Показываем инструкции по выбору шрифтов
+echo ""
+echo "Выберите шрифты для установки:"
+echo "- Навигация: клавиши со стрелками ↑↓"
+echo "- Выбор/отмена выбора: пробел"
+echo "- Подтверждение выбора: Enter"
+echo ""
+
+# Используем gum choose с флагом --no-limit для множественного выбора
+SELECTED_FONTS=($(gum choose --height 20 --no-limit "${NERD_FONTS[@]}"))
+
+# Проверяем, выбраны ли шрифты
+if [ ${#SELECTED_FONTS[@]} -eq 0 ]; then
+  echo "Не выбрано ни одного шрифта. Завершение работы."
+  rm -rf "$TEMP_DIR"
+  exit 0
+fi
+
+echo "Выбрано шрифтов: ${#SELECTED_FONTS[@]}"
+echo "Список выбранных шрифтов:"
+for font in "${SELECTED_FONTS[@]}"; do
+  echo "  - $font"
+done
+
+# Спрашиваем подтверждение перед установкой
+echo ""
+read -p "Начать установку? (y/n): " confirm
+if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+  echo "Установка отменена."
+  rm -rf "$TEMP_DIR"
+  exit 0
+fi
+
+# Переходим во временную директорию
+cd "$TEMP_DIR"
+
+# Базовый URL для загрузки
+BASE_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERD_FONTS_VERSION}"
+
+# Создаем прогресс-бар для установки
+total=${#SELECTED_FONTS[@]}
+current=0
+
+# Скачиваем и устанавливаем выбранные шрифты
+for font_name in "${SELECTED_FONTS[@]}"; do
+  current=$((current + 1))
+  percent=$((current * 100 / total))
+
+  # Отображаем прогресс
+  echo -ne "\r[$(printf '%3d' $percent)%] Обработка $font_name ($current из $total)"
+
+  # Формируем URL (имя шрифта в точности как в релизе)
+  download_url="${BASE_URL}/${font_name}.zip"
+
+  # Пробуем скачать с таймаутом и повторными попытками
+  if ! curl -s -L --connect-timeout 10 --retry 3 --retry-delay 2 -o "$font_name.zip" "$download_url"; then
+    echo -e "\r[$(printf '%3d' $percent)%] ✖ Ошибка загрузки $font_name                          "
+    continue
+  fi
+
+  # Проверяем, что файл не пустой и не страница ошибки
+  if [ ! -s "$font_name.zip" ] || grep -q "Not Found" "$font_name.zip"; then
+    echo -e "\r[$(printf '%3d' $percent)%] ✖ Недействительный файл: $font_name                   "
+    continue
+  fi
+
+  # Распаковываем
+  if ! unzip -q "$font_name.zip" -d "$font_name"; then
+    echo -e "\r[$(printf '%3d' $percent)%] ✖ Ошибка распаковки $font_name                        "
+    continue
+  fi
+
+  # Устанавливаем шрифты
+  find "$font_name" -type f \( -name "*.ttf" -o -name "*.otf" \) -exec cp {} "$FONT_DIR/" \; 2>/dev/null
+
+  echo -e "\r[$(printf '%3d' $percent)%] ✓ $font_name установлен                                "
+
+  # Очищаем временные файлы
+  rm -rf "$font_name" "$font_name.zip"
+done
+
+echo -e "\nОбновление кэша шрифтов..."
+fc-cache -f
+
+echo "Очистка временных файлов..."
+rm -rf "$TEMP_DIR"
+
+echo ""
+echo "✅ Установка завершена! Шрифты установлены в $FONT_DIR"
+echo "Для применения шрифтов может потребоваться перезапуск приложений или системы."

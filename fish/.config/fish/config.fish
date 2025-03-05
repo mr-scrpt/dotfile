@@ -2,7 +2,7 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
     # eval (ssh-agent -c)
 
-    neofetch
+    fastfetch
     starship init fish | source
     zoxide init fish | source
 
@@ -13,8 +13,6 @@ if status is-interactive
     # aliases
 
     alias c="clear"
-    # alias pgadmin4="sudo python3 /usr/lib/pgadmin4/pgAdmin4.py"
-    # alias y="yazi"
 
 
     if type -q eza
@@ -34,20 +32,21 @@ if status is-interactive
     set -gx PATH ~/.local/bin $PATH
     set -gx PATH ~/.config/bin $PATH
     set -x PATH $HOME/.cargo/bin $PATH
+    set -gx PATH ~/.local/share/flatpak/exports/bin $PATH
 
-      # ordered by priority - bottom up
+    # ordered by priority - bottom up
     fish_add_path $HOME/.local/bin
     fish_add_path $HOME/.local/share/nvim/site/pack
+    fish_add_path /var/lib/flatpak/exports/bin
 end
 
 # pnpm
 set -gx PNPM_HOME "/home/mr/.local/share/pnpm"
 if not string match -q -- $PNPM_HOME $PATH
-  set -gx PATH "$PNPM_HOME" $PATH
+    set -gx PATH "$PNPM_HOME" $PATH
 end
 # pnpm end
 
 
 #env
 source ~/.config/fish/private.env
-

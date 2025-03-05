@@ -1,0 +1,139 @@
+#!/bin/bash
+# Установка скрипта для Fedora Linux
+# Аналог обновленного Brewfile для macOS
+echo "Начинаем настройку Fedora Linux..."
+
+# Обновление системы
+echo "Обновление системы..."
+sudo dnf update -y
+
+# Добавление необходимых репозиториев
+echo "Добавление дополнительных репозиториев..."
+# RPM Fusion (Free и Non-Free)
+sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf install -y https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+# Репозиторий Visual Studio Code
+sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+
+# Настройка Flathub для приложений, которые лучше установить через Flatpak
+sudo dnf install -y flatpak
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Установка языков программирования и компиляторов
+echo "Установка языков программирования и компиляторов..."
+
+# Установка Rust через rustup
+echo "Установка Rust через rustup..."
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
+rustup update
+
+# Установка Go
+echo "Установка Go..."
+sudo dnf install -y golang
+
+# Установка PHP
+echo "Установка PHP..."
+sudo dnf install -y php php-cli php-fpm php-mysqlnd php-zip php-devel php-gd php-mcrypt php-mbstring php-curl php-xml php-pear php-bcmath php-json
+
+# Установка Python и pip
+echo "Установка Python и pip..."
+sudo dnf install -y python3 python3-pip python3-devel
+
+# Установка NVM для управления версиями Node.js
+echo "Установка NVM и последней версии Node.js..."
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Загрузка NVM
+nvm install --lts                                # Установка последней LTS-версии Node.js
+
+# Системные утилиты и менеджеры пакетов
+echo "Установка системных утилит и менеджеров пакетов..."
+sudo dnf install -y git gh wget
+
+# Установка pnpm
+echo "Установка pnpm из стандартного репозитория..."
+sudo dnf install -y pnpm
+
+# Установка trash (аналог для brew "trash")
+echo "Установка trash из стандартного репозитория..."
+sudo dnf install -y trash-cli
+
+# Установка gum из стандартного репозитория
+echo "Установка gum..."
+sudo dnf install -y gum
+
+# Терминал и командная оболочка
+echo "Установка терминальных утилит..."
+sudo dnf install -y tmux fish
+sudo dnf install -y kitty
+
+# Установка Starship prompt
+echo "Установка Starship prompt..."
+curl -sS https://starship.rs/install.sh | sh
+
+# Установка Gitmux для tmux
+echo "Установка Gitmux..."
+mkdir -p ~/Downloads
+cd ~/Downloads
+curl -Lo gitmux.tar.gz https://github.com/arl/gitmux/releases/download/v0.9.1/gitmux_0.9.1_linux_amd64.tar.gz
+tar -xzf gitmux.tar.gz
+sudo mv gitmux /usr/local/bin/
+cd -
+
+# Установка утилит навигации из стандартного репозитория
+echo "Установка утилит для навигации и просмотра файлов..."
+sudo dnf install -y tree bat fzf ripgrep jq fd eza zoxide
+
+# Установка Yazi через cargo
+echo "Установка Yazi через cargo..."
+cargo install --locked yazi-fm yazi-cli
+
+# Инструменты разработки
+echo "Установка инструментов разработки..."
+sudo dnf install -y neovim stow
+
+# Установка lazygit
+echo "Установка lazygit..."
+sudo dnf copr enable atim/lazygit -y
+sudo dnf install -y lazygit
+
+# Мониторинг и информация о системе
+echo "Установка инструментов мониторинга системы..."
+sudo dnf install -y htop
+
+# Установка fastfetch из стандартного репозитория
+echo "Установка fastfetch..."
+sudo dnf install -y fastfetch
+
+# Браузеры и веб-разработка
+echo "Установка браузеров..."
+sudo dnf install -y chromium zen-browser
+
+# Медиа и связь
+echo "Установка медиа-приложений..."
+sudo dnf install -y vlc
+
+# Установка Telegram
+echo "Установка Telegram..."
+flatpak install -y flathub org.telegram.desktop
+
+# Разработка
+echo "Установка инструментов разработки..."
+# Установка Postman (Flatpak)
+flatpak install -y flathub com.getpostman.Postman
+
+# IDE и редакторы кода
+echo "Установка IDE и редакторов кода..."
+sudo dnf install -y code
+
+# Настройка Fish как оболочки по умолчанию (опционально)
+read -p "Хотите установить Fish как оболочку по умолчанию? (y/n): " set_fish_default
+if [ "$set_fish_default" = "y" ]; then
+  chsh -s $(which fish)
+  echo "Fish установлен как оболочка по умолчанию."
+fi
+
+echo "Установка завершена!"
