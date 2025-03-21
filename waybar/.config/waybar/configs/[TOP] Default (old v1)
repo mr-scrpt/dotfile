@@ -1,8 +1,14 @@
 /* ---- 💫 https://github.com/JaKooLit 💫 ---- */
 
-// ### DEFAULT Top -Laptop ### //
+// ### DEFAULT - Top (old v1) ### //
 {
-"include": "~/.config/waybar/modules",
+"include": [
+  "$HOME/.config/waybar/Modules",
+  "$HOME/.config/waybar/ModulesWorkspaces",
+  "$HOME/.config/waybar/ModulesCustom",
+  "$HOME/.config/waybar/ModulesGroups",
+  "$HOME/.config/waybar/UserModules",
+  ],
 "layer": "top",
 //"mode": "dock",
 "exclusive": true,
@@ -47,16 +53,12 @@
 "modules-right": [
 	"network#speed",
 	"custom/separator#dot-line",
-	"custom/swaync",
+	"group/notify",
 	"tray",
 	"mpris", 
 	"custom/separator#dot-line",
 	"bluetooth",
 	"custom/separator#dot-line", 
-	"battery",
-	"custom/separator#dot-line", 
-	"backlight",
-	"custom/separator#dot-line",
 	"pulseaudio",
 	"custom/separator#dot-line",
 	"pulseaudio#microphone",

@@ -1,0 +1,865 @@
+/* Catppuccin Mocha Palette */
+
+@import "../catppuccin-themes/mocha.css";
+@keyframes gradientFlowFull {
+  0% {
+    background: linear-gradient(
+      to right,
+      @blue,
+      @red,
+      @yellow,
+      @green,
+      @mauve,
+      @teal,
+      @peach,
+      @lavender,
+      @sky,
+      @maroon
+    );
+  }
+  10% {
+    background: linear-gradient(
+      to right,
+      @sapphire,
+      @base,
+      @flamingo,
+      @yellow,
+      @maroon,
+      @green,
+      @rosewater,
+      @mauve,
+      @blue,
+      @red
+    );
+  }
+  20% {
+    background: linear-gradient(
+      to right,
+      @teal,
+      @lavender,
+      @peach,
+      @sky,
+      @sapphire,
+      @red,
+      @yellow,
+      @mauve,
+      @green,
+      @flamingo
+    );
+  }
+  30% {
+    background: linear-gradient(
+      to right,
+      @red,
+      @mauve,
+      @base,
+      @teal,
+      @sky,
+      @peach,
+      @lavender,
+      @yellow,
+      @flamingo,
+      @green
+    );
+  }
+  40% {
+    background: linear-gradient(
+      to right,
+      @flamingo,
+      @sapphire,
+      @maroon,
+      @blue,
+      @peach,
+      @yellow,
+      @mauve,
+      @red,
+      @lavender,
+      @teal
+    );
+  }
+  50% {
+    background: linear-gradient(
+      to right,
+      @mauve,
+      @green,
+      @yellow,
+      @red,
+      @blue,
+      @maroon,
+      @peach,
+      @sky,
+      @sapphire,
+      @flamingo
+    );
+  }
+  60% {
+    background: linear-gradient(
+      to right,
+      @peach,
+      @base,
+      @sky,
+      @mauve,
+      @red,
+      @flamingo,
+      @sapphire,
+      @green,
+      @yellow,
+      @maroon
+    );
+  }
+  70% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @teal,
+      @blue,
+      @flamingo,
+      @yellow,
+      @mauve,
+      @green,
+      @sapphire,
+      @peach,
+      @lavender
+    );
+  }
+  80% {
+    background: linear-gradient(
+      to right,
+      @yellow,
+      @mauve,
+      @sky,
+      @sapphire,
+      @teal,
+      @base,
+      @peach,
+      @blue,
+      @red,
+      @maroon
+    );
+  }
+  90% {
+    background: linear-gradient(
+      to right,
+      @green,
+      @red,
+      @lavender,
+      @maroon,
+      @peach,
+      @yellow,
+      @flamingo,
+      @blue,
+      @teal,
+      @sapphire
+    );
+  }
+  100% {
+    background: linear-gradient(
+      to right,
+      @blue,
+      @red,
+      @yellow,
+      @green,
+      @mauve,
+      @teal,
+      @peach,
+      @lavender,
+      @sky,
+      @maroon
+    );
+  }
+}
+
+@keyframes gradientFlowSimple {
+  0% {
+    background: linear-gradient(
+      to right,
+      @blue,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @red
+    );
+  }
+  10% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @sapphire,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @yellow,
+      @base,
+      @base
+    );
+  }
+  20% {
+    background: linear-gradient(
+      to right,
+      @blue,
+      @base,
+      @teal,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  30% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @yellow,
+      @base,
+      @base,
+      @maroon,
+      @base,
+      @base,
+      @base
+    );
+  }
+  40% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @flamingo,
+      @base,
+      @base,
+      @base,
+      @maroon,
+      @base
+    );
+  }
+  50% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @mauve,
+      @base,
+      @base,
+      @sapphire,
+      @base
+    );
+  }
+  60% {
+    background: linear-gradient(
+      to right,
+      @peach,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @rosewater,
+      @base,
+      @base,
+      @base
+    );
+  }
+  70% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @green,
+      @base,
+      @base,
+      @base,
+      @base,
+      @lavender,
+      @base,
+      @base
+    );
+  }
+  80% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @maroon,
+      @base,
+      @base,
+      @base,
+      @base,
+      @sky,
+      @base
+    );
+  }
+  90% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @yellow,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @green,
+      @base
+    );
+  }
+  100% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @blue,
+      @base,
+      @base,
+      @red,
+      @base,
+      @base,
+      @base
+    );
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background: linear-gradient(
+      to right,
+      @blue,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @red
+    );
+  }
+  5% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @lavender,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @pink,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  10% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @sapphire,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @yellow,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  15% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @sky,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @mauve,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  20% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @teal,
+      @base,
+      @blue,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  25% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @green,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @rosewater,
+      @base,
+      @base
+    );
+  }
+  30% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @yellow,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @maroon,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  35% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @peach,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @flamingo,
+      @base,
+      @base,
+      @base
+    );
+  }
+  40% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @flamingo,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @maroon,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  45% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @red,
+      @base,
+      @base,
+      @teal,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  50% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @mauve,
+      @base,
+      @base,
+      @base,
+      @base,
+      @sapphire,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  55% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @sky,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @pink,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  60% {
+    background: linear-gradient(
+      to right,
+      @peach,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @rosewater,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  65% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @blue,
+      @yellow,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  70% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @green,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @lavender,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  75% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @red,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @sapphire,
+      @base,
+      @base,
+      @base,
+      @base
+    );
+  }
+  80% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @sky,
+      @maroon,
+      @base,
+      @base
+    );
+  }
+  85% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @lavender,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @teal,
+      @base,
+      @base
+    );
+  }
+  90% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @yellow,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @green,
+      @base
+    );
+  }
+  95% {
+    background: linear-gradient(
+      to right,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @red,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @pink
+    );
+  }
+  100% {
+    background: linear-gradient(
+      to right,
+      @blue,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @base,
+      @red
+    );
+  }
+}

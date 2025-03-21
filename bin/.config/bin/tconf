@@ -19,9 +19,10 @@ create_session() {
   windows=(
     "  nvim:nvim"
     "  kitty:kitty"
-    "  tmux:tmux"
+    " 󰒋 tmux:tmux"
     "  fish:fish"
-    "  hyper:hyper"
+    "  hypr:hypr"
+    "  waybar:waybar"
     "  yazi:yazi"
     "  bin:bin"
     "  startup:startup"
