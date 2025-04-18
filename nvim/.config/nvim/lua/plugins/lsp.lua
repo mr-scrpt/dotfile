@@ -5,7 +5,7 @@ return {
     opts = function()
       local keys = require("lazyvim.plugins.lsp.keymaps").get()
       -- change a keymap
-      keys[#keys + 1] = { "K", false }
+      -- keys[#keys + 1] = { "K", false }
       keys[#keys + 1] = { "<leader>ck", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Hover" }
       keys[#keys + 1] = {
         "<leader>ci",

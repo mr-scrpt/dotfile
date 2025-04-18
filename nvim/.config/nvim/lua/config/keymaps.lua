@@ -2,10 +2,10 @@
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
 
-vim.keymap.del({ "n", "x" }, "k")
-vim.keymap.del({ "n", "x" }, "j")
-vim.keymap.del({ "n", "x" }, "<Up>")
-vim.keymap.del({ "n", "x" }, "<Down>")
+-- vim.keymap.del({ "n", "x" }, "k")
+-- vim.keymap.del({ "n", "x" }, "j")
+-- vim.keymap.del({ "n", "x" }, "<Up>")
+-- vim.keymap.del({ "n", "x" }, "<Down>")
 
 local map = LazyVim.safe_keymap_set
 local function yank_and_comment()
@@ -25,8 +25,8 @@ end
 -- vim.keymap.del({ "n", "v" }, "<S-j>")
 -- vim.keymap.del({ "n", "v" }, "J")
 
-map({ "v", "n" }, "<S-k>", "<C-u>zz", { desc = "Scroll up center" })
-map({ "v", "n" }, "<S-j>", "<C-d>zz", { desc = "Scroll down center" })
+-- map({ "v", "n" }, "<S-k>", "<C-u>zz", { desc = "Scroll up center" })
+-- map({ "v", "n" }, "<S-j>", "<C-d>zz", { desc = "Scroll down center" })
 -- map({ "v", "n" }, "K", "<C-u>zz", { desc = "Scroll up center" })
 -- map({ "v", "n" }, "J", "<C-d>zz", { desc = "Scroll down center" })
 

@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# Проверка наличия gum
+if ! command -v gum &> /dev/null; then
+    echo "Утилита gum не установлена. Пожалуйста, установите её перед использованием скрипта."
+    echo "https://github.com/charmbracelet/gum#installation"
+    exit 1
+fi
+
+# Функция для выбора каталога
+select_directory() {
+    local dirs=()
+    # Получаем только каталоги, исключая скрытые
+    for dir in */; do
+        if [[ ! "$dir" == .* ]]; then
+            dirs+=("${dir%/}")
+        fi
+    done
+    
+    if [ ${#dirs[@]} -eq 0 ]; then
+        echo "В текущей директории нет папок."
+        exit 1
+    fi
+    
+    # Определяем значение по умолчанию (src если существует)
+    local default=""
+    if [[ " ${dirs[@]} " =~ " src " ]]; then
+        default="src"
+    else
+        default="${dirs[0]}"
+    fi
+    
+    # Выбор каталога через gum
+    local selected=$(gum choose --selected="$default" "${dirs[@]}")
+    
+    if [ -z "$selected" ]; then
+        echo "Выбор отменен."
+        exit 1
+    fi
+    
+    echo "$selected"
+}
+
+# Функция для навигации по структуре проекта
+navigate_to_modules() {
+    cd "$1" || exit 1
+    
+    while true; do
+        echo "Текущий каталог: $(pwd)"
+        echo "Содержимое каталога:"
+        ls -la | grep "^d" | awk '{print $9}' | grep -v "^\."
+        
+        if gum confirm "Это каталог с модулями для копирования?"; then
+            break
+        else
+            local next_dir=$(select_directory)
+            cd "$next_dir" || exit 1
+        fi
+    done
+}
+
+# Функция для выбора модуля для копирования
+select_module_to_copy() {
+    local dirs=()
+    for dir in */; do
+        dirs+=("${dir%/}")
+    done
+    
+    if [ ${#dirs[@]} -eq 0 ]; then
+        echo "В текущей директории нет модулей для копирования."
+        exit 1
+    fi
+    
+    local selected=$(gum choose "${dirs[@]}")
+    
+    if [ -z "$selected" ]; then
+        echo "Выбор отменен."
+        exit 1
+    fi
+    
+    echo "$selected"
+}
+
+# Функция для рекурсивного переименования в содержимом файлов
+replace_content() {
+    local file="$1"
+    local old_name="$2"
+    local new_name="$3"
+    local old_upper_name=$(echo "$old_name" | tr '[:lower:]' '[:upper:]')
+    local new_upper_name=$(echo "$new_name" | tr '[:lower:]' '[:upper:]')
+    local old_capitalize=$(echo "$old_name" | sed 's/\b\(.\)/\u\1/g')
+    local new_capitalize=$(echo "$new_name" | sed 's/\b\(.\)/\u\1/g')
+    
+    # Пропускаем бинарные файлы
+    if file "$file" | grep -q "text"; then
+        # Замена с учетом регистра
+        sed -i "s/$old_upper_name/$new_upper_name/g" "$file"
+        sed -i "s/$old_capitalize/$new_capitalize/g" "$file"
+        sed -i "s/$old_name/$new_name/g" "$file"
+    fi
+}
+
+# Функция для копирования и переименования модуля
+copy_and_rename_module() {
+    local src_module="$1"
+    local entity_name="$2"
+    local new_module="$3"
+    
+    # Создаем новый каталог
+    cp -r "$src_module" "$new_module"
+    
+    # Получаем список всех файлов в новом модуле
+    find "$new_module" -type f | while read -r file; do
+        # Переименовываем файлы
+        if [[ "$file" == *"$entity_name"* ]]; then
+            new_file="${file//$entity_name/$new_module}"
+            # Создаем необходимые директории перед переименованием
+            mkdir -p "$(dirname "$new_file")"
+            mv "$file" "$new_file"
+            file="$new_file"
+        fi
+        
+        # Заменяем содержимое файлов
+        replace_content "$file" "$entity_name" "$new_module"
+        
+        # Замена с учетом CamelCase
+        local entity_camel=$(echo "$entity_name" | sed -r 's/(^|-)([a-z])/\U\2/g')
+        local new_camel=$(echo "$new_module" | sed -r 's/(^|-)([a-z])/\U\2/g')
+        replace_content "$file" "$entity_camel" "$new_camel"
+    done
+    
+    # Переименовываем директории
+    find "$new_module" -depth -type d | while read -r dir; do
+        if [[ "$dir" == *"$entity_name"* ]]; then
+            new_dir="${dir//$entity_name/$new_module}"
+            mv "$dir" "$new_dir"
+        fi
+        
+        # Переименовываем директории с CamelCase
+        local entity_camel=$(echo "$entity_name" | sed -r 's/(^|-)([a-z])/\U\2/g')
+        local new_camel=$(echo "$new_module" | sed -r 's/(^|-)([a-z])/\U\2/g')
+        
+        if [[ "$dir" == *"$entity_camel"* ]]; then
+            new_dir="${dir//$entity_camel/$new_camel}"
+            mkdir -p "$(dirname "$new_dir")"
+            mv "$dir" "$new_dir"
+        fi
+    done
+    
+    echo "Модуль успешно скопирован и переименован: $src_module -> $new_module"
+}
+
+# Главная функция
+main() {
+    echo "Утилита для копирования и переименования модулей"
+    echo "=================================================="
+    
+    # Выбираем корневой каталог проекта
+    echo "Выберите корневой каталог проекта:"
+    local root_dir=$(select_directory)
+    
+    # Переходим в выбранный каталог и навигируем до модулей
+    navigate_to_modules "$root_dir"
+    
+    # Выбираем модуль для копирования
+    echo "Выберите модуль для копирования:"
+    local src_module=$(select_module_to_copy)
+    
+    # Спрашиваем о названии сущности в исходном модуле
+    echo "Название сущности в исходном модуле (по умолчанию: $src_module):"
+    local entity_name=$(gum input --placeholder="$src_module" --value="$src_module")
+    if [ -z "$entity_name" ]; then
+        entity_name="$src_module"
+    fi
+    
+    # Запрашиваем название для нового модуля
+    echo "Введите название для нового модуля:"
+    local new_module=$(gum input --placeholder="Введите название нового модуля")
+    
+    if [ -z "$new_module" ]; then
+        echo "Название нового модуля не может быть пустым."
+        exit 1
+    fi
+    
+    # Проверяем, не существует ли уже такой модуль
+    if [ -d "$new_module" ]; then
+        echo "Модуль с именем '$new_module' уже существует."
+        if ! gum confirm "Хотите перезаписать существующий модуль?"; then
+            echo "Операция отменена."
+            exit 1
+        fi
+        rm -rf "$new_module"
+    fi
+    
+    # Копируем и переименовываем модуль
+    copy_and_rename_module "$src_module" "$entity_name" "$new_module"
+}
+
+# Запуск главной функции
+main

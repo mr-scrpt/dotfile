@@ -16,24 +16,24 @@
 
 window#waybar {
   border-radius: 5px;
-  animation: gradientFlowFull 30s ease infinite;
+  animation: solidColorFlow 20s ease infinite;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 .modules-left {
   background: @base;
   border-radius: 5px;
-  margin: 14px;
+  margin: 20px;
 }
 .modules-center {
   background: @base;
   border-radius: 5px;
-  margin: 14px;
+  margin: 20px;
 }
 .modules-right {
   background: @base;
   /* animation: gradientSimple 20s ease both infinite; */
   border-radius: 5px;
-  margin: 14px;
+  margin: 20px;
 }
 tooltip {
   /* background: @base; */

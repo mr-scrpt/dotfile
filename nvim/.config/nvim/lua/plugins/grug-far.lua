@@ -1,10 +1,11 @@
 return {
   "MagicDuck/grug-far.nvim",
   opts = { headerMaxWidth = 80 },
+  -- lazy = false,
   cmd = "GrugFar",
   keys = {
     {
-      "<leader>sra",
+      "<leader>srA",
       function()
         local grug = require("grug-far")
         local ext = vim.bo.buftype == "" and vim.fn.expand("%:e")
@@ -16,10 +17,10 @@ return {
         })
       end,
       mode = { "n", "v" },
-      desc = "Search and Replace",
+      desc = "S&R in !ALL! files",
     },
     {
-      "<leader>srfc",
+      "<leader>srfcs",
       function()
         local grug = require("grug-far")
         local ext = vim.fn.expand("<cword>")
@@ -27,17 +28,17 @@ return {
         grug.open({ prefills = { search = ext, paths = path } })
       end,
       mode = { "n", "v" },
-      desc = "Search and Replace",
+      desc = "S&R current word in current file",
     },
     {
-      "<leader>srf",
+      "<leader>srfca",
       function()
         local grug = require("grug-far")
         local ext = vim.fn.expand("%")
         grug.open({ prefills = { paths = ext } })
       end,
       mode = { "n", "v" },
-      desc = "Search and Replace",
+      desc = "S&R in current file",
     },
   },
 }

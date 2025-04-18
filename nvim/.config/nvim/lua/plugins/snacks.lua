@@ -2,10 +2,10 @@ return {
   "folke/snacks.nvim",
   priority = 1000,
   lazy = false,
-  keys = {
-    { "<leader>E", "<leader>fe", desc = "Explorer Snacks (root dir)", remap = true },
-    { "<leader>e", "<leader>fE", desc = "Explorer Snacks (cwd)", remap = true },
-  },
+  -- keys = {
+  --   { "<leader>E", "<leader>fe", desc = "Explorer Snacks (root dir)", remap = true },
+  --   { "<leader>e", "<leader>fE", desc = "Explorer Snacks (cwd)", remap = true },
+  -- },
   opts = {
     picker = {
       ----@class snacks.picker.formatters.Config

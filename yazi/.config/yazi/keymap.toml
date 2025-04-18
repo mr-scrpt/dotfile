@@ -263,13 +263,18 @@ keymap = [
   { on = [
     "g",
     "d",
-    "d",
-  ], run = "cd ~/Downloads", desc = "Goto downloads" },
+    "b",
+  ], run = "cd ~/Downloads/browser/", desc = "Goto downloads browser" },
   { on = [
     "g",
     "d",
     "t",
-  ], run = "cd ~/Downloads/+telegram", desc = "Goto telegram" },
+  ], run = "cd ~/Downloads/telegram", desc = "Goto downloads telegram" },
+  { on = [
+    "g",
+    "d",
+    "u",
+  ], run = "cd ~/Downloads/torrent/", desc = "Goto downloads torrent" },
   { on = [
     "g",
     "p",
