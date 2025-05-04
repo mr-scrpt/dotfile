@@ -1,0 +1,53 @@
+return {
+  -- "huggingface/llm.nvim",
+  -- -- enabled = false,
+  -- event = "VeryLazy",
+  -- keys = {
+  --   {
+  --     "<c-j>",
+  --     function()
+  --       require("llm.completion").complete()
+  --     end,
+  --     mode = "i",
+  --     desc = "complete",
+  --   },
+  -- },
+  --
+  -- opts = {
+  --   -- lsp = {
+  --   --   bin_path = "/usr/local/bin/llm-ls",
+  --   --   cmd_env = { LLM_LOG_LEVEL = "DEBUG" },
+  --   -- },
+  --
+  --   lsp = {
+  --     bin_path = vim.api.nvim_call_function("stdpath", { "data" }) .. "/mason/bin/llm-ls",
+  --   },
+  --   backend = "openai",
+  --
+  --   model = "qwen2.5-coder-14b-instruct",
+  --
+  --   url = "http://192.168.1.132:1234/v1", -- llm-ls uses "/api/generate"
+  --   fim = {
+  --
+  --     enabled = false,
+  --
+  --     -- enabled = true,
+  --     -- prefix = "<｜fim▁begin｜>",
+  --     -- suffix = "<｜fim▁hole｜>",
+  --     -- middle = "<｜fim▁end｜>",
+  --   },
+  --
+  --   request_body = {
+  --     -- Modelfile options for the model you use
+  --     temperature = 0.2,
+  --     top_p = 0.95,
+  --     -- options = {
+  --     --   temperature = 0.2,
+  --     --   top_p = 0.95,
+  --     -- },
+  --   },
+  --   context_window = 7200, -- Добавьте параметр контекстного окна, если известен для вашей модели
+  --
+  --   enable_completion = true, -- Явно включите автодополнение
+  -- },
+}

@@ -277,6 +277,11 @@ keymap = [
   ], run = "cd ~/Downloads/torrent/", desc = "Goto downloads torrent" },
   { on = [
     "g",
+    "d",
+    "f",
+  ], run = "cd ~/dotfile/", desc = "Goto dotfile" },
+  { on = [
+    "g",
     "p",
   ], run = "cd ~/Project", desc = "Goto projects" },
   { on = [
