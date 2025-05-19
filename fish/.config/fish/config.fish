@@ -18,6 +18,7 @@ if status is-interactive
         alias ll "eza -l -g --icons"
         alias lla "ll -a"
     end
+    abbr -a !! 'eval sudo $history[1]'
 
     command -qv nvim && alias v nvim
 
@@ -42,7 +43,7 @@ end
 # pnpm
 set -gx PNPM_HOME "/home/mr/.local/share/pnpm"
 if not string match -q -- $PNPM_HOME $PATH
-  set -gx PATH "$PNPM_HOME" $PATH
+    set -gx PATH "$PNPM_HOME" $PATH
 end
 # pnpm end
 
@@ -52,4 +53,3 @@ source ~/.config/fish/private.env
 # Added by LM Studio CLI (lms)
 set -gx PATH $PATH /home/mr/.lmstudio/bin
 # End of LM Studio CLI section
-

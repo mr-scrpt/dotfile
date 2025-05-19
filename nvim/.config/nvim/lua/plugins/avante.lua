@@ -1,138 +1,149 @@
-return {
-  "yetone/avante.nvim",
-  event = "VeryLazy",
-  version = false,
-  opts = {
-    provider = "qwen3-14b",
-    claude = {
-      endpoint = "https://api.anthropic.com",
-      model = "claude-3-5-sonnet-20241022",
-      timeout = 30000, -- Timeout in milliseconds
-      temperature = 0,
-      max_tokens = 4096,
-    },
-    vendors = {
-
-      ["qwen3-32b"] = {
-        __inherited_from = "openai",
-        model = "qwen3-32b",
-        endpoint = "http://localhost:1234/v1/",
-        -- api_key = "sk-no-key-required",
-        options = {
-          num_ctx = 6000,
-        },
-      },
-      ["qwen3-14b"] = {
-        __inherited_from = "openai",
-        model = "qwen3-14b",
-        endpoint = "http://localhost:1234/v1/",
-        -- api_key = "sk-no-key-required",
-        -- options = {
-        --   num_ctx = 6000,
-        -- },
-      },
-      ["glm-4-32b-0414"] = {
-        __inherited_from = "openai",
-        model = "glm-4-32b-0414",
-        endpoint = "http://localhost:1234/v1/",
-      },
-      ["qwen2.5-coder-14b-instruct"] = {
-        __inherited_from = "openai",
-        model = "qwen2.5-coder-14b-instruct",
-        endpoint = "http://192.168.1.132:1234/v1",
-        -- api_key = "sk-no-key-required",
-        -- options = {
-        --   num_ctx = 7500,
-        -- },
-      },
-      ["bartowski/deepseek-coder-v2-lite-instruct"] = {
-        __inherited_from = "openai",
-        model = "bartowski/deepseek-coder-v2-lite-instruct",
-        endpoint = "http://localhost:1234/v1/",
-        -- api_key = "sk-no-key-required",
-        -- options = {
-        --   num_ctx = 7600,
-        -- },
-      },
-    },
-    behaviour = {
-      enable_cursor_planning_mode = true,
-      -- auto_suggestions = true,
-      -- auto_suggestions_respect_ignore = true,
-    },
-    mappings = {
-      -- suggestion = {
-      --   accept = "<M-CR>",
-      --   next = "<M-n>",
-      --   prev = "<M-p>",
-      --   dismiss = "<C-]>",
-      -- },
-    },
-    windows = {
-      sidebar_header = {
-        rounded = false,
-        align = "left",
-      },
-      position = "left",
-    },
-
-    -- system_prompt = function()
-    --   local hub = require("mcphub").get_hub_instance()
-    --   return hub:get_active_servers_prompt()
-    -- end,
-    --
-    -- custom_tools = function()
-    --   return {
-    --     require("mcphub.extensions.avante").mcp_tool(),
-    --   }
-    -- end,
-    -- Disable built-in tools that might conflict with MCP servers
-    -- disabled_tools = {
-    --   "list_files",
-    --   "search_files",
-    --   "read_file",
-    --   "create_file",
-    --   "rename_file",
-    --   "delete_file",
-    --   "create_dir",
-    --   "rename_dir",
-    --   "delete_dir",
-    --   "bash",
-    -- },
-  },
-  build = "make",
-  dependencies = {
-    "nvim-treesitter/nvim-treesitter",
-    "stevearc/dressing.nvim",
-    "nvim-lua/plenary.nvim",
-    "MunifTanjim/nui.nvim",
-    "echasnovski/mini.pick",
-    "nvim-telescope/telescope.nvim",
-    "hrsh7th/nvim-cmp",
-    "ibhagwan/fzf-lua",
-    "nvim-tree/nvim-web-devicons",
-    "zbirenbaum/copilot.lua",
-    "ravitemer/mcphub.nvim", -- Add MCP Hub as a dependency
-    {
-      "HakonHarnes/img-clip.nvim",
-      event = "VeryLazy",
-      opts = {
-        default = {
-          embed_image_as_base64 = false,
-          prompt_for_file_name = false,
-          drag_and_drop = {
-            insert_mode = true,
-          },
-          use_absolute_path = true,
-        },
-      },
-    },
-    {
-      "MeanderingProgrammer/render-markdown.nvim",
-      opts = {
-        file_types = { "markdown", "Avante" },
-      },
-      ft = { "markdown", "Avante" },
-    },
-  },
-}
+return {}
+-- return {
+--
+--   "yetone/avante.nvim",
+--   event = "VeryLazy",
+--   version = false,
+--   opts = {
+--     provider = "qwen3-30b-a3b@q6_k",
+--     claude = {
+--       endpoint = "https://api.anthropic.com",
+--       model = "claude-3-5-sonnet-20241022",
+--       timeout = 30000, -- Timeout in milliseconds
+--       temperature = 0,
+--       max_tokens = 4096,
+--     },
+--     vendors = {
+--       ["qwen3-30b-a3b@q6_k"] = {
+--         __inherited_from = "openai",
+--         model = "qwen3-30b-a3b@q6_k",
+--         endpoint = "http://localhost:1234/v1/",
+--         -- api_key = "sk-no-key-required",
+--         -- options = {
+--         --   num_ctx = 6000,
+--         -- },
+--       },
+--
+--       ["qwen3-32b"] = {
+--         __inherited_from = "openai",
+--         model = "qwen3-32b",
+--         endpoint = "http://localhost:1234/v1/",
+--         -- api_key = "sk-no-key-required",
+--         options = {
+--           num_ctx = 6000,
+--         },
+--       },
+--       ["qwen3-14b"] = {
+--         __inherited_from = "openai",
+--         model = "qwen3-14b",
+--         endpoint = "http://localhost:1234/v1/",
+--         -- api_key = "sk-no-key-required",
+--         -- options = {
+--         --   num_ctx = 6000,
+--         -- },
+--       },
+--       ["glm-4-32b-0414"] = {
+--         __inherited_from = "openai",
+--         model = "glm-4-32b-0414",
+--         endpoint = "http://localhost:1234/v1/",
+--       },
+--       ["qwen2.5-coder-14b-instruct"] = {
+--         __inherited_from = "openai",
+--         model = "qwen2.5-coder-14b-instruct",
+--         endpoint = "http://192.168.1.132:1234/v1",
+--         -- api_key = "sk-no-key-required",
+--         -- options = {
+--         --   num_ctx = 7500,
+--         -- },
+--       },
+--       ["bartowski/deepseek-coder-v2-lite-instruct"] = {
+--         __inherited_from = "openai",
+--         model = "bartowski/deepseek-coder-v2-lite-instruct",
+--         endpoint = "http://localhost:1234/v1/",
+--         -- api_key = "sk-no-key-required",
+--         -- options = {
+--         --   num_ctx = 7600,
+--         -- },
+--       },
+--     },
+--     behaviour = {
+--       enable_cursor_planning_mode = true,
+--       -- auto_suggestions = true,
+--       -- auto_suggestions_respect_ignore = true,
+--     },
+--     mappings = {
+--       -- suggestion = {
+--       --   accept = "<M-CR>",
+--       --   next = "<M-n>",
+--       --   prev = "<M-p>",
+--       --   dismiss = "<C-]>",
+--       -- },
+--     },
+--     windows = {
+--       sidebar_header = {
+--         rounded = false,
+--         align = "left",
+--       },
+--       position = "left",
+--     },
+--
+--     -- system_prompt = function()
+--     --   local hub = require("mcphub").get_hub_instance()
+--     --   return hub:get_active_servers_prompt()
+--     -- end,
+--     --
+--     -- custom_tools = function()
+--     --   return {
+--     --     require("mcphub.extensions.avante").mcp_tool(),
+--     --   }
+--     -- end,
+--     -- Disable built-in tools that might conflict with MCP servers
+--     -- disabled_tools = {
+--     --   "list_files",
+--     --   "search_files",
+--     --   "read_file",
+--     --   "create_file",
+--     --   "rename_file",
+--     --   "delete_file",
+--     --   "create_dir",
+--     --   "rename_dir",
+--     --   "delete_dir",
+--     --   "bash",
+--     -- },
+--   },
+--   build = "make",
+--   dependencies = {
+--     "nvim-treesitter/nvim-treesitter",
+--     "stevearc/dressing.nvim",
+--     "nvim-lua/plenary.nvim",
+--     "MunifTanjim/nui.nvim",
+--     "echasnovski/mini.pick",
+--     "nvim-telescope/telescope.nvim",
+--     "hrsh7th/nvim-cmp",
+--     "ibhagwan/fzf-lua",
+--     "nvim-tree/nvim-web-devicons",
+--     "zbirenbaum/copilot.lua",
+--     "ravitemer/mcphub.nvim", -- Add MCP Hub as a dependency
+--     {
+--       "HakonHarnes/img-clip.nvim",
+--       event = "VeryLazy",
+--       opts = {
+--         default = {
+--           embed_image_as_base64 = false,
+--           prompt_for_file_name = false,
+--           drag_and_drop = {
+--             insert_mode = true,
+--           },
+--           use_absolute_path = true,
+--         },
+--       },
+--     },
+--     {
+--       "MeanderingProgrammer/render-markdown.nvim",
+--       opts = {
+--         file_types = { "markdown", "Avante" },
+--       },
+--       ft = { "markdown", "Avante" },
+--     },
+--   },
+-- }
