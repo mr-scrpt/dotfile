@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Extract script with interactive folder name selection
+# Usage: extract.sh <archive_path>
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <archive_path>"
+    exit 1
+fi
+
+ARCHIVE_PATH="$1"
+ARCHIVE_NAME=$(basename "$ARCHIVE_PATH")
+
+# Remove extensions to get default folder name
+DEFAULT_NAME="${ARCHIVE_NAME%.*}"
+# Handle .tar.gz, .tar.bz2, etc.
+DEFAULT_NAME="${DEFAULT_NAME%.tar}"
+
+# Clear screen and show dialog
+clear
+echo "╭─────────────────────────────────────────────────────────────╮"
+echo "│                    Extract Archive                          │"
+echo "├─────────────────────────────────────────────────────────────┤"
+echo "│ Archive: $ARCHIVE_NAME"
+echo "│"
+echo "│ Enter folder name (or press Enter for default):"
+echo "╰─────────────────────────────────────────────────────────────╯"
+echo
+printf "Folder name [$DEFAULT_NAME]: "
+
+# Read user input
+read -r USER_INPUT
+
+# Use default if empty
+if [ -z "$USER_INPUT" ]; then
+    FOLDER_NAME="$DEFAULT_NAME"
+else
+    FOLDER_NAME="$USER_INPUT"
+fi
+
+# Check if folder exists
+if [ -d "$FOLDER_NAME" ]; then
+    echo
+    echo "⚠️  Folder '$FOLDER_NAME' already exists."
+    printf "Continue anyway? [y/N]: "
+    read -r CONFIRM
+    if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+        echo "Extraction cancelled."
+        read -p "Press Enter to continue..."
+        exit 0
+    fi
+fi
+
+# Extract the archive
+echo
+echo "🔄 Extracting '$ARCHIVE_NAME' to '$FOLDER_NAME'..."
+
+if ouch d -y "$ARCHIVE_PATH" -d "$FOLDER_NAME"; then
+    echo "✅ Extraction completed successfully!"
+    echo "📁 Files extracted to: $FOLDER_NAME"
+else
+    echo "❌ Extraction failed!"
+    echo "Please check the archive file and try again."
+fi
+
+echo
+read -p "Press Enter to continue..."
