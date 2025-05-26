@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+WALLPAPER_DIR="$HOME/.config/hypr/theme/walls"
+HYPRPAPER_CONFIG="$HOME/.config/hypr/hyprpaper.conf"
+
+random=$(fd --base-directory "$WALLPAPER_DIR" --type f . | shuf -n 1)
+WALLPAPER="$WALLPAPER_DIR/$random"
+
+if pgrep -x "hyprpaper" >/dev/null; then
+  echo "preload = $WALLPAPER" >"$HYPRPAPER_CONFIG"
+  echo "wallpaper = HDMI-A-2,$WALLPAPER" >>"$HYPRPAPER_CONFIG"
+  echo "wallpaper = DP-2,$WALLPAPER" >>"$HYPRPAPER_CONFIG"
+
+  hyprctl hyprpaper preload "$WALLPAPER"
+  hyprctl hyprpaper wallpaper "HDMI-A-2,$WALLPAPER"
+  hyprctl hyprpaper wallpaper "DP-2,$WALLPAPER"
+
+  notify-send "Wallpaper Changed" -i "$WALLPAPER" --app-name=Wallpaper
+elif pgrep -x "swww" >/dev/null; then
+  swww img "$WALLPAPER" \
+    --transition-bezier 0.5,1.19,.8,.4 \
+    --transition-type wipe \
+    --transition-duration 2 \
+    --transition-fps 75 && notify-send "Wallpaper Changed" -i "$WALLPAPER" --app-name=Wallpaper
+fi

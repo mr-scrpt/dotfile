@@ -1,0 +1,8 @@
+{
+  "name": "blink",
+  "include": [
+    "~/.config/waybar/modules/hyprland-window.jsonc",
+
+  ],
+  "modules-left": ["hyprland/window"],
+}

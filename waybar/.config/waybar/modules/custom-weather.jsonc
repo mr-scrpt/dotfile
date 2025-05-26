@@ -1,0 +1,13 @@
+{
+  "custom/weather": {
+    "exec-if": "which wttrbar",
+    "exec": "wttrbar --location Kharkiv",
+    "restart-interval": 300,
+    "tooltip": true,
+    "format": "{}°",
+    "return-type": "json",
+    "on-click": "kitty --hold --class center-float fish -c 'wttr Kharkiv'",
+    "on-click-right": "kitty --hold --class center-float fish -c 'wttr -v2 Kharkiv'",
+    "on-click-middle": "xdg-open https://wttr.in/kharkiv",
+  },
+}
