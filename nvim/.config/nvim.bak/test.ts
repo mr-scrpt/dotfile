@@ -1,1 +1,0 @@
-const t = () => ({ ooo: "aaa" });

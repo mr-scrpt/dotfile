@@ -4,7 +4,9 @@
 
 prepend_keymap = [
   # Drag and Drop
-  { on = ["<C-n>"], run = '''
+  { on = [
+    "<C-n>",
+  ], run = '''
 	shell 'ripdrag "$@" -x 2>/dev/null &' --confirm
 	''' },
   { on = "<Esc>", run = "escape", desc = "Exit visual mode, clear selected, or cancel search" },
@@ -17,7 +19,7 @@ prepend_keymap = [
     "c",
     "a",
   ], run = "plugin ouch", desc = "Archive selected files" },
-   # Visual mode
+  # Visual mode
   { on = "v", run = "visual_mode", desc = "Enter visual mode (selection mode)" },
   { on = "V", run = "visual_mode --unset", desc = "Enter visual mode (unset mode)" },
 
@@ -42,7 +44,10 @@ prepend_keymap = [
   { on = "S", run = "search --via=fd", desc = "Search files by name using fd" },
   { on = [
     "y",
-  ], run = ['shell -- for path in "$@"; do echo "file://$path"; done | wl-copy -t text/uri-list', 'yank'], desc = "Copy to clipboard" },
+  ], run = [
+    'shell -- for path in "$@"; do echo "file://$path"; done | wl-copy -t text/uri-list',
+    'yank',
+  ], desc = "Copy to clipboard" },
   { on = "A", run = "create --dir", desc = "Create a dir" },
   { on = [
     "g",
@@ -52,7 +57,7 @@ prepend_keymap = [
   { on = "L", run = "tab_switch 1 --relative", desc = "Switch to the next tab" },
   { on = "<", run = "tab_swap -1", desc = "Swap current tab with previous tab" },
   { on = ">", run = "tab_swap 1", desc = "Swap current tab with next tab" },
-    { on = [
+  { on = [
     "g",
     "r",
   ], run = "cd /", desc = "Go root" },
@@ -92,7 +97,7 @@ prepend_keymap = [
   { on = [
     "g",
     "p",
-  ], run = "cd ~/Project", desc = "Goto projects" },
+  ], run = "cd ~/project", desc = "Goto projects" },
   { on = [
     "g",
     "<Space>",
@@ -110,10 +115,8 @@ append_keymap = [
 ]
 
 
-
 [completion]
 prepend_keymap = [
   { on = "<C-k>", run = "arrow -1", desc = "Move cursor up" },
   { on = "<C-j>", run = "arrow 1", desc = "Move cursor down" },
 ]
-

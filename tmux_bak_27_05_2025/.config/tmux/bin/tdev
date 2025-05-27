@@ -1,0 +1,22 @@
+#!/bin/sh
+tmux new -s "$1" -d 'nvm use latest && nvim'
+tmux rename-window ' editor'
+
+tmux new-window;
+tmux rename-window ' server'
+tmux send-keys -t "$pane" 'nvm use latest' Enter
+
+tmux new-window;
+tmux rename-window ' terminal'
+tmux send-keys -t "$pane" 'nvm use latest' Enter
+
+tmux new-window;
+tmux rename-window ' file-manager'
+tmux send-keys -t "$pane" 'lfcd' Enter
+
+tmux select-window -t 1
+# tmux split-window -v 'ipython'
+# tmux split-window -h
+# tmux new-window 'mutt'
+tmux -2 attach-session -d
+
