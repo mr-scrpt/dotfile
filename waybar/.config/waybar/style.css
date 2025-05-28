@@ -95,29 +95,21 @@
   padding: 2px;
   box-shadow: none;
   border: 2px solid transparent;
+  font-size: 12px;
 }
+.hdmi #clock{
+  font-size: 12px
+}
+
 .hdmi #custom-arch {
   margin: 2px 10px;
 
 }
 
 
-
-/* window#waybar>box .hdmi{ */
-/*     padding:10px; */
-/* } */
-
-
 window#waybar {
   color: @text;
-  /* padding-left: 20px; */
-  /* padding-right:20px; */
-  /* margin-left: 20px; */
-  /* margin-left: 20px; */
-
   background: transparent;
-  /* padding-top:20px; */
-  /* background-color: @base; */
 }
 
 window#waybar.hdmi {
@@ -141,6 +133,10 @@ window#waybar.hidden {
 #workspaces * {
   font-size: 13px;
 }
+.hdmi #workspaces * {
+  font-size: 11px;
+}
+
 
 #workspaces button {
   margin: 0 15px;
@@ -149,13 +145,11 @@ window#waybar.hidden {
 
 #workspaces button label {
   color: @lavender;
-  /* font-weight: bolder; */
   transition: all 0.5s cubic-bezier(0.55, -0.68, 0.48, 1.68);
 }
 
 #workspaces button.active label {
   color: @base;
-  /* font-weight: bolder; */
   
 }
 
@@ -188,7 +182,7 @@ window#waybar.hidden {
   margin-left: 3px;
   margin-top: 3px;
   margin-bottom: 3px;
-  padding: 0 10px;
+  padding: 4px 6px;
   font-weight: bolder;
   min-width: 20px;
   color: @base;
@@ -203,7 +197,6 @@ window#waybar.hidden {
   padding-right: 12px;
   padding-left: 12px;
   box-shadow: 3px 3px 1px 1px alpha(@shadow, 0.7);
-  /* padding-bottom: 3px; */
   margin-top: 5px;
   margin-bottom: 5px;
   background: linear-gradient(

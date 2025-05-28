@@ -86,3 +86,8 @@ if type -q vivid
     set -xg LS_COLORS (vivid generate catppuccin-macchiato)
 end
 set -xg STARSHIP_LOG error
+
+# Added by LM Studio CLI (lms)
+set -gx PATH $PATH /home/mr/.lmstudio/bin
+# End of LM Studio CLI section
+set --universal nvm_default_version v22.16.0
