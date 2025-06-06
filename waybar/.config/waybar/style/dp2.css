@@ -1,0 +1,382 @@
+@import "./gradient.css";
+@import "./color.css";
+
+* {
+  font-family: JetBrainsMono Nerd Font;
+  font-size: 13px;
+  min-height: 0;
+}
+
+/*.dp2 Monitor Styles */
+.dp2 #battery,
+.dp2 #cava,
+.dp2 #custom-cava,
+.dp2 #custom-clipboard,
+.dp2 #custom-notifications,
+.dp2 #custom-arch,
+.dp2 #custom-gpu-usage,
+.dp2 #custom-updates,
+.dp2 #mode,
+.dp2 #cpu,
+.dp2 #memory,
+.dp2 #temperature,
+.dp2 #custom-music,
+.dp2 #custom-fans,
+.dp2 #clock,
+.dp2 #idle_inhibitor,
+.dp2 #bluetooth,
+.dp2 #custom-wf-recorder,
+.dp2 #pulseaudio,
+.dp2 #backlight,
+.dp2 #network,
+.dp2 #tray,
+.dp2 #custom-power-menu,
+.dp2 #language,
+.dp2 #window,
+.dp2 #custom-weather,
+.dp2 #custom-weather.severe,
+.dp2 #custom-weather.sunnyDay,
+.dp2 #custom-weather.clearNight,
+.dp2 #custom-weather.cloudyFoggyDay,
+.dp2 #custom-weather.cloudyFoggyNight,
+.dp2 #custom-weather.rainyDay,
+.dp2 #custom-weather.rainyNight,
+.dp2 #custom-weather.showyIcyDay,
+.dp2 #custom-weather.snowyIcyNight,
+.dp2 #custom-weather.default {
+  background-color: alpha(@base, 0.9);
+  padding: 0 10px;
+  margin: 2px 4px 5px 4px;
+  border-radius: 10px;
+  box-shadow: 3px 3px 1px 1px alpha(@shadow, 0.7);
+  border: 2px solid @border;
+  background-clip: padding-box;
+}
+
+.dp2 window#waybar {
+  color: @text;
+  background: transparent;
+}
+
+.dp2 .blink {
+  border-radius: 5px;
+  animation: solidColorFlow 20s ease infinite;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.dp2 window#waybar.hidden {
+  opacity: 0;
+}
+
+.dp2 #workspaces * {
+  font-size: 13px;
+}
+
+.dp2 #workspaces button {
+  margin: 0 15px;
+}
+
+.dp2 #workspaces button label {
+  color: @lavender;
+  transition: all 0.5s cubic-bezier(0.55, -0.68, 0.48, 1.68);
+}
+
+.dp2 #workspaces button.active label {
+  color: @base;
+}
+
+.dp2 #workspaces button.urgent {
+  background-color: @red;
+}
+
+.dp2 #workspaces button.urgent label {
+  color: @base;
+  font-weight: bolder;
+}
+
+.dp2 #workspaces {
+  background-color: alpha(@base, 0.9);
+  border: 2px solid @border;
+  padding: 0 4px;
+  margin: 2px 4px 2px 4px;
+  box-shadow: 3px 3px 1px 1px alpha(@shadow, 0.7);
+  border-radius: 10px;
+  background-clip: padding-box;
+}
+
+.dp2 #workspaces button {
+  border-radius: 15px;
+  margin-right: 3px;
+  margin-left: 3px;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  padding: 4px 6px;
+  font-weight: bolder;
+  min-width: 20px;
+  color: @base;
+  transition: all 0.3s cubic-bezier(0.55, -0.68, 0.48, 1.682);
+}
+
+.dp2 #workspaces button.active {
+  padding-right: 12px;
+  padding-left: 12px;
+  box-shadow: 3px 3px 1px 1px alpha(@shadow, 0.7);
+  /* margin-top: 5px; */
+  /* margin-bottom: 5px; */
+  background: linear-gradient(
+    52deg,
+    rgba(139, 213, 202, 1) 0%,
+    rgba(138, 173, 244, 1) 30%,
+    rgba(183, 189, 248, 1) 48%,
+    rgba(198, 160, 246, 1) 77%,
+    rgba(238, 153, 160, 1) 100%
+  );
+  background-size: 400% 400%;
+  transition: all 0.3s cubic-bezier(0.55, -0.68, 0.48, 1.682);
+  color: @mauve;
+  border-radius: 12px;
+}
+
+.dp2 #workspaces button:hover {
+  background-color: @surface0;
+}
+
+.dp2 #workspaces button.focused:hover {
+  background-color: alpha(@base, 0.9);
+}
+
+.dp2 #workspaces button.focused:hover label {
+  color: @text;
+}
+
+/* Individual Modules */
+.dp2 #battery {
+  color: @mauve;
+}
+
+.dp2 #battery.warning {
+  color: @yellow;
+}
+
+.dp2 #battery.critical {
+  color: @peach;
+}
+
+.dp2 #battery.urgent {
+  color: @red;
+}
+
+.dp2 #battery.charging,
+.dp2 #battery.plugged {
+  background-color: @green;
+  color: @mantle;
+}
+
+.dp2 #battery.critical:not(.charging) {
+  background-color: @red;
+  color: @mantle;
+  animation-name: blink;
+  animation-duration: 0.5s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.dp2 #custom-cava {
+  color: @lavender;
+  border-radius: 12px;
+}
+
+.dp2 #cpu {
+  color: @blue;
+  transition: all 0.5s cubic-bezier(0.55, -0.68, 0.48, 1.68);
+}
+
+.dp2 #memory {
+  color: @green;
+  transition: all 0.5s cubic-bezier(0.55, -0.68, 0.48, 1.68);
+}
+
+.dp2 #custom-notifications {
+  color: @yellow;
+}
+
+.dp2 #custom-weather {
+  color: @red;
+}
+
+.dp2 #custom-updates {
+  color: @teal;
+}
+
+.dp2 #custom-wf-recorder {
+  color: @red;
+}
+
+.dp2 #custom-gpu-temp {
+  color: @peach;
+}
+
+.dp2 #custom-gpu-usage {
+  color: @teal;
+}
+
+.dp2 #custom-power-menu {
+  color: @red;
+}
+
+.dp2 #temperature {
+  color: @peach;
+}
+
+.dp2 #temperature.critical {
+  background-color: @red;
+  color: @mantle;
+}
+
+.dp2 #bluetooth {
+  color: @blue;
+}
+
+.dp2 #window {
+  background: linear-gradient(
+    52deg,
+    rgba(139, 213, 202, 1) 0%,
+    rgba(138, 173, 244, 1) 30%,
+    rgba(183, 189, 248, 1) 48%,
+    rgba(198, 160, 246, 1) 77%,
+    rgba(238, 153, 160, 1) 100%
+  );
+  background-size: 400% 400%;
+  text-shadow: 0px 0px 5px @lavender;
+  font-weight: bold;
+  color: @mantle;
+  transition: all 0.3s cubic-bezier(0.55, -0.68, 0.48, 1.682);
+  border: none;
+}
+
+.dp2 #custom-music {
+  background: @lavender;
+  background: linear-gradient(
+    52deg,
+    rgba(139, 213, 202, 1) 0%,
+    rgba(138, 173, 244, 1) 30%,
+    rgba(183, 189, 248, 1) 48%,
+    rgba(198, 160, 246, 1) 77%,
+    rgba(238, 153, 160, 1) 100%
+  );
+  background-size: 400% 400%;
+  text-shadow: 0px 0px 5px @border;
+  font-weight: bold;
+  color: @mantle;
+  transition: all 0.3s cubic-bezier(0.55, -0.68, 0.48, 1.682);
+  border: none;
+}
+
+.dp2 #custom-fans {
+  color: @green;
+}
+
+.dp2 #clock {
+  color: @lavender;
+}
+
+.dp2 #clock.cl2 {
+  background: @lavender;
+  background: linear-gradient(
+    52deg,
+    rgba(139, 213, 202, 1) 0%,
+    rgba(138, 173, 244, 1) 30%,
+    rgba(183, 189, 248, 1) 48%,
+    rgba(198, 160, 246, 1) 77%,
+    rgba(238, 153, 160, 1) 100%
+  );
+  background-size: 400% 400%;
+  text-shadow: 0px 0px 5px @border;
+  font-weight: bold;
+  color: @mantle;
+  transition: all 0.3s cubic-bezier(0.55, -0.68, 0.48, 1.682);
+  border: none;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.dp2 #language {
+  color: @blue;
+}
+
+.dp2 #pulseaudio {
+  color: @pink;
+}
+
+.dp2 #pulseaudio.muted {
+  background-color: @red;
+  color: @mantle;
+}
+
+.dp2 #pulseaudio.source-muted {
+  background-color: @peach;
+  color: @mantle;
+}
+
+.dp2 #backlight {
+  color: @blue;
+}
+
+.dp2 #network {
+  color: @sky;
+}
+
+.dp2 #network.disconnected {
+  background-color: @red;
+  color: @mantle;
+}
+
+.dp2 #network.linked {
+  background-color: @peach;
+  color: @mantle;
+}
+
+/* Animation Keyframes */
+@keyframes blink {
+  to {
+    background-color: alpha(@base, 0.9);
+    color: @red;
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient_f {
+  0% {
+    background-position: 0% 200%;
+  }
+
+  50% {
+    background-position: 200% 0%;
+  }
+
+  100% {
+    background-position: 400% 200%;
+  }
+}
+
+@keyframes gradient_f_nh {
+  0% {
+    background-position: 0% 200%;
+  }
+
+  100% {
+    background-position: 200% 200%;
+  }
+}

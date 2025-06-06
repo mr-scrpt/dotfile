@@ -1,6 +1,3 @@
--- implet
--- IMPLET
--- ImpLet
 return {
   "nvim-neo-tree/neo-tree.nvim",
 
@@ -226,7 +223,7 @@ return {
     end
     map("<leader>e", ":Neotree float reveal<CR>", "NeoTree [E]xplore")
     map("<leader>E", ":Neotree right reveal<CR>", "NeoTree [E]xplore Right")
-    map("<leader>o", ":Neotree float git_status<CR>", "NeoTree [O]pen Git Status")
+    -- map("<leader>o", ":Neotree float git_status<CR>", "NeoTree [O]pen Git Status")
     -- ['b'] = function() vim.api.nvim_exec('Neotree focus buffers left', true) end,
     -- keymap.set("n", "<leader>e", ":Neotree float reveal<CR>")
     -- keymap.set("n", "<leader>E", ":Neotree right reveal<CR>")

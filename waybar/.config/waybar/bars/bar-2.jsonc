@@ -1,4 +1,5 @@
 {
+  "name": "dp2",
   "include": [
     "~/.config/waybar/modules/cpu.jsonc",
     "~/.config/waybar/modules/memory.jsonc",
@@ -6,14 +7,14 @@
     "~/.config/waybar/modules/temperature-gpu.jsonc",
     "~/.config/waybar/modules/temperature-cpu.jsonc",
     "~/.config/waybar/modules/custom-logo.jsonc",
-    "~/.config/waybar/modules/custom-notifications.jsonc", 
+    "~/.config/waybar/modules/custom-notifications.jsonc",
     "~/.config/waybar/modules/hyprland-window.jsonc",
     // "~/.config/waybar/modules/hyprland-workspaces.jsonc",
     "~/.config/waybar/modules/hyprland-workspaces-custom.jsonc",
     "~/.config/waybar/modules/network.jsonc",
     "~/.config/waybar/modules/bluetooth.jsonc",
   ],
-  "modules-left": ["custom/arch", "hyprland/workspaces#dp2"],
+  "modules-left": ["hyprland/workspaces#dp2"],
   // "modules-center": ["hyprland/window"],
   "modules-right": [
     "network",

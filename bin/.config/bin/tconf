@@ -54,7 +54,7 @@ windows=(
   done 
   
   # Небольшая задержка перед выбором окна
-  sleep 0.2
+  sleep 0.1
   tmux select-window -t "$session_name:1"
 }
 

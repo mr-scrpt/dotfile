@@ -1,5 +1,5 @@
-local adapters_config = require("codecompanion.adapters_config")
-local adapters_setup = require("codecompanion.adapters_setup")
+local adapters_config = require("plugins.codecompanion.adapters_config")
+local adapters_setup = require("plugins.codecompanion.adapters_setup")
 
 -- Основная конфигурация плагина
 return {

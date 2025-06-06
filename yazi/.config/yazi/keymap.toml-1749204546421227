@@ -1,6 +1,6 @@
 "$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
 
-[mgr]
+[manager]
 
 prepend_keymap = [
   # Drag and Drop

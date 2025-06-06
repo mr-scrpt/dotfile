@@ -1,8 +1,13 @@
 local adapters_config = {
+  -- Выбор активных адаптеров для разных стратегий (вверху для удобства)
+  active = {
+    chat = "qwen3_30b",
+    inline = "qwen3_30b",
+  },
+
   defaults = {
     stream = true,
     default_type = "openai_compatible",
-
     types = {
       openai_compatible = {
         url = "http://localhost:1234",
@@ -41,12 +46,6 @@ local adapters_config = {
       name = "llama3.2:1b",
       model_default = "llama3.2:1b",
     },
-  },
-
-  -- Выбор активных адаптеров для разных стратегий
-  active = {
-    chat = "qwen3_30b",
-    inline = "qwen3_30b",
   },
 }
 
