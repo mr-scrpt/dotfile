@@ -26,8 +26,7 @@ map("n", "<leader>qf", ":cclose<CR>", { desc = "[Q]uit [Q]uickfix" })
 map("n", "<leader>wh", "<C-w>x", { desc = "Swap with left window" })
 map("n", "<leader>wl", "<C-w>r", { desc = "Swap with right window" })
 
-map("n", "<C-s>", ":w<CR>", { desc = "[W]rite All File" })
--- map("n", "<C-s>", ":wa<CR>", { desc = "[W]rite All File" })
+map("n", "<C-s>", ":wa<CR>", { desc = "[W]rite All File" })
 
 map({ "n", "v" }, "<leader>y", '"+y', { desc = "[Y]ank to clipboard" })
 map({ "n", "v" }, "<leader>Y", '"+Y', { desc = "[Y]ank line to clipboard" })
@@ -42,3 +41,8 @@ map("n", "<C-h>", "<C-w>h", { desc = "Go to left window" })
 map("n", "<C-j>", "<C-w>j", { desc = "Go to lower window" })
 map("n", "<C-k>", "<C-w>k", { desc = "Go to upper window" })
 map("n", "<C-l>", "<C-w>l", { desc = "Go to right window" })
+
+-- QuickFix list
+
+map({ "n", "v" }, "<leader>j", "<cmd>cnext<CR>zz", { desc = "[J] Jump Next" })
+map({ "n", "v" }, "<leader>k", "<cmd>cprev<CR>zz", { desc = "[K] Jump Prev" })

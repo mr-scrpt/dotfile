@@ -17,7 +17,7 @@
   {
     "include": "~/.config/waybar/bars/bar-blink.jsonc",
     "height": 40,
-    "position": "bottom",
+    "position": "top",
     "layer": "top",
     "output": "DP-2",
     "mode": "dock",

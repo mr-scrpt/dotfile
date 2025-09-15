@@ -78,7 +78,7 @@
   "console.log": {
     "key": "console.log",
     "prefix": "cl",
-    "body": ["console.log('output_log: $2 =>>>', $1)"],
+    "body": ["console.log('output_log:  =>>>', $1)"],
     "description": "create console log snippet",
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },

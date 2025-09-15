@@ -1,28 +1,65 @@
+local function copy_path(state)
+  local node = state.tree:get_node()
+  if not node then
+    vim.notify("Could not get node from neo-tree", vim.log.levels.WARN)
+    return
+  end
+  local filepath = node:get_id()
+  local filename = node.name
+  local modify = vim.fn.fnamemodify
+
+  local results = {
+    filepath,
+    modify(filepath, ":."),
+    modify(filepath, ":~"),
+    filename,
+    modify(filename, ":r"),
+    modify(filename, ":e"),
+  }
+
+  vim.ui.select({
+    "1. Absolute path: " .. results[1],
+    "2. Path relative to CWD: " .. results[2],
+    "3. Path relative to HOME: " .. results[3],
+    "4. Filename: " .. results[4],
+    "5. Filename without extension: " .. results[5],
+    "6. Extension of the filename: " .. results[6],
+  }, { prompt = "Choose to copy to clipboard:" }, function(choice)
+    if choice then
+      local i = tonumber(choice:sub(1, 1))
+      if i and results[i] then
+        local result = results[i]
+        -- Используем регистр '+' для копирования в системный буфер обмена
+        vim.fn.setreg("+", result)
+        vim.notify("Copied to system clipboard: " .. result)
+      else
+        vim.notify("Invalid selection", vim.log.levels.WARN)
+      end
+    else
+      vim.notify("Selection cancelled")
+    end
+  end)
+end
+
 return {
   "nvim-neo-tree/neo-tree.nvim",
 
   branch = "v3.x",
   dependencies = {
     "MagicDuck/grug-far.nvim",
-    -- "JoosepAlviste/nvim-ts-context-commentstring"
     "nvim-lua/plenary.nvim",
     "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
     "MunifTanjim/nui.nvim",
     "johmsalas/text-case.nvim",
     {
       "s1n7ax/nvim-window-picker",
-      --tag = "v1.*",
       config = function()
         require("window-picker").setup({
           autoselect_one = true,
           include_current = false,
           filter_rules = {
-            -- filter using buffer options
             bo = {
-              -- if the file type is one of following, the window will be ignored
               filetype = { "neo-tree", "neo-tree-popup", "notify" },
-
-              -- if the buffer type is one of following, the window will be ignored
               buftype = { "terminal", "quickfix" },
             },
           },
@@ -34,14 +71,16 @@ return {
   opts = {
     auto_expand_width = true,
     event_handlers = {
-      event = "neo_tree_buffer_enter",
-      handler = function()
-        vim.opt_local.relativenumber = true
-      end,
+      {
+        event = "neo_tree_buffer_enter",
+        handler = function()
+          vim.opt_local.relativenumber = true
+        end,
+      },
     },
   },
 
-  config = function()
+  config = function(_, opts)
     local function open_grug_far(prefills)
       local grug_far = require("grug-far")
 
@@ -50,21 +89,15 @@ return {
       else
         grug_far.open_instance("explorer")
       end
-      -- doing it seperately because multiple paths doesn't open work when passed with open
-      -- updating the prefills without clearing the search and other fields
       grug_far.update_instance_prefills("explorer", prefills, false)
     end
 
     local neotree = require("neo-tree")
     neotree.setup({
       commands = {
-        -- create a new neo-tree command
         grug_far_replace = function(state)
           local node = state.tree:get_node()
-          print(node)
           local prefills = {
-            -- also escape the paths if space is there
-            -- if you want files to be selected, use ':p' only, see filename-modifiers
             paths = node.type == "directory" and vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":p"))
               or vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":h")),
           }
@@ -73,8 +106,6 @@ return {
         grug_far_replace_visual = function(state, selected_nodes, callback)
           local paths = {}
           for _, node in pairs(selected_nodes) do
-            -- also escape the paths if space is there
-            -- if you want files to be selected, use ':p' only, see filename-modifiers
             local path = node.type == "directory" and vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":p"))
               or vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":h"))
             table.insert(paths, path)
@@ -86,39 +117,45 @@ return {
         system_open = function(state)
           local node = state.tree:get_node()
           local path = node:get_id()
-          -- macOs: open file in default application in the background.
-          vim.fn.jobstart({ "open", path }, { detach = true })
-          -- Linux: open file in default application
-          vim.fn.jobstart({ "xdg-open", path }, { detach = true })
+          local a = vim.loop.new_async(vim.schedule_wrap(function()
+            local handle
+            local success
+            if vim.fn.has("mac") == 1 then
+              handle = vim.fn.jobstart({ "open", path }, { detach = true })
+              success = handle > 0
+            elseif vim.fn.has("linux") == 1 then
+              handle = vim.fn.jobstart({ "xdg-open", path }, { detach = true })
+              success = handle > 0
+            elseif vim.fn.has("win32") == 1 then
+              -- On Windows, we might want to open the containing folder in explorer
+              local p = vim.fn.fnamemodify(path, ":h")
+              handle = vim.fn.jobstart({ "explorer", p }, { detach = true })
+              success = handle > 0
+            end
 
-          -- Windows: Without removing the file from the path, it opens in code.exe instead of explorer.exe
-          local p
-          local lastSlashIndex = path:match("^.+()\\[^\\]*$") -- Match the last slash and everything before it
-          if lastSlashIndex then
-            p = path:sub(1, lastSlashIndex - 1) -- Extract substring before the last slash
-          else
-            p = path -- If no slash found, return original path
-          end
-          vim.cmd("silent !start explorer " .. p)
+            if not success then
+              vim.notify("Failed to open " .. path, vim.log.levels.ERROR)
+            end
+          end))
+          a:send()
         end,
       },
       window = {
         mappings = {
-          -- map our new command to z
-          -- z = "grug_far_replace",
           ["R"] = function(state)
-            local path = state.tree:get_node().path
-            require("grug-far").open({ prefills = { paths = path } })
+            local node = state.tree:get_node()
+            if node then
+              require("grug-far").open({ prefills = { paths = node.path } })
+            end
           end,
           ["b"] = function()
             vim.api.nvim_exec("Neotree focus buffers float", true)
           end,
           ["o"] = "system_open",
+          ["Y"] = copy_path, -- Наша обновленная функция
         },
       },
       popup_border_style = "rounded",
-      -- enable_git_status = true,
-      -- enable_diagnostics = true,
       sources = { "filesystem", "buffers", "git_status" },
       source_selector = {
         winbar = true,
@@ -127,22 +164,17 @@ return {
           { source = "filesystem" },
           { source = "buffers" },
           { source = "git_status" },
-          -- { source = "document_symbols"},
         },
       },
       buffers = {
         follow_current_file = {
-          enabled = true, -- This will find and focus the file in the active buffer every time
-          --              -- the current file is changed while the tree is open.
-          leave_dirs_open = false, -- `false` closes auto expanded dirs, such as with `:Neotree reveal`
+          enabled = true,
+          leave_dirs_open = false,
         },
       },
       filesystem = {
-        check_gitignore_in_search = false, -- Check gitignore status for files/directories when searching.
+        check_gitignore_in_search = false,
         find_by_full_path_words = false,
-        -- find_by_full_path_words = fuzzy_finder,
-        -- Setting this to false will speed up searches, but gitignored
-        -- items won't be marked if they are visible.
       },
       default_component_configs = {
         container = {
@@ -150,14 +182,12 @@ return {
         },
         indent = {
           indent_size = 2,
-          padding = 1, -- extra padding on left hand side
-          -- indent guides
+          padding = 1,
           with_markers = true,
           indent_marker = "│",
           last_indent_marker = "└",
           highlight = "NeoTreeIndentMarker",
-          -- expander config, needed for nesting files
-          with_expanders = nil, -- if nil and file nesting is enabled, will enable expanders
+          with_expanders = nil,
           expander_collapsed = "",
           expander_expanded = "",
           expander_highlight = "NeoTreeExpander",
@@ -166,8 +196,6 @@ return {
           folder_closed = "",
           folder_open = "",
           folder_empty = "󰜌",
-          -- The next two settings are only a fallback, if you use nvim-web-devicons and configure default icons there
-          -- then these will never be used.
           default = "*",
           highlight = "NeoTreeFileIcon",
         },
@@ -182,12 +210,10 @@ return {
         },
         git_status = {
           symbols = {
-            -- Change type
-            added = "󰎔 ", -- or "✚", but this is redundant info if you use git_status_colors on the name
-            modified = "󰚰 ", -- or "", but this is redundant info if you use git_status_colors on the name
-            deleted = "󱘄 ", -- this can only be used in the git_status source
-            renamed = "󰑕 ", -- this can only be used in the git_status source
-            -- Status type
+            added = "󰎔 ",
+            modified = "󰚰 ",
+            deleted = "󱘄 ",
+            renamed = "󰑕 ",
             untracked = " ",
             ignored = " ",
             unstaged = " ",
@@ -195,41 +221,33 @@ return {
             conflict = "",
           },
         },
-        -- If you don't want to use these columns, you can set `enabled = false` for each of them individually
         file_size = {
           enabled = true,
-          required_width = 64, -- min width of window required to show this column
+          required_width = 64,
         },
         type = {
           enabled = true,
-          required_width = 122, -- min width of window required to show this column
+          required_width = 122,
         },
         last_modified = {
           enabled = true,
-          required_width = 88, -- min width of window required to show this column
+          required_width = 88,
         },
         created = {
           enabled = true,
-          required_width = 110, -- min width of window required to show this column
+          required_width = 110,
         },
         symlink_target = {
           enabled = false,
         },
       },
     })
+
     local map = function(keys, func, desc, mode)
       mode = mode or "n"
-      vim.keymap.set(mode, keys, func, { desc = "NeoTree: " .. desc })
+      vim.keymap.set(mode, keys, func, { desc = "NeoTree: " .. desc, noremap = true, silent = true })
     end
     map("<leader>e", ":Neotree float reveal<CR>", "NeoTree [E]xplore")
     map("<leader>E", ":Neotree right reveal<CR>", "NeoTree [E]xplore Right")
-    -- map("<leader>o", ":Neotree float git_status<CR>", "NeoTree [O]pen Git Status")
-    -- ['b'] = function() vim.api.nvim_exec('Neotree focus buffers left', true) end,
-    -- keymap.set("n", "<leader>e", ":Neotree float reveal<CR>")
-    -- keymap.set("n", "<leader>E", ":Neotree right reveal<CR>")
-    -- keymap.set("n", "<leader>o", ":Neotree float git_status<CR>")
   end,
 }
---vim.keymap.set("n", "<leader>e", ":Neotree float reveal<CR>")
---vim.keymap.set("n", "<leader>E", ":Neotree right reveal<CR>")
---vim.keymap.set("n", "<leader>o", ":Neotree float git_status<CR>")

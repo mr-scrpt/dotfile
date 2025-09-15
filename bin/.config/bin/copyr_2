@@ -1,0 +1,437 @@
+#!/bin/bash
+
+# Проверка наличия необходимых утилит
+check_dependencies() {
+  local missing_deps=()
+
+  if ! command -v gum &>/dev/null; then
+    missing_deps+=("gum")
+  fi
+
+  if ! command -v fzf &>/dev/null; then
+    missing_deps+=("fzf")
+  fi
+
+  if [ ${#missing_deps[@]} -gt 0 ]; then
+    echo "❌ Отсутствуют необходимые утилиты: ${missing_deps[*]}"
+    echo ""
+    echo "Установите недостающие пакеты:"
+    for dep in "${missing_deps[@]}"; do
+      case $dep in
+      "gum")
+        echo "  - gum: https://github.com/charmbracelet/gum#installation"
+        echo "    Arch Linux: yay -S gum"
+        ;;
+      "fzf")
+        echo "  - fzf: https://github.com/junegunn/fzf#installation"
+        echo "    Arch Linux: pacman -S fzf"
+        ;;
+      esac
+    done
+    exit 1
+  fi
+}
+
+# Функция для выбора каталога
+select_directory() {
+  local dirs=()
+  # Получаем только каталоги, исключая скрытые
+  for dir in */; do
+    if [[ ! "$dir" == .* ]]; then
+      dirs+=("${dir%/}")
+    fi
+  done
+
+  if [ ${#dirs[@]} -eq 0 ]; then
+    echo "В текущей директории нет папок."
+    exit 1
+  fi
+
+  # Определяем значение по умолчанию (src если существует)
+  local default=""
+  if [[ " ${dirs[@]} " =~ " src " ]]; then
+    default="src"
+  else
+    default="${dirs[0]}"
+  fi
+
+  # Выбор каталога через gum
+  local selected=$(gum choose --selected="$default" "${dirs[@]}")
+
+  if [ -z "$selected" ]; then
+    echo "Выбор отменен."
+    exit 1
+  fi
+
+  echo "$selected"
+}
+
+# Файловый менеджер через fzf
+navigate_with_fzf() {
+  local start_dir="$1"
+  local current_dir="$start_dir"
+
+  cd "$current_dir" || exit 1
+
+  while true; do
+    echo "📁 Текущий каталог: $(pwd)"
+    echo ""
+    echo "🎯 Управление:"
+    echo "  Enter      - войти в каталог"
+    echo "  Space      - выбрать текущий каталог для копирования"
+    echo "  Backspace  - подняться на уровень выше"
+    echo "  Esc/Ctrl+C - отмена"
+    echo ""
+
+    # Создаем список для fzf
+    local items=()
+
+    # Добавляем возможность подняться выше, если мы не в начальной директории
+    if [[ "$(pwd)" != "$(realpath "$start_dir")" ]]; then
+      items+=("📁 .. (подняться выше)")
+    fi
+
+    # Добавляем подкаталоги с иконками
+    for dir in */; do
+      if [[ -d "$dir" && ! "$dir" == .* ]]; then
+        local clean_dir="${dir%/}"
+        # Определяем иконку в зависимости от названия каталога
+        local icon="📁"
+        case "$clean_dir" in
+        "src" | "source") icon="📂" ;;
+        "modules" | "module") icon="🧩" ;;
+        "components" | "component") icon="🔧" ;;
+        "services" | "service") icon="⚙️" ;;
+        "utils" | "util" | "helpers") icon="🛠️" ;;
+        "tests" | "test" | "__tests__") icon="🧪" ;;
+        "docs" | "documentation") icon="📚" ;;
+        "assets" | "static") icon="🖼️" ;;
+        "config" | "configuration") icon="⚙️" ;;
+        esac
+        items+=("$icon $clean_dir")
+      fi
+    done
+
+    if [ ${#items[@]} -eq 0 ]; then
+      echo "📂 В текущем каталоге нет подкаталогов."
+      if gum confirm "Выбрать текущий каталог для копирования модулей?"; then
+        break
+      else
+        echo "Операция отменена."
+        exit 1
+      fi
+    fi
+
+    # Показываем краткое содержимое каталога
+    echo "📋 Содержимое каталога:"
+    local dir_count=$(find . -maxdepth 1 -type d ! -name "." ! -name ".*" | wc -l)
+    local file_count=$(find . -maxdepth 1 -type f ! -name ".*" | wc -l)
+    echo "   📁 Каталогов: $dir_count"
+    echo "   📄 Файлов: $file_count"
+    echo ""
+
+    # Создаем временный файл для результата
+    local result_file=$(mktemp)
+    local action_file=$(mktemp)
+
+    # Используем fzf для выбора с кастомными привязками клавиш
+    printf '%s\n' "${items[@]}" | fzf \
+      --height=15 \
+      --border=rounded \
+      --header="Выберите каталог (Space - выбрать текущий)" \
+      --bind="space:execute(echo 'SELECT_CURRENT' > $action_file)+abort" \
+      --bind="backspace:execute(echo 'GO_UP' > $action_file)+abort" \
+      --prompt="📁 Навигация: " \
+      --pointer="👉" \
+      --preview="echo 'Выбран: {}'" \
+      --preview-window=up:1:wrap >"$result_file"
+
+    local exit_code=$?
+    local selected=$(cat "$result_file" 2>/dev/null || echo "")
+    local action=$(cat "$action_file" 2>/dev/null || echo "")
+
+    # Очищаем временные файлы
+    rm -f "$result_file" "$action_file"
+
+    # Обрабатываем специальные действия
+    if [[ "$action" == "SELECT_CURRENT" ]]; then
+      echo "✅ Выбран текущий каталог: $(pwd)"
+      break
+    elif [[ "$action" == "GO_UP" ]]; then
+      if [[ "$(pwd)" != "$(realpath "$start_dir")" ]]; then
+        cd .. || exit 1
+        continue
+      else
+        echo "⚠️  Уже в начальном каталоге"
+        continue
+      fi
+    fi
+
+    # Проверяем результат обычного выбора
+    if [[ $exit_code -ne 0 ]] || [[ -z "$selected" ]]; then
+      echo "Операция отменена."
+      exit 1
+    fi
+
+    # Извлекаем имя каталога (убираем иконку)
+    local dir_name=$(echo "$selected" | sed 's/^[^ ]* //')
+
+    # Отладочная информация
+    echo "🔍 Debug: selected='$selected', dir_name='$dir_name'"
+
+    if [[ "$dir_name" == ".. (подняться выше)" ]]; then
+      cd .. || exit 1
+    elif [[ -n "$dir_name" ]]; then
+      # Входим в выбранный каталог
+      if [[ -d "$dir_name" ]]; then
+        cd "$dir_name" || exit 1
+      else
+        echo "❌ Каталог '$dir_name' не найден."
+        echo "📂 Доступные каталоги:"
+        ls -la | grep "^d" | awk '{print "   " $9}' | grep -v "^\."
+        echo ""
+        echo "⏳ Попробуйте снова..."
+        sleep 2
+      fi
+    else
+      echo "⚠️  Пустой выбор, попробуйте снова"
+      sleep 1
+    fi
+  done
+
+  echo "🎯 Выбран каталог для копирования: $(pwd)"
+}
+
+# Функция для выбора модуля для копирования
+select_module_to_copy() {
+  local dirs=()
+  local display_items=()
+
+  for dir in */; do
+    if [[ -d "$dir" ]]; then
+      local clean_dir="${dir%/}"
+      dirs+=("$clean_dir")
+
+      # Добавляем информацию о содержимом модуля
+      local file_count=$(find "$dir" -type f 2>/dev/null | wc -l)
+      display_items+=("🧩 $clean_dir ($file_count файлов)")
+    fi
+  done
+
+  if [ ${#dirs[@]} -eq 0 ]; then
+    echo "❌ В текущей директории нет модулей для копирования."
+    exit 1
+  fi
+
+  echo "📦 Доступные модули для копирования:"
+
+  # Используем fzf для выбора модуля
+  local selected_display=$(printf '%s\n' "${display_items[@]}" | fzf \
+    --height=10 \
+    --border=rounded \
+    --header="Выберите модуль для копирования" \
+    --prompt="🧩 Модуль: " \
+    --pointer="👉" \
+    --preview="ls -la {2} 2>/dev/null || echo 'Не удается показать содержимое'" \
+    --preview-window=right:50%:wrap)
+
+  if [ -z "$selected_display" ]; then
+    echo "Выбор отменен."
+    exit 1
+  fi
+
+  # Извлекаем имя модуля из строки отображения
+  local selected=$(echo "$selected_display" | sed 's/^🧩 \([^ ]*\) .*/\1/')
+  echo "$selected"
+}
+
+# Функция для рекурсивного переименования в содержимом файлов
+replace_content() {
+  local file="$1"
+  local old_name="$2"
+  local new_name="$3"
+  local old_upper_name=$(echo "$old_name" | tr '[:lower:]' '[:upper:]')
+  local new_upper_name=$(echo "$new_name" | tr '[:lower:]' '[:upper:]')
+  local old_capitalize=$(echo "$old_name" | sed 's/\b\(.\)/\u\1/g')
+  local new_capitalize=$(echo "$new_name" | sed 's/\b\(.\)/\u\1/g')
+
+  # Пропускаем бинарные файлы
+  if file "$file" | grep -q "text"; then
+    # Замена с учетом регистра
+    sed -i "s/$old_upper_name/$new_upper_name/g" "$file"
+    sed -i "s/$old_capitalize/$new_capitalize/g" "$file"
+    sed -i "s/$old_name/$new_name/g" "$file"
+  fi
+}
+
+# Функция для копирования и переименования модуля
+copy_and_rename_module() {
+  local src_module="$1"
+  local entity_name="$2"
+  local new_module="$3"
+
+  echo "🔄 Копирование модуля '$src_module' в '$new_module'..."
+
+  # Создаем новый каталог
+  cp -r "$src_module" "$new_module"
+
+  # Подготавливаем различные варианты имен для замены
+  local entity_upper=$(echo "$entity_name" | tr '[:lower:]' '[:upper:]')
+  local new_upper=$(echo "$new_module" | tr '[:lower:]' '[:upper:]')
+  local entity_capitalize=$(echo "$entity_name" | sed 's/\b\(.\)/\u\1/g')
+  local new_capitalize=$(echo "$new_module" | sed 's/\b\(.\)/\u\1/g')
+  local entity_camel=$(echo "$entity_name" | sed -r 's/(^|-)([a-z])/\U\2/g')
+  local new_camel=$(echo "$new_module" | sed -r 's/(^|-)([a-z])/\U\2/g')
+
+  echo "📝 Переименование файлов и замена содержимого..."
+
+  # Показываем прогресс
+  local total_files=$(find "$new_module" -type f | wc -l)
+  local current_file=0
+
+  # Получаем список всех файлов в новом модуле
+  find "$new_module" -type f | while read -r file; do
+    current_file=$((current_file + 1))
+    echo -ne "\r📄 Обработка файлов: $current_file/$total_files"
+
+    local new_file="$file"
+    local file_renamed=false
+
+    # Переименовываем файлы - проверяем все варианты
+    if [[ "$file" == *"$entity_camel"* ]]; then
+      new_file="${file//$entity_camel/$new_camel}"
+      file_renamed=true
+    elif [[ "$file" == *"$entity_capitalize"* ]]; then
+      new_file="${file//$entity_capitalize/$new_capitalize}"
+      file_renamed=true
+    elif [[ "$file" == *"$entity_upper"* ]]; then
+      new_file="${file//$entity_upper/$new_upper}"
+      file_renamed=true
+    elif [[ "$file" == *"$entity_name"* ]]; then
+      new_file="${file//$entity_name/$new_module}"
+      file_renamed=true
+    fi
+
+    # Если файл нужно переименовать
+    if [ "$file_renamed" = true ]; then
+      # Создаем необходимые директории перед переименованием
+      mkdir -p "$(dirname "$new_file")"
+      mv "$file" "$new_file"
+    fi
+
+    # Заменяем содержимое файлов (используем актуальное имя файла)
+    replace_content "$new_file" "$entity_name" "$new_module"
+    replace_content "$new_file" "$entity_camel" "$new_camel"
+    replace_content "$new_file" "$entity_capitalize" "$new_capitalize"
+    replace_content "$new_file" "$entity_upper" "$new_upper"
+  done
+
+  echo -ne "\n"
+  echo "📁 Переименование директорий..."
+
+  # Переименовываем директории
+  find "$new_module" -depth -type d | while read -r dir; do
+    local new_dir="$dir"
+    local dir_renamed=false
+
+    # Проверяем все варианты имен для директорий
+    if [[ "$dir" == *"$entity_camel"* ]]; then
+      new_dir="${dir//$entity_camel/$new_camel}"
+      dir_renamed=true
+    elif [[ "$dir" == *"$entity_capitalize"* ]]; then
+      new_dir="${dir//$entity_capitalize/$new_capitalize}"
+      dir_renamed=true
+    elif [[ "$dir" == *"$entity_upper"* ]]; then
+      new_dir="${dir//$entity_upper/$new_upper}"
+      dir_renamed=true
+    elif [[ "$dir" == *"$entity_name"* ]]; then
+      new_dir="${dir//$entity_name/$new_module}"
+      dir_renamed=true
+    fi
+
+    # Переименовываем директорию если нужно
+    if [ "$dir_renamed" = true ]; then
+      mkdir -p "$(dirname "$new_dir")"
+      mv "$dir" "$new_dir"
+    fi
+  done
+
+  echo "✅ Модуль успешно скопирован и переименован: $src_module -> $new_module"
+}
+
+# Главная функция
+main() {
+  # Проверяем зависимости
+  check_dependencies
+
+  echo "🚀 Утилита для копирования и переименования модулей"
+  echo "=================================================="
+  echo ""
+
+  # Выбираем корневой каталог проекта
+  echo "📂 Выберите корневой каталог проекта:"
+  local root_dir=$(select_directory)
+  echo ""
+
+  # Переходим в выбранный каталог и навигируем до модулей через fzf
+  echo "🧭 Навигация к каталогу с модулями (используйте fzf)..."
+  echo ""
+  navigate_with_fzf "$root_dir"
+  echo ""
+
+  # Выбираем модуль для копирования
+  echo "🎯 Выберите модуль для копирования:"
+  local src_module=$(select_module_to_copy)
+  echo ""
+
+  # Спрашиваем о названии сущности в исходном модуле
+  echo "📝 Название сущности в исходном модуле (по умолчанию: $src_module):"
+  local entity_name=$(gum input --placeholder="$src_module" --value="$src_module")
+  if [ -z "$entity_name" ]; then
+    entity_name="$src_module"
+  fi
+  echo ""
+
+  # Запрашиваем название для нового модуля
+  echo "✨ Введите название для нового модуля:"
+  local new_module=$(gum input --placeholder="Введите название нового модуля")
+
+  if [ -z "$new_module" ]; then
+    echo "❌ Название нового модуля не может быть пустым."
+    exit 1
+  fi
+  echo ""
+
+  # Проверяем, не существует ли уже такой модуль
+  if [ -d "$new_module" ]; then
+    echo "⚠️  Модуль с именем '$new_module' уже существует."
+    if ! gum confirm "Хотите перезаписать существующий модуль?"; then
+      echo "Операция отменена."
+      exit 1
+    fi
+    rm -rf "$new_module"
+  fi
+
+  # Показываем сводку перед началом операции
+  echo "📋 Сводка операции:"
+  echo "   📦 Исходный модуль: $src_module"
+  echo "   🏷️  Название сущности: $entity_name"
+  echo "   ✨ Новый модуль: $new_module"
+  echo "   📁 Рабочий каталог: $(pwd)"
+  echo ""
+
+  if gum confirm "🚀 Начать копирование и переименование?"; then
+    echo ""
+    # Копируем и переименовываем модуль
+    copy_and_rename_module "$src_module" "$entity_name" "$new_module"
+    echo ""
+    echo "🎉 Операция завершена успешно!"
+    echo "📦 Новый модуль создан: $new_module"
+  else
+    echo "❌ Операция отменена пользователем."
+    exit 1
+  fi
+}
+
+# Запуск главной функции
+main

@@ -1,7 +1,0 @@
-#!/bin/sh
-SESSION_NAME="$1"
-tmux new-session -s "$SESSION_NAME" -d
-tmux split-window -h
-tmux send-keys -t "$TMUX_PANE" "yazi" C-m
-tmux send-keys -t "$((TMUX_PANE - 1))" "yazi" C-m
-tmux -2 attach-session -d

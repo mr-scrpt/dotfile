@@ -1,0 +1,191 @@
+#!/bin/bash
+
+# --- Проверка зависимостей ---
+if ! command -v gum &>/dev/null; then
+  echo "Ошибка: Утилита 'gum' не найдена."
+  echo "Пожалуйста, установите ее: 'sudo pacman -S gum'"
+  exit 1
+fi
+
+# --- Стилизация вывода с помощью gum ---
+gum style \
+  --foreground 212 --border-foreground 212 --border double \
+  --align center --width 50 --margin "1 2" --padding "2 4" \
+  'Консольный Комбайнер Контента' 'Начнем работу!'
+
+# --- Шаг 1: Выбор основной директории ---
+gum style --bold --foreground 220 'Шаг 1: Выберите корневую директорию для сканирования.'
+TARGET_DIR=$(gum file --directory --height 20)
+
+if [ -z "$TARGET_DIR" ]; then
+  gum style --bold --foreground 197 'Выбор отменен. Выход.'
+  exit 0
+fi
+
+# Сохраняем абсолютный путь к директории, из которой запущен скрипт (корень проекта)
+PROJECT_ROOT=$(pwd)
+echo "Выбрана директория: $(gum style --bold "$TARGET_DIR")"
+echo "Корень проекта: $(gum style --bold "$PROJECT_ROOT")"
+
+# --- Шаг 2: Выбор директорий для исключения ---
+gum style --bold --foreground 220 'Шаг 2: Выберите директории, которые нужно исключить.'
+EXCLUDED_DIRS=()
+while gum confirm "Хотите добавить директорию в список исключений?"; do
+  EXCLUDED_DIR=$(gum file "$TARGET_DIR" --directory --height 15)
+  if [ -n "$EXCLUDED_DIR" ]; then
+    # Получаем относительный путь от TARGET_DIR
+    RELATIVE_EXCLUDED_DIR=${EXCLUDED_DIR#$TARGET_DIR/}
+    EXCLUDED_DIRS+=("./$RELATIVE_EXCLUDED_DIR")
+    gum style "Добавлено в исключения: $(gum style --italic --foreground 200 "$RELATIVE_EXCLUDED_DIR")"
+  else
+    break
+  fi
+done
+
+if [ ${#EXCLUDED_DIRS[@]} -gt 0 ]; then
+  echo "Исключенные директории:"
+  for dir in "${EXCLUDED_DIRS[@]}"; do
+    echo "- $(gum style --foreground 197 "$dir")"
+  done
+fi
+
+# --- Шаг 3: Ввод маски для исключения файлов ---
+gum style --bold --foreground 220 'Шаг 3: Введите маски для исключения файлов (через запятую).'
+# ⭐ ИЗМЕНЕНИЕ: Добавлено --value для значений по умолчанию
+EXCLUDE_MASK=$(gum input --value "*.json, *.md" --placeholder "Например: *.log, *.tmp, specific_file.md")
+
+if [ -n "$EXCLUDE_MASK" ]; then
+  echo "Маска для исключения файлов: $(gum style --bold "$EXCLUDE_MASK")"
+else
+  echo "Файлы исключаться не будут."
+fi
+
+# --- Шаг 4: Ввод имени для итогового файла ---
+gum style --bold --foreground 220 'Шаг 4: Введите имя для итогового файла.'
+OUTPUT_FILENAME=$(gum input --value "combined_content.txt")
+OUTPUT_FILE="$TARGET_DIR/$OUTPUT_FILENAME"
+
+# --- Шаг 5: Обработка файлов и создание итогового файла ---
+gum style --bold --foreground 220 'Шаг 5: Начинаю обработку файлов...'
+
+# Удаляем старый файл, если он существует
+[ -f "$OUTPUT_FILE" ] && rm "$OUTPUT_FILE"
+touch "$OUTPUT_FILE"
+
+if [ ! -w "$OUTPUT_FILE" ]; then
+  gum style --bold --foreground 197 "КРИТИЧЕСКАЯ ОШИБКА: Нет прав на запись в файл $OUTPUT_FILE"
+  exit 1
+fi
+
+# Используем массив для команды find
+find_args=(".")
+
+# Добавляем исключение директорий
+if [ ${#EXCLUDED_DIRS[@]} -gt 0 ]; then
+  find_args+=("(")
+  first_dir=true
+  for dir in "${EXCLUDED_DIRS[@]}"; do
+    if ! $first_dir; then
+      find_args+=("-o")
+    fi
+    find_args+=("-path" "$dir")
+    first_dir=false
+  done
+  find_args+=(")" "-prune" "-o")
+fi
+
+# Добавляем основное условие поиска - это должен быть файл
+find_args+=("-type" "f")
+
+# Исключаем сам выходной файл
+find_args+=("!" "-name" "$OUTPUT_FILENAME")
+
+# ⭐ ИЗМЕНЕНИЕ: Новый блок для корректной обработки нескольких масок
+# Добавляем исключение файлов по маске
+if [ -n "$EXCLUDE_MASK" ]; then
+  # Начинаем группу условий для исключения
+  find_args+=("!")
+  find_args+=("(")
+
+  # Преобразуем строку с масками, разделенными запятыми, в массив
+  IFS=',' read -ra patterns <<<"$EXCLUDE_MASK"
+
+  first_pattern=true
+  for pattern in "${patterns[@]}"; do
+    # Убираем лишние пробелы в начале и конце маски
+    trimmed_pattern=$(echo "$pattern" | xargs)
+    if [ -n "$trimmed_pattern" ]; then
+      if ! $first_pattern; then
+        find_args+=("-o") # Добавляем "ИЛИ" между масками
+      fi
+      find_args+=("-name" "$trimmed_pattern")
+      first_pattern=false
+    fi
+  done
+
+  # Завершаем группу условий
+  find_args+=(")")
+fi
+
+# Функция для обработки
+process_files() {
+  local count=0
+  # Меняем директорию для корректной работы find с относительными путями
+  cd "$TARGET_DIR" || exit 1
+
+  # Добавляем -print0 в конце, чтобы использовать в цикле
+  local final_find_args=("${find_args[@]}" "-print0")
+
+  while IFS= read -r -d '' file; do
+    # Убираем './' в начале пути
+    clean_file=${file#./}
+
+    # Получаем полный путь к файлу относительно корня проекта
+    full_path="$TARGET_DIR/$clean_file"
+    path_from_project_root=$(realpath --relative-to="$PROJECT_ROOT" "$full_path")
+
+    # Читаем первую строку файла
+    first_line=$(head -n 1 "$full_path")
+
+    # Проверяем, содержит ли первая строка комментарий с путем
+    if [[ "$first_line" =~ ^//.* ]] || [[ "$first_line" =~ ^#.* ]]; then
+      # Если да, просто добавляем содержимое файла
+      cat "$full_path" >>"$OUTPUT_FILE"
+    else
+      # Если нет, добавляем комментарий с путем и затем содержимое файла
+      echo "// $path_from_project_root" >>"$OUTPUT_FILE"
+      cat "$full_path" >>"$OUTPUT_FILE"
+    fi
+
+    # Добавляем разделитель между файлами для лучшей читаемости
+    echo -e "\n\n# --- END OF FILE: $path_from_project_root ---\n" >>"$OUTPUT_FILE"
+
+    count=$((count + 1))
+    echo "Обработан: $clean_file"
+  done < <(find "${final_find_args[@]}")
+
+  # Возвращаемся в исходную директорию
+  cd "$PROJECT_ROOT" || exit 1
+
+  # Возвращаем количество обработанных файлов
+  echo "Всего обработано файлов: $count"
+}
+
+# Запускаем обработку с красивым спиннером.
+gum spin --spinner dot --title "Идет объединение файлов..." --show-output -- \
+  bash -c "$(declare -f process_files); $(declare -p find_args PROJECT_ROOT TARGET_DIR OUTPUT_FILE); process_files"
+
+# --- Завершение ---
+gum style --bold --foreground 154 "Готово! Все содержимое объединено в файл:"
+gum style --underline --bold "$OUTPUT_FILE"
+
+if gum confirm "Хотите открыть созданный файл?"; then
+  # Используем 'xdg-open' для универсальности или ваш любимый редактор
+  if command -v code &>/dev/null; then
+    code "$OUTPUT_FILE"
+  elif command -v vim &>/dev/null; then
+    vim "$OUTPUT_FILE"
+  else
+    xdg-open "$OUTPUT_FILE"
+  fi
+fi

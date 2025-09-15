@@ -4,24 +4,28 @@ local i = ls.insert_node
 local f = ls.function_node
 local fmt = require("luasnip.extras.fmt").fmt
 
--- Улучшенная функция для преобразования имени файла в PascalCase
-local function capitalize(str)
-  -- Разбиваем имя файла на части по точкам
-  local parts = vim.split(str, ".", { plain = true })
-  -- Удаляем последний элемент (расширение файла)
-  local lastPart = parts[#parts]
-  if lastPart:match("tsx?$") or lastPart:match("jsx?$") then
-    table.remove(parts)
-  end
+-- ОБНОВЛЕННАЯ ФУНКЦИЯ с обработкой дефисов
+local function get_component_name()
+  local filename = vim.fn.expand("%:t:r")
+  local component_name = (filename == "index") and vim.fn.expand("%:h:t") or filename
 
-  -- Преобразуем каждую часть в PascalCase и объединяем
-  local result = ""
-  for _, part in ipairs(parts) do
-    -- Для каждой части: первая буква заглавная, остальные без изменений
-    result = result .. part:gsub("^%l", string.upper)
-  end
+  -- Преобразование в PascalCase/camelCase
+  local processed_name = component_name
+    -- Сначала обрабатываем дефисы: "use-attribute-create" -> "useAttributeCreate"
+    :gsub(
+      "%-(%w)",
+      function(c)
+        return string.upper(c)
+      end
+    )
+    -- Затем обрабатываем точки: "handler.ts" -> "handlerTs"
+    :gsub("%.(%w)", function(c)
+      return string.upper(c)
+    end)
+    -- Делаем первую букву заглавной для PascalCase
+    :gsub("^%l", string.upper)
 
-  return result
+  return processed_name
 end
 
 local react_snippets = {
@@ -29,34 +33,28 @@ local react_snippets = {
     "rfce",
     fmt(
       [[
-import {{ FC, HTMLAttributes }} from 'react'
-
-interface {}Props extends HTMLAttributes<HTMLDivElement> {{}}
-
-export const {}: FC<{}Props> = (props) => {{
-    return (
-        <div>{}</div>
-    )
-}}
-            ]],
+import type {{ ComponentProps }} from 'react';
+type {}Props = ComponentProps<'div'>;
+export const {} = (props: {}Props) => {{
+  const {{ children, ...rest }} = props;
+  return (
+    <div {{...rest}}>
+      {}
+    </div>
+  );
+}};
+      ]],
       {
-        f(function(_, snip)
-          local filename = vim.fn.expand("%:t")
-          return capitalize(filename)
+        f(function()
+          return get_component_name()
         end),
-        f(function(_, snip)
-          local filename = vim.fn.expand("%:t")
-          return capitalize(filename)
+        f(function()
+          return get_component_name()
         end),
-        f(function(_, snip)
-          local filename = vim.fn.expand("%:t")
-          return capitalize(filename)
+        f(function()
+          return get_component_name()
         end),
-        f(function(_, snip)
-          local filename = vim.fn.expand("%:t")
-          return capitalize(filename)
-        end),
-        -- i(1, "content"),
+        i(1, "Content"),
       }
     )
   ),
@@ -64,5 +62,113 @@ export const {}: FC<{}Props> = (props) => {{
 
 ls.add_snippets("typescript", react_snippets)
 ls.add_snippets("typescriptreact", react_snippets)
-ls.add_snippets("javascript", react_snippets)
-ls.add_snippets("javascriptreact", react_snippets)
+-- local ls = require("luasnip")
+-- local s = ls.snippet
+-- local i = ls.insert_node
+-- local f = ls.function_node
+-- local fmt = require("luasnip.extras.fmt").fmt
+--
+-- -- ОБНОВЛЕННАЯ ФУНКЦИЯ
+-- local function get_component_name()
+--   local filename = vim.fn.expand("%:t:r")
+--   local component_name = (filename == "index") and vim.fn.expand("%:h:t") or filename
+--
+--   -- Преобразование в PascalCase (например, "text.animated" -> "TextAnimated")
+--   local pascal_case_name = component_name
+--     :gsub(
+--       "%.(%w)",
+--       function(c) -- Убираем точки и делаем следующую букву заглавной
+--         return string.upper(c)
+--       end
+--     )
+--     :gsub("^%l", string.upper) -- Делаем первую букву всей строки заглавной
+--
+--   return pascal_case_name
+-- end
+--
+-- local react_snippets = {
+--   s(
+--     "rfce",
+--     fmt(
+--       [[
+-- import type {{ ComponentProps }} from 'react';
+--
+-- type {}Props = ComponentProps<'div'>;
+--
+-- export const {} = (props: {}Props) => {{
+--   const {{ children, ...rest }} = props;
+--
+--   return (
+--     <div {{...rest}}>
+--       {}
+--     </div>
+--   );
+-- }};
+--       ]],
+--       {
+--         f(function()
+--           return get_component_name()
+--         end),
+--         f(function()
+--           return get_component_name()
+--         end),
+--         f(function()
+--           return get_component_name()
+--         end),
+--         i(1, "Content"),
+--       }
+--     )
+--   ),
+-- }
+--
+-- ls.add_snippets("typescript", react_snippets)
+-- ls.add_snippets("typescriptreact", react_snippets)
+-- -- local ls = require("luasnip")
+-- -- local s = ls.snippet
+-- -- local i = ls.insert_node
+-- -- local f = ls.function_node
+-- -- local fmt = require("luasnip.extras.fmt").fmt
+-- --
+-- -- local function get_component_name()
+-- --   local filename = vim.fn.expand("%:t:r")
+-- --   local component_name = (filename == "index") and vim.fn.expand("%:h:t") or filename
+-- --   return component_name:gsub("^%l", string.upper)
+-- -- end
+-- --
+-- -- local react_snippets = {
+-- --   s(
+-- --     "rfce",
+-- --     fmt(
+-- --       [[
+-- -- import type {{ ComponentProps }} from 'react';
+-- --
+-- -- type {}Props = ComponentProps<'div'>;
+-- --
+-- -- export const {} = (props: {}Props) => {{
+-- --   const {{ children, ...rest }} = props;
+-- --
+-- --   return (
+-- --     <div {{...rest}}>
+-- --       {}
+-- --     </div>
+-- --   );
+-- -- }};
+-- --       ]],
+-- --       {
+-- --         f(function()
+-- --           return get_component_name()
+-- --         end),
+-- --         f(function()
+-- --           return get_component_name()
+-- --         end),
+-- --         f(function()
+-- --           return get_component_name()
+-- --         end),
+-- --         i(1, "Content"),
+-- --       }
+-- --     )
+-- --   ),
+-- -- }
+-- --
+-- -- ls.add_snippets("typescript", react_snippets)
+-- -- ls.add_snippets("typescriptreact", react_snippets)

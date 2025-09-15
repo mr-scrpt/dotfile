@@ -1,0 +1,67 @@
+#!/bin/sh
+
+create_session() {
+  local session_name="terminalus maximux"
+  
+  # Проверяем, существует ли сессия
+  tmux has-session -t "$session_name" 2>/dev/null
+  if [ $? -eq 0 ]; then
+    echo "Session '$session_name' already exists"
+    return
+  fi
+  
+  # Создаем новую сессию
+  tmux new -s "$session_name" -d
+  
+  # Определяем конфигурации для окон с иконками Nerd Font
+  windows=(
+    "  : _first"
+    "  : _second" 
+    "  : _third"
+    "  : _fourth"
+    "  : _fifth"
+    "  : _sixth"
+  )
+  
+  # Создаем окна через цикл
+  for i in "${!windows[@]}"; do
+    window_number=$((i + 1))
+    window_name="${windows[$i]}"
+    
+    # Для первого окна не нужно создавать новое, только переименовать
+    if [ "$window_number" = "1" ]; then
+      tmux rename-window -t "$session_name:1" "$window_name"
+    else
+      # Создаем новое окно с явным указанием номера
+      tmux new-window -t "$session_name:$window_number" -n "$window_name"
+    fi
+    
+    echo "-----"
+    echo "Window: $window_name"
+    echo "Path: ~"
+    echo "Session: $session_name:$window_number"
+    echo "-----"
+    
+    # Небольшая задержка перед отправкой команд
+    sleep 0.1
+    
+    # Отправляем команды для перехода в домашнюю директорию
+    tmux send-keys -t "$session_name:$window_number" "cd ~" Enter
+    tmux send-keys -t "$session_name:$window_number" "clear" Enter
+  done
+  
+  # Небольшая задержка перед выбором окна
+  sleep 0.1
+  tmux select-window -t "$session_name:1"
+}
+
+# Основная логика скрипта
+if [ -n "$TMUX" ]; then
+  # Если мы в tmux
+  create_session
+  tmux switch-client -t "terminalus maximux"
+else
+  # Если мы не в tmux
+  create_session
+  tmux attach-session -t "terminalus maximux"
+fi
