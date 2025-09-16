@@ -42,7 +42,7 @@ windows=(
     fi
     
     echo "-----"
-    echo "cd ~/dotfile/$path/.config/$path" 
+    echo "cd ~/Hellkitchen/dotfile/$path/.config/$path" 
     echo "$session_name:$window_number"
     echo "-----"
     
@@ -50,7 +50,7 @@ windows=(
     sleep 0.1
     
     # Отправляем команды
-    tmux send-keys -t "$session_name:$window_number" "cd ~/dotfile/$path/.config/$path" Enter
+    tmux send-keys -t "$session_name:$window_number" "cd ~/Hellkitchen/dotfile/$path/.config/$path" Enter
     tmux send-keys -t "$session_name:$window_number" "clear" Enter
   done 
   
