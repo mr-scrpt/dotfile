@@ -7,3 +7,4 @@ set -gx PATH $PATH /home/mr/.lmstudio/bin
 # End of LM Studio CLI section
 # Привязка основанная на выводе fish_key_reader
 bind \cs fzf_search_files_global_advanced
+bind -e \cn

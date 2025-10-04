@@ -3,11 +3,13 @@
 create_session() {
   local session_name="$1"
 
-  # Создаем сессию с первым окном (editor)
+  # Создаем сессию с первым окном (editor), в котором будет запущен shell
+  tmux new -s "$session_name" -d -n ' editor'
+
+  # Если nvim установлен, отправляем команду на его запуск в созданное окно
   if command -v nvim >/dev/null 2>&1; then
-    tmux new -s "$session_name" -d -n ' editor' 'nvim'
+    tmux send-keys -t "$session_name:1" 'nvim' Enter
   else
-    tmux new -s "$session_name" -d -n ' editor'
     echo "Warning: nvim not found"
   fi
 
