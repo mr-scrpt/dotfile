@@ -16,7 +16,8 @@ vim.g.ai_cmp = false
 -- })
 
 vim.diagnostic.config({
-  virtual_text = false,
+  virtual_lines = true,
+  -- virtual_lines = { current_line = true },
 })
 
 -- local border_style = "rounded"

@@ -1,6 +1,14 @@
 return {
   "saghen/blink.cmp",
+  opts_extend = {
+    "sources.compat",
+    "sources.default",
+  },
   opts = {
+    keymap = {
+      preset = "enter",
+      ["<A-Space>"] = { "show" },
+    },
     completion = {
       menu = {
         border = "rounded",

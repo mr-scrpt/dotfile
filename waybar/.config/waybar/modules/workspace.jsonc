@@ -10,7 +10,7 @@
       "2": [],
       "3": [],
       "4": [],
-      "5": []
+      "5": [],
     },
     "format-icons": {
       "1": "  code",
@@ -21,7 +21,7 @@
     },
 
     "on-click": "activate",
-    "sort-by-number": true
+    "sort-by-number": true,
   },
   "hyprland/workspaces#secondary": {
     "disable-scroll": true,
@@ -35,7 +35,7 @@
       "6": [],
       "7": [],
       "8": [],
-      "9": []
+      "9": [],
     },
     "format-icons": {
       "6": "󱖫 project",
@@ -43,8 +43,5 @@
       "8": " lab",
       "9": " media",
     },
-
   },
-
 }
-

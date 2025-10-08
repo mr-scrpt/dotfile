@@ -27,7 +27,8 @@
 #workspaces button {
   all: initial;
   padding: 0 6px;
-  margin: 0 1.5px;
+  /* margin: 0 1.5px; */
+  margin: 0 3px;
   min-width: 9px;
   border-bottom: 2px solid transparent;
   transition: border-color 0.3s ease;
@@ -37,6 +38,9 @@
   opacity: 0.5;
 }
 
+#tray-expander {
+  color: red;
+}
 #tray,
 #cpu,
 #battery,
@@ -47,10 +51,12 @@
 #custom-update {
   min-width: 12px;
   margin: 0 7.5px;
+  color: @rosewater;
 }
 
 #custom-expand-icon {
-  margin-right: 7px;
+  /* margin-right: 7px; */
+  margin-right: 5px;
 }
 
 tooltip {
@@ -63,6 +69,7 @@ tooltip {
 
 #clock {
   margin-left: 8.75px;
+  color: @sapphire;
 }
 
 .hidden {
@@ -70,7 +77,9 @@ tooltip {
 }
 
 #workspaces button label {
-  transition: color 0.3s ease, opacity 0.3s ease;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease;
   padding: 8px 0;
 }
 
@@ -212,8 +221,8 @@ tooltip {
 
 .dp_1 * {
   /* background-color: @background; */
-  font-size:14px;
-  padding:1px;
+  font-size: 14px;
+  padding: 1px;
 }
 
 .deco * {
@@ -222,26 +231,26 @@ tooltip {
 
 .deco {
   background: linear-gradient(
-        90deg,
-        #f5c2e7,
-        #cba6f7,
-        #89b4fa,
-        #94e2d5,
-        #a6e3a1,
-        #f9e2af,
-        #fab387,
-        #f38ba8,
-        #f5c2e7
+    90deg,
+    #f5c2e7,
+    #cba6f7,
+    #89b4fa,
+    #94e2d5,
+    #a6e3a1,
+    #f9e2af,
+    #fab387,
+    #f38ba8,
+    #f5c2e7
   );
   background-size: 200% 100%;
   animation: gradient-flow 6s linear infinite;
 }
 
 @keyframes gradient-flow {
-    0% {
-        background-position: 0% 0%;
-    }
-    100% {
-        background-position: 200% 0%;
-    }
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
 }

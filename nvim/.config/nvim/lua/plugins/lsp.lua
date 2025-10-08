@@ -53,6 +53,32 @@ return {
         utils.fix_imports_by_reimporting,
         desc = "Fix Imports (Re-Import)",
       }
+      keys[#keys + 1] = {
+        "<leader>cec",
+        function()
+          vim.diagnostic.config({ virtual_lines = { only_current_line = true } })
+        end,
+        desc = "Toggle Virtual Lines (Current)",
+      }
+
+      -- Этот кеймап включает virtual lines для ВСЕГО документа
+      keys[#keys + 1] = {
+        "<leader>cea",
+        function()
+          vim.diagnostic.config({ virtual_lines = {} }) -- Пустая таблица включает для всех строк
+        end,
+        desc = "Toggle Virtual Lines (All)",
+      }
+
+      -- Я удалил ваш старый <leader>ce, так как он был для переключения.
+      -- Вместо него можно добавить явное отключение:
+      keys[#keys + 1] = {
+        "<leader>ced", -- d for disable
+        function()
+          vim.diagnostic.config({ virtual_lines = false })
+        end,
+        desc = "Disable Virtual Lines",
+      }
     end,
   },
 }
