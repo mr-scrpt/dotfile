@@ -1,0 +1,136 @@
+"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+
+[manager]
+prepend_keymap = [
+	# Vim Navigation
+	{ on = "h", run = "leave" },           # Влево (выход из папки)
+	{ on = "j", run = "arrow 1" },         # Вниз
+	{ on = "k", run = "arrow -1" },        # Вверх
+	{ on = "l", run = "plugin smart-enter" }, # Вправо (вход в папку)
+	
+	# Быстрая навигация
+	{ on = "J", run = "arrow 5" },         # 5 вниз
+	{ on = "K", run = "arrow -5" },        # 5 вверх
+	{ on = "g", run = "arrow -99999999" }, # В начало
+	{ on = "G", run = "arrow 99999999" },  # В конец
+	
+	# История навигации
+	{ on = "H", run = "back" },            # Назад в истории
+	{ on = "L", run = "forward" },         # Вперед в истории
+	
+	# Seeking в preview
+	{ on = "<C-u>", run = "seek -5" },
+	{ on = "<C-d>", run = "seek 5" },
+	
+	# Поиск
+	{ on = "/", run = "find" },
+	{ on = "n", run = "find_arrow" },       # Следующий результат
+	{ on = "N", run = "find_arrow --previous" }, # Предыдущий результат
+	
+	# Операции с файлами
+	{ on = "y", run = "yank" },            # Копировать
+	{ on = "d", run = "remove" },          # Удалить
+	{ on = "D", run = "remove --permanently" }, # Удалить навсегда
+	{ on = "p", run = "paste" },           # Вставить
+	{ on = "P", run = "paste --force" },   # Вставить с перезаписью
+	{ on = "r", run = "rename" },          # Переименовать
+	
+	# Выделение
+	{ on = "<Space>", run = [ "select --state=none", "arrow 1" ] },
+	{ on = "v", run = "visual_mode" },
+	{ on = "V", run = "visual_mode --unset" },
+	
+	# Создание
+	{ on = "a", run = "create" },          # Создать файл/папку
+	
+	# Символические ссылки
+	{ on = [ "c", "l" ], run = "link" },
+	{ on = [ "c", "L" ], run = "link --relative" },
+	
+	# Goto shortcuts
+	{ on = [ "g", "h" ], run = "cd ~" },
+	{ on = [ "g", "c" ], run = "cd ~/.config" },
+	{ on = [ "g", "d" ], run = "cd ~/Downloads" },
+	{ on = [ "g", "r" ], run = 'shell -- ya emit cd "$(git rev-parse --show-toplevel)"' },
+	{ on = [ "g", "." ], run = "plugin vcs-files" }, # Git файлы
+	
+	# Shell
+	{ on = "!", run = "shell --block $SHELL" },
+	
+	# Плагины
+	{ on = "M", run = "plugin mount" },
+	{ on = [ "c", "m" ], run = "plugin chmod" },
+	{ on = "<C-g>", run = "plugin diff" },
+	
+	# Панели
+	{ on = "<C-1>", run = "plugin toggle-pane max-parent" },
+	{ on = "<C-2>", run = "plugin toggle-pane max-current" },
+	{ on = "<C-3>", run = "plugin toggle-pane max-preview" },
+	
+	# Tab management
+	{ on = "t", run = "tab_create --current" },
+	{ on = "1", run = "tab_switch 0" },
+	{ on = "2", run = "tab_switch 1" },
+	{ on = "3", run = "tab_switch 2" },
+	{ on = "4", run = "tab_switch 3" },
+	{ on = "5", run = "tab_switch 4" },
+]
+
+[tasks]
+prepend_keymap = [
+	{ on = "j", run = "arrow 1" },
+	{ on = "k", run = "arrow -1" },
+]
+
+[select]
+prepend_keymap = [
+	{ on = "j", run = "arrow 1" },
+	{ on = "k", run = "arrow -1" },
+]
+
+[input]
+prepend_keymap = [
+	# Vim режим вставки
+	{ on = "i", run = "insert" },
+	{ on = "a", run = "insert --append" },
+	{ on = "I", run = [ "move bol", "insert" ] },
+	{ on = "A", run = [ "move eol", "insert --append" ] },
+	
+	# Навигация в режиме команд
+	{ on = "<C-h>", run = "move -1" },
+	{ on = "<C-l>", run = "move 1" },
+	{ on = "<C-a>", run = "move bol" },
+	{ on = "<C-e>", run = "move eol" },
+	{ on = "<C-w>", run = "backward delete --end-of-word" },
+	
+	# Удаление
+	{ on = "x", run = [ "delete", "move 1 --in-operating" ] },
+	{ on = "<C-u>", run = "kill bol" },
+	{ on = "<C-k>", run = "kill eol" },
+	
+	# Undo/Redo
+	{ on = "<C-z>", run = "undo" },
+	{ on = "<C-y>", run = "redo" },
+]
+
+[confirm]
+prepend_keymap = [
+	{ on = "j", run = "arrow 1" },
+	{ on = "k", run = "arrow -1" },
+]
+
+[completion]
+prepend_keymap = [
+	{ on = "<C-j>", run = "arrow 1" },
+	{ on = "<C-k>", run = "arrow -1" },
+]
+
+[help]
+prepend_keymap = [
+	{ on = "j", run = "arrow 1" },
+	{ on = "k", run = "arrow -1" },
+	{ on = "J", run = "arrow 5" },
+	{ on = "K", run = "arrow -5" },
+	{ on = "g", run = "arrow -99999999" },
+	{ on = "G", run = "arrow 99999999" },
+]
