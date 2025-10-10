@@ -1,3 +1,6 @@
 [submodule ".secrets"]
 	path = .secrets
 	url = git@github.com:mr-scrpt/dotfiles-private.git
+[submodule "password-store"]
+	path = password-store
+	url = git@github.com:mr-scrpt/password-store.git
