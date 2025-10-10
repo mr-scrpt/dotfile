@@ -53,5 +53,5 @@ SETUVAR fish_pager_color_selected_background:\x1d
 SETUVAR fish_pager_color_selected_completion:\x1d
 SETUVAR fish_pager_color_selected_description:\x1d
 SETUVAR fish_pager_color_selected_prefix:\x1d
-SETUVAR fish_user_paths:/home/mr/\x2elocal/share/pnpm\x1e/home/mr/\x2elocal/share/npm/bin\x1e/home/mr/\x2econfig/bin\x1e/home/mr/\x2elocal/share/nvim/mason/bin\x1e/usr/lib/go/bin\x1e/sbin\x1e/bin\x1e/usr/sbin\x1e/usr/bin\x1e/usr/local/sbin\x1e/usr/local/bin\x1e/home/mr/\x2elocal/bin/color\x2dscripts\x1e/home/mr/\x2elocal/bin
+SETUVAR fish_user_paths:/home/mr/\x2econfig/bin/pass\x1e/home/mr/\x2econfig/bin\x1e/home/mr/\x2elocal/share/nvim/mason/bin\x1e/sbin\x1e/bin\x1e/usr/sbin\x1e/usr/bin\x1e/usr/local/sbin\x1e/usr/local/bin\x1e/home/mr/\x2elocal/bin\x1e/home/mr/\x2elocal/share/pnpm\x1e/home/mr/\x2elocal/share/npm/bin\x1e/usr/lib/go/bin\x1e/home/mr/\x2elocal/bin/color\x2dscripts
 SETUVAR nvm_default_version:v22\x2e16\x2e0

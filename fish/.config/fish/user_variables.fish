@@ -1,3 +1,5 @@
+#  fish/.config/fish/user_variables.fish
+
 # XDG Directories
 set -xg XDG_CONFIG_HOME $HOME/.config
 set -xg XDG_CACHE_HOME $HOME/.cache
@@ -58,7 +60,7 @@ fish_add_path $XDG_DATA_HOME/npm/bin
 fish_add_path $XDG_DATA_HOME/nvim/mason/bin
 fish_add_path $HOME/.yarn/bin
 fish_add_path $XDG_DATA_HOME/pnpm
-fish_add_path $HOME/.config/bin
+fish_add_path $HOME/.config/bin/*
 
 # Editor
 set -xg EDITOR nvim
@@ -91,3 +93,5 @@ set -xg STARSHIP_LOG error
 set -gx PATH $PATH /home/mr/.lmstudio/bin
 # End of LM Studio CLI section
 set --universal nvm_default_version v22.16.0
+
+set -gx PATH $PATH /home/mr/.lmstudio/bin
