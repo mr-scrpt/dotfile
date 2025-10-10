@@ -3,30 +3,79 @@
 # --- Главное меню ---
 ACTION_GENERATE="󰐾 Generate & Copy Password"
 ACTION_SEARCH=" Search Stored Password"
-MENU_OPTIONS="$ACTION_GENERATE\n$ACTION_SEARCH"
+MENU_OPTIONS=$(printf "%s\n%s" "$ACTION_GENERATE" "$ACTION_SEARCH")
 
-SELECTED_ACTION=$(echo -e "$MENU_OPTIONS" | walker --dmenu --theme dmenu_250 -p "󰌋 Password Menu:")
+SELECTED_ACTION=$(walker --dmenu --theme dmenu_250 -p "󰌋 Password Menu:" <<<"$MENU_OPTIONS")
 
 # --- Обработка выбора ---
 case "$SELECTED_ACTION" in
 "$ACTION_GENERATE")
-  # Если пользователь выбрал "Generate & Copy Password"
-
-  # 1. Генерируем надежный 20-символьный пароль.
-  #    Используем /dev/urandom для криптографической случайности.
-  #    tr -dc '...' оставляет только нужные символы: буквы, цифры и спецсимволы.
   new_password=$(tr -dc 'A-Za-z0-9!"#$%&'\''()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 20)
-
-  # 2. Копируем пароль в буфер обмена Wayland.
-  #    Флаг -n у echo убирает перенос строки в конце.
   echo -n "$new_password" | wl-copy
-
-  # 3. Показываем уведомление об успехе.
   notify-send "🔐 Password Generated" "A new random password has been copied to your clipboard."
   ;;
 
 "$ACTION_SEARCH")
-  # Эта часть будет реализована на следующем шаге.
-  notify-send "Work in Progress" "Search functionality will be added next."
+  SYMLINK_DIR="/home/mr/.password-store"
+  REAL_STORE_DIR=$(readlink -f "$SYMLINK_DIR")
+  PASS_PATHS=$(find "$REAL_STORE_DIR" -type f -name "*.gpg" | sed "s|$REAL_STORE_DIR/||; s|\.gpg$||")
+  FORMATTED_LIST=$(echo -e "$PASS_PATHS" | sed -E 's|^([^/]+)/(.*)|[\1] \2|')
+  selected_formatted=$(walker --dmenu --theme dmenu_250 -p " Search Password:" <<<"$FORMATTED_LIST")
+
+  if [[ -n "$selected_formatted" ]]; then
+    original_path=$(echo "$selected_formatted" | sed -E 's/^\[([^]]+)\] (.*)/\1\/\2/')
+
+    ACTION_QUICK_COPY="󰆏 Quick Copy Password"
+    ACTION_SHOW_DETAILS="󰓎 Show Details"
+    DETAIL_MENU=$(printf "%s\n%s" "$ACTION_QUICK_COPY" "$ACTION_SHOW_DETAILS")
+    DETAIL_ACTION=$(walker --dmenu --theme dmenu_250 -p "Action for '$original_path':" <<<"$DETAIL_MENU")
+
+    case "$DETAIL_ACTION" in
+    "$ACTION_QUICK_COPY")
+      pass show "$original_path" | head -n 1 | wl-copy
+      notify-send "🔐 Pass" "Password for '$original_path' copied."
+      ;;
+
+    "$ACTION_SHOW_DETAILS")
+      # --- НОВЫЙ МЕТОД С ОТДЕЛЬНЫМ data.js ---
+
+      # 1. Получаем "сырые" данные от pass
+      SECRET_CONTENT=$(pass show "$original_path" 2>&1)
+
+      # 2. Создаем временный файл data.js
+      TMP_JS=$(mktemp --suffix=.js)
+      chmod 600 "$TMP_JS"
+
+      # 3. Экранируем данные и записываем их в data.js как переменную
+      JS_SAFE_CONTENT=$(echo "$SECRET_CONTENT" | sed 's/\\/\\\\/g; s/`/\\`/g')
+      echo "window.__SECRET_DATA__ = \`$JS_SAFE_CONTENT\`;" >"$TMP_JS"
+
+      # 4. Создаем временный HTML
+      VIEWER_DIR=$(readlink -f "$(dirname "$0")/pass-viewer")
+      TMP_HTML=$(mktemp --suffix=.html)
+      chmod 600 "$TMP_HTML"
+
+      # 5. Читаем шаблон и вставляем в него все нужные пути
+      HTML_CONTENT=$(<"$VIEWER_DIR/template.html")
+      HTML_CONTENT="${HTML_CONTENT//'CSS_PATH_HERE'/$VIEWER_DIR/style.css}"
+
+      # Создаем <script> тег для нашего временного data.js
+      DATA_SCRIPT_TAG="<script src=\"$TMP_JS\"></script>"
+      HTML_CONTENT="${HTML_CONTENT//'DATA_SCRIPT_WILL_BE_INSERTED_HERE'/$DATA_SCRIPT_TAG}"
+
+      HTML_CONTENT="${HTML_CONTENT//'JS_PATH_HERE'/$VIEWER_DIR/script.js}"
+
+      echo "$HTML_CONTENT" >"$TMP_HTML"
+
+      # 6. Запускаем Chrome
+      google-chrome-stable --app="file://$TMP_HTML" --class="pass-viewer-chrome" --title="pass-viewer" &
+      CHROME_PID=$!
+
+      # 7. Ждем закрытия и удаляем ОБА временных файла
+      wait "$CHROME_PID"
+      rm -f "$TMP_HTML" "$TMP_JS"
+      ;;
+    esac
+  fi
   ;;
 esac

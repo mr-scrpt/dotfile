@@ -1,0 +1,81 @@
+:root {
+  --background: #282a36;
+  --current-line: #44475a;
+  --foreground: #f8f8f2;
+  --comment: #6272a4;
+  --cyan: #8be9fd;
+  --green: #50fa7b;
+  --orange: #ffb86c;
+  --pink: #ff79c6;
+  --purple: #bd93f9;
+  --red: #ff5555;
+  --yellow: #f1fa8c;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "MesloLGM Nerd Font", "Fira Code", monospace;
+  padding: 1.5em;
+  margin: 0;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+h3 {
+  margin: 0 0 10px 0;
+  color: var(--purple);
+  border-bottom: 2px solid var(--current-line);
+  padding-bottom: 10px;
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  flex-basis: 120px;
+  text-align: right;
+  color: var(--cyan);
+  font-weight: bold;
+}
+
+input.value {
+  flex-grow: 1;
+  background-color: var(--current-line);
+  padding: 8px 10px;
+  border-radius: 5px;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 1em;
+  border: 1px solid var(--comment);
+  min-width: 0; /* Fix for flexbox overflow */
+}
+
+.copy-btn {
+  background-color: var(--comment);
+  border: none;
+  color: var(--foreground);
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.copy-btn:hover {
+  background-color: #7184b8; /* slightly lighter comment color */
+}
+
+.copy-btn:active {
+  background-color: var(--pink);
+  transform: translateY(1px);
+}
