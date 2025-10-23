@@ -69,54 +69,6 @@ function M.remove_all_comments()
   vim.notify("Все комментарии удалены с помощью Tree-sitter!", vim.log.levels.INFO)
 end
 
--- В файле: lua/custom/utils.lua
--- ВРЕМЕННАЯ ДЕБАГ-ВЕРСИЯ ФУНКЦИИ
-
--- function M.fix_imports_by_reimporting()
---   local bufnr = vim.api.nvim_get_current_buf()
---
---   print("--- Отладка диагностик ---")
---   local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.lsp.protocol.DiagnosticSeverity.Error })
---
---   if #diagnostics == 0 then
---     print("Не найдено диагностик с уровнем 'Error'.")
---     return
---   end
---
---   -- Распечатываем информацию о каждой ошибке
---   for i, diag in ipairs(diagnostics) do
---     print("Диагностика #" .. i .. ":")
---     print(vim.inspect(diag))
---   end
---
---   print("--- Конец отладки ---")
---   vim.notify(
---     "Данные отладки выведены. Проверьте сообщения (:messages).",
---     vim.log.levels.INFO
---   )
--- end
--- В файле: lua/custom/utils.lua
-
--- ... (остальная часть вашего файла) ...
-
----
---- Исправляет сломанные импорты путем их удаления и повторного импортирования.
----
--- В файле: lua/custom/utils.lua
-
--- ... (остальная часть вашего файла) ...
-
----
---- Исправляет сломанные импорты путем их удаления и повторного импортирования.
----
--- В файле: lua/custom/utils.lua
-
--- ... (остальная часть вашего файла) ...
-
----
---- Исправляет сломанные импорты путем их удаления и последующего импортирования.
---- Делает это последовательно, дожидаясь обновления диагностик от LSP-сервера.
----
 function M.fix_imports_by_reimporting()
   local bufnr = vim.api.nvim_get_current_buf()
   local lines_to_delete = {}

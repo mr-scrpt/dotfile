@@ -7,7 +7,7 @@ return {
       opts.diagnostics.virtual_text = false
       opts.diagnostics.float = { border = "rounded" }
 
-      -- ... (Твои биндинги ck, co, cI, ci, cD, cu, cc, cf, cY, cy) ...
+      -- ... (Ваши биндинги ck, co, cI, ci, cD, cu, cc, cf, cY, cy) ...
       -- (Они должны остаться здесь, я убрал их для краткости)
       keys[#keys + 1] = { "<leader>ck", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Hover" }
       keys[#keys + 1] = {
@@ -96,57 +96,60 @@ return {
         desc = "Copy Line Diagnostics",
       }
 
-      -- [[ ЛОГИКА С АВТО-ОТКЛЮЧЕНИЕМ (НА `CursorHold`) ]]
+      -- [[ ЛОГИКА С АВТО-ОТКЛЮЧЕНИЕМ (СТАБИЛЬНАЯ, С ОТМЕНЯЕМЫМ ТАЙМЕРОМ) ]]
 
-      -- Создаем группу, чтобы управлять нашими autocmd
-      local augroup = vim.api.nvim_create_augroup("TempVirtualLineWatcher", { clear = true })
       local watched_line = nil
+      local autocmd_id = nil
+      local timer = nil -- Храним таймер, чтобы отменить его
 
-      -- 1. Хелпер: Очистка "сторожей"
-      local function clear_autocmds()
-        -- Очищаем все autocmd в нашей группе
-        vim.api.nvim_clear_autocmds({ group = augroup })
-        watched_line = nil
+      -- 1. Хелпер: Очистка "сторожа" и (что ВАЖНО) отложенного таймера
+      local function clear_autocmd_and_timer()
+        -- Отменяем таймер, который еще не успел сработать
+        if timer then
+          timer:close()
+          timer = nil
+        end
+        -- Удаляем "сторожа", который уже был установлен
+        if autocmd_id then
+          if vim.api.nvim_get_autocmds({ id = autocmd_id })[1] then
+            vim.api.nvim_del_autocmd(autocmd_id)
+          end
+          autocmd_id = nil
+          watched_line = nil
+        end
       end
 
-      -- 2. Хелпер: Функция, которая срабатывает ПОСЛЕ анимации
-      local function on_jump_landed()
-        -- Запоминаем строку, на которую "приземлились"
-        watched_line = vim.api.nvim_win_get_cursor(0)[1]
-
-        -- Теперь создаем "сторожа" на РУЧНОЕ движение
-        vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-          group = augroup,
-          buffer = 0,
-          callback = function()
-            local current_line = vim.api.nvim_win_get_cursor(0)[1]
-            if current_line ~= watched_line then
-              -- Мы ушли! Выключаем режим.
-              vim.diagnostic.config({ virtual_lines = false })
-              clear_autocmds() -- Очищаем всех "сторожей"
-            end
-          end,
-        })
-      end
-
-      -- 3. Хелпер: Главная функция, запускающая переход
+      -- 2. Хелпер: Переход и установка "сторожа"
       local function jump_and_watch(jump_func)
-        -- Сначала очищаем старых "сторожей"
-        clear_autocmds()
+        -- СНАЧАЛА отменяем все, что было запущено прошлым нажатием
+        clear_autocmd_and_timer()
 
-        -- Включаем режим ховера
-        vim.diagnostic.config({ virtual_lines = { current_line = true } })
-
-        -- Запускаем РАБОЧУЮ навигацию (которая вызовет анимацию)
+        -- ЗАПУСКАЕМ РАБОЧУЮ НАВИГАЦИЮ
         jump_func({ float = false })
 
-        -- Создаем ОДНОРАЗОВЫЙ "сторож" на ОСТАНОВКУ курсора
-        vim.api.nvim_create_autocmd("CursorHold", {
-          group = augroup,
-          buffer = 0,
-          once = true, -- Сработает 1 раз и удалится
-          callback = on_jump_landed, -- Вызовет хелпер, когда анимация кончится
-        })
+        -- ЗАПУСКАЕМ ТАЙМЕР
+        -- Он создаст "сторожа" только ПОСЛЕ завершения анимации
+        timer = vim.defer_fn(function()
+          -- 1. Анимация завершена. Включаем режим.
+          vim.diagnostic.config({ virtual_lines = { current_line = true } })
+
+          -- 2. Запоминаем, куда мы "приземлились"
+          watched_line = vim.api.nvim_win_get_cursor(0)[1]
+
+          -- 3. Создаем "сторожа"
+          autocmd_id = vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            buffer = 0,
+            callback = function()
+              local current_line = vim.api.nvim_win_get_cursor(0)[1]
+              if current_line ~= watched_line then
+                -- Мы ушли! Выключаем режим.
+                vim.diagnostic.config({ virtual_lines = false })
+                clear_autocmd_and_timer() -- Очищаем "сторожа"
+              end
+            end,
+          })
+          timer = nil -- Таймер сработал
+        end, 150) -- Задержка 150мс (можете поменять на 200, если анимация дольше)
       end
 
       -- ce: следующая ошибка
@@ -172,7 +175,7 @@ return {
         "<leader>cs",
         function()
           -- Важно: выключаем "сторожа", т.к. мы переходим в другой режим
-          clear_autocmds()
+          clear_autocmd_and_timer()
 
           local config = vim.diagnostic.config()
           if
