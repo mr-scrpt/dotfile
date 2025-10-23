@@ -95,3 +95,6 @@ set -gx PATH $PATH /home/mr/.lmstudio/bin
 set --universal nvm_default_version v22.16.0
 
 set -gx PATH $PATH /home/mr/.lmstudio/bin
+
+set -gx CC /usr/bin/gcc
+set -gx CXX /usr/bin/g++

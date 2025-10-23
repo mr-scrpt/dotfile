@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Путь к сокету gpg-agent, который появляется только после успешного запуска
+GPG_SOCKET="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent"
+
+# Ждем в цикле, пока файл сокета не появится (максимум 30 секунд)
+COUNT=0
+while [ ! -e "$GPG_SOCKET" ] && [ "$COUNT" -lt 60 ]; do
+  sleep 0.5
+  ((COUNT++))
+done
+
+# Если сокет появился, импортируем окружение и отправляем уведомление
+if [ -e "$GPG_SOCKET" ]; then
+  systemctl --user import-environment
+  notify-send "GPG Environment" "Agent environment successfully imported." -i dialog-information
+else
+  notify-send "GPG Environment" "Error: Timed out waiting for gpg-agent socket." -i dialog-error
+fi

@@ -15,10 +15,10 @@ vim.g.ai_cmp = false
 --   virtual_text = false,
 -- })
 
-vim.diagnostic.config({
-  virtual_lines = true,
-  -- virtual_lines = { current_line = true },
-})
+-- vim.diagnostic.config({
+--   virtual_lines = true,
+--   -- virtual_lines = { current_line = true },
+-- })
 
 -- local border_style = "rounded"
 --
