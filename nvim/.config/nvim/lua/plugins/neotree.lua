@@ -1,6 +1,6 @@
 local Utils = require("custom.utils")
-local FavoritesCommands = require("custom.neotree-favorites.commands")
 local FlatFavoritesCommands = require("custom.neotree-flat-favorites.commands")
+local FlatFavoritesInfo = require("custom.neotree-flat-favorites.info")
 
 return {
   "nvim-neo-tree/neo-tree.nvim",
@@ -13,18 +13,7 @@ return {
 
   keys = {
     {
-      "<leader>fv",
-      function()
-        require("neo-tree.command").execute({
-          source = "flat_favorites",
-          toggle = true,
-          position = "float",
-        })
-      end,
-      desc = "📦 Flat Favorites",
-    },
-    {
-      "<leader>fe",
+      "<leader>e",
       function()
         require("neo-tree.command").execute({
           toggle = true,
@@ -34,6 +23,17 @@ return {
         })
       end,
       desc = "Explorer NeoTree (Root Dir, Float)",
+    },
+    {
+      "<leader>E",
+      function()
+        require("neo-tree.command").execute({
+          source = "flat_favorites",
+          toggle = true,
+          position = "float",
+        })
+      end,
+      desc = "📦 Flat Favorites",
     },
     {
       "<leader>fE",
@@ -47,7 +47,6 @@ return {
       end,
       desc = "Explorer NeoTree (cwd, Right)",
     },
-    { "<leader>e", "<leader>fe", desc = "Explorer NeoTree (Root Dir, Float)", remap = true },
     {
       "<leader>ge",
       function()
@@ -65,28 +64,22 @@ return {
   },
 
   opts = {
-    sources = { "filesystem", "buffers", "git_status", "favorites", "flat_favorites" },
+    sources = { "filesystem", "buffers", "git_status", "flat_favorites" },
     popup_border_style = "rounded",
 
     commands = {
       grug_far_replace = Utils.grug_far_replace,
       grug_far_replace_visual = Utils.grug_far_replace_visual,
-      add_to_favorites = FavoritesCommands.add_to_favorites,
-      remove_from_favorites = FavoritesCommands.remove_from_favorites,
-      toggle_favorite = FavoritesCommands.toggle_favorite,
       add_to_flat_favorites = FlatFavoritesCommands.add_to_flat_favorites,
       remove_from_flat_favorites = FlatFavoritesCommands.remove_from_flat_favorites,
       toggle_flat_favorite = FlatFavoritesCommands.toggle_flat_favorite,
+      show_favorites_info = FlatFavoritesInfo.show_project_info,
     },
 
     window = {
       mappings = {
         ["Y"] = Utils.copy_path,
         ["R"] = Utils.grug_far_open,
-        ["s"] = "add_to_favorites",
-        ["d"] = "remove_from_favorites",
-        ["S"] = "add_to_flat_favorites",
-        ["D"] = "remove_from_flat_favorites",
       },
     },
 
@@ -95,10 +88,9 @@ return {
       content_layout = "center",
       sources = {
         { source = "filesystem", display_name = "  Files " },
+        { source = "flat_favorites", display_name = " 📦 Favorites " },
         { source = "buffers", display_name = "  Buffers " },
         { source = "git_status", display_name = "  Git " },
-        { source = "favorites", display_name = " ⭐ Favorites " },
-        { source = "flat_favorites", display_name = " 📦 Flat " },
       },
     },
 
@@ -107,7 +99,15 @@ return {
       follow_current_file = { enabled = true },
       use_libuv_file_watcher = true,
       components = {
-        favorite_indicator = require("custom.neotree-favorites.component"),
+        flat_favorite_indicator = require("custom.neotree-flat-favorites.component"),
+      },
+      window = {
+        mappings = {
+          -- Toggle favorites
+          ["s"] = "toggle_flat_favorite",
+          -- Show project info
+          ["I"] = "show_favorites_info",
+        },
       },
       renderers = {
         directory = {
@@ -115,32 +115,13 @@ return {
           { "icon" },
           { "current_filter" },
           { "name" },
-          { "favorite_indicator" },
+          { "flat_favorite_indicator" },
         },
         file = {
           { "indent" },
           { "icon" },
           { "name", use_git_status_colors = true },
-          { "favorite_indicator" },
-          { "git_status" },
-        },
-      },
-    },
-
-    favorites = {
-      bind_to_cwd = false,
-      follow_current_file = { enabled = false },
-      renderers = {
-        directory = {
-          { "indent" },
-          { "icon" },
-          { "current_filter" },
-          { "name" },
-        },
-        file = {
-          { "indent" },
-          { "icon" },
-          { "name", use_git_status_colors = true },
+          { "flat_favorite_indicator" },
           { "git_status" },
         },
       },
@@ -151,8 +132,10 @@ return {
       follow_current_file = { enabled = false },
       window = {
         mappings = {
-          ["S"] = "add_to_flat_favorites",
-          ["D"] = "remove_from_flat_favorites",
+          -- Toggle favorite
+          ["s"] = "toggle_flat_favorite",
+          -- Show project info
+          ["I"] = "show_favorites_info",
         },
       },
       renderers = {

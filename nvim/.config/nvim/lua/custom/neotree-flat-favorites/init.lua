@@ -103,8 +103,9 @@ function M.navigate(state, path, path_to_reveal, callback, async)
   root.search_pattern = state.search_pattern
   context.folders[root.path] = root
   
-  -- Получаем flat favorites
-  local favorites = manager.get_all_favorites()
+  -- Получаем список избранных элементов
+  -- Проверяем invalid пути только при открытии flat_favorites (медленно для больших деревьев)
+  local favorites = manager.load_favorites(true)
   
   if not vim.tbl_isempty(favorites) then
     -- Собираем пути и сортируем
@@ -123,7 +124,13 @@ function M.navigate(state, path, path_to_reveal, callback, async)
     -- Создаем элементы вручную БЕЗ file_items чтобы избежать автоматической иерархии
     for _, item_data in ipairs(paths) do
       local fav_path = item_data.path
+      local fav_info = favorites[fav_path]
       local name = vim.fn.fnamemodify(fav_path, ":t")
+      
+      -- Если путь invalid, добавляем индикатор к имени
+      if fav_info and fav_info.invalid then
+        name = "⚠️  " .. name
+      end
       
       -- Создаем элемент вручную
       local item = {
@@ -133,14 +140,21 @@ function M.navigate(state, path, path_to_reveal, callback, async)
         path = fav_path,
         type = item_data.type,
         loaded = false,
-        extra = { is_flat_favorite = true },
+        extra = { 
+          is_flat_favorite = true,
+          is_invalid = fav_info and fav_info.invalid or false,
+        },
       }
       
       if item_data.type == "directory" then
         item.children = {}
         context.folders[fav_path] = item
-        -- Загружаем ВСЁ содержимое рекурсивно сразу
-        load_all_recursive(item, fav_path)
+        -- Загружаем содержимое только для валидных путей
+        if not (fav_info and fav_info.invalid) then
+          load_all_recursive(item, fav_path)
+        else
+          item.loaded = true -- Помечаем как загруженный чтобы не было попыток загрузить
+        end
       end
       
       -- Добавляем напрямую в root

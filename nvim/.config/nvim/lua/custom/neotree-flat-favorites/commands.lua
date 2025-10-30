@@ -6,6 +6,12 @@ local M = {}
 --- Добавить текущий узел в flat favorites
 ---@param state table
 function M.add_to_flat_favorites(state)
+  -- НЕ работает в источнике flat_favorites - только в filesystem
+  if state.name == "flat_favorites" then
+    vim.notify("Cannot add from flat_favorites view. Use filesystem view (fa)", vim.log.levels.WARN)
+    return
+  end
+  
   local node = state.tree:get_node()
   
   if not node then
@@ -16,7 +22,7 @@ function M.add_to_flat_favorites(state)
   local path = node:get_id()
   manager.add_path(path)
   
-  -- Обновляем отображение
+  -- Обновляем отображение индикаторов
   local ok, renderer = pcall(require, "neo-tree.ui.renderer")
   if ok then
     pcall(renderer.redraw, state)
@@ -42,10 +48,16 @@ function M.remove_from_flat_favorites(state)
 
   manager.remove_path(path)
   
-  -- Обновляем отображение
-  local ok, renderer = pcall(require, "neo-tree.ui.renderer")
-  if ok then
-    pcall(renderer.redraw, state)
+  -- Обновляем отображение - если в источнике flat_favorites, делаем refresh
+  if state.name == "flat_favorites" then
+    local mgr = require("neo-tree.sources.manager")
+    mgr.refresh("flat_favorites")
+  else
+    -- Иначе просто перерисовываем индикаторы
+    local ok, renderer = pcall(require, "neo-tree.ui.renderer")
+    if ok then
+      pcall(renderer.redraw, state)
+    end
   end
 end
 
@@ -62,9 +74,28 @@ function M.toggle_flat_favorite(state)
   local path = node:get_id()
   
   if manager.is_favorite(path) then
-    M.remove_from_flat_favorites(state)
+    -- Удаляем
+    manager.remove_path(path)
+    
+    -- Обновляем отображение
+    if state.name == "flat_favorites" then
+      local mgr = require("neo-tree.sources.manager")
+      mgr.refresh("flat_favorites")
+    else
+      local ok, renderer = pcall(require, "neo-tree.ui.renderer")
+      if ok then
+        pcall(renderer.redraw, state)
+      end
+    end
   else
-    M.add_to_flat_favorites(state)
+    -- Добавляем
+    manager.add_path(path)
+    
+    -- Обновляем индикаторы
+    local ok, renderer = pcall(require, "neo-tree.ui.renderer")
+    if ok then
+      pcall(renderer.redraw, state)
+    end
   end
 end
 
