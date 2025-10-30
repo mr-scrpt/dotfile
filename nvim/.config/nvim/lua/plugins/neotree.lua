@@ -8,6 +8,13 @@ return {
   dependencies = {
     "MagicDuck/grug-far.nvim",
     "johmsalas/text-case.nvim",
+    {
+      "antosha417/nvim-lsp-file-operations",
+      dependencies = { "nvim-lua/plenary.nvim" },
+      config = function()
+        require("lsp-file-operations").setup()
+      end,
+    },
   },
 
   keys = {
@@ -21,6 +28,17 @@ return {
         })
       end,
       desc = "Favorites Explorer (Float)",
+    },
+    {
+      "<leader>fv",
+      function()
+        require("neo-tree.command").execute({
+          source = "flat",
+          toggle = true,
+          position = "float",
+        })
+      end,
+      desc = "📦 Flat Favorites",
     },
     {
       "<leader>fe",
@@ -64,7 +82,7 @@ return {
   },
 
   opts = {
-    sources = { "filesystem", "buffers", "git_status", "favorites" },
+    sources = { "filesystem", "buffers", "git_status", "favorites", "flat" },
     popup_border_style = "rounded",
 
     commands = {
@@ -121,6 +139,25 @@ return {
     },
 
     favorites = {
+      bind_to_cwd = false,
+      follow_current_file = { enabled = false },
+      renderers = {
+        directory = {
+          { "indent" },
+          { "icon" },
+          { "current_filter" },
+          { "name" },
+        },
+        file = {
+          { "indent" },
+          { "icon" },
+          { "name", use_git_status_colors = true },
+          { "git_status" },
+        },
+      },
+    },
+
+    flat = {
       bind_to_cwd = false,
       follow_current_file = { enabled = false },
       renderers = {
