@@ -1,6 +1,4 @@
 local Utils = require("custom.utils")
-local FlatFavoritesCommands = require("custom.neotree-flat-favorites.commands")
-local FlatFavoritesInfo = require("custom.neotree-flat-favorites.info")
 
 return {
   "nvim-neo-tree/neo-tree.nvim",
@@ -9,6 +7,7 @@ return {
   dependencies = {
     "MagicDuck/grug-far.nvim",
     "johmsalas/text-case.nvim",
+    "mr-scrpt/neotree-favorites.nvim",
   },
 
   keys = {
@@ -28,7 +27,7 @@ return {
       "<leader>E",
       function()
         require("neo-tree.command").execute({
-          source = "flat_favorites",
+          source = "neotree-favorites",
           toggle = true,
           position = "float",
         })
@@ -64,16 +63,24 @@ return {
   },
 
   opts = {
-    sources = { "filesystem", "buffers", "git_status", "flat_favorites" },
+    sources = { "filesystem", "buffers", "git_status", "neotree-favorites" },
     popup_border_style = "rounded",
 
     commands = {
       grug_far_replace = Utils.grug_far_replace,
       grug_far_replace_visual = Utils.grug_far_replace_visual,
-      add_to_flat_favorites = FlatFavoritesCommands.add_to_flat_favorites,
-      remove_from_flat_favorites = FlatFavoritesCommands.remove_from_flat_favorites,
-      toggle_flat_favorite = FlatFavoritesCommands.toggle_flat_favorite,
-      show_favorites_info = FlatFavoritesInfo.show_project_info,
+      add_to_flat_favorites = function(state)
+        require("neotree-favorites.commands").add_to_flat_favorites(state)
+      end,
+      remove_from_flat_favorites = function(state)
+        require("neotree-favorites.commands").remove_from_flat_favorites(state)
+      end,
+      toggle_flat_favorite = function(state)
+        require("neotree-favorites.commands").toggle_flat_favorite(state)
+      end,
+      show_favorites_info = function(state)
+        require("neotree-favorites.info").show_project_info()
+      end,
     },
 
     window = {
@@ -88,7 +95,7 @@ return {
       content_layout = "center",
       sources = {
         { source = "filesystem", display_name = "  Files " },
-        { source = "flat_favorites", display_name = " 📦 Favorites " },
+        { source = "neotree-favorites", display_name = " 📦 Favorites " },
         { source = "buffers", display_name = "  Buffers " },
         { source = "git_status", display_name = "  Git " },
       },
@@ -99,7 +106,9 @@ return {
       follow_current_file = { enabled = true },
       use_libuv_file_watcher = true,
       components = {
-        flat_favorite_indicator = require("custom.neotree-flat-favorites.component"),
+        flat_favorite_indicator = function(config, node, state)
+          return require("neotree-favorites.component")(config, node, state)
+        end,
       },
       window = {
         mappings = {
@@ -127,7 +136,7 @@ return {
       },
     },
 
-    flat_favorites = {
+    ["neotree-favorites"] = {
       bind_to_cwd = false,
       follow_current_file = { enabled = false },
       window = {
