@@ -74,6 +74,7 @@ return {
       remove_from_flat_favorites = FlatFavoritesCommands.remove_from_flat_favorites,
       toggle_flat_favorite = FlatFavoritesCommands.toggle_flat_favorite,
       show_favorites_info = FlatFavoritesInfo.show_project_info,
+      clear_all_flat_favorites = FlatFavoritesCommands.clear_all_flat_favorites,
     },
 
     window = {
@@ -107,6 +108,8 @@ return {
           ["s"] = "toggle_flat_favorite",
           -- Show project info
           ["I"] = "show_favorites_info",
+          -- Clear all favorites for project
+          ["w"] = "clear_all_flat_favorites",
         },
       },
       renderers = {
@@ -136,6 +139,8 @@ return {
           ["s"] = "toggle_flat_favorite",
           -- Show project info
           ["I"] = "show_favorites_info",
+          -- Clear all favorites for project
+          ["w"] = "clear_all_flat_favorites",
         },
       },
       renderers = {

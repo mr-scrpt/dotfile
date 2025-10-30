@@ -99,4 +99,16 @@ function M.toggle_flat_favorite(state)
   end
 end
 
+--- Очистить все избранные для текущего проекта
+---@param state table
+function M.clear_all_flat_favorites(state)
+  manager.clear_all_favorites()
+  
+  -- Обновляем отображение - если в источнике flat_favorites, делаем refresh
+  if state.name == "flat_favorites" then
+    local mgr = require("neo-tree.sources.manager")
+    mgr.refresh("flat_favorites")
+  end
+end
+
 return M
