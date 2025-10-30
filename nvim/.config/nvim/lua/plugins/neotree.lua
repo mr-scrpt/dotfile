@@ -1,5 +1,6 @@
 local Utils = require("custom.utils")
 local FavoritesCommands = require("custom.neotree-favorites.commands")
+local FlatFavoritesCommands = require("custom.neotree-flat-favorites.commands")
 
 return {
   "nvim-neo-tree/neo-tree.nvim",
@@ -12,15 +13,15 @@ return {
 
   keys = {
     {
-      "<leader>E",
+      "<leader>fv",
       function()
         require("neo-tree.command").execute({
-          source = "favorites",
+          source = "flat_favorites",
           toggle = true,
           position = "float",
         })
       end,
-      desc = "Favorites Explorer (Float)",
+      desc = "📦 Flat Favorites",
     },
     {
       "<leader>fe",
@@ -64,7 +65,7 @@ return {
   },
 
   opts = {
-    sources = { "filesystem", "buffers", "git_status", "favorites" },
+    sources = { "filesystem", "buffers", "git_status", "favorites", "flat_favorites" },
     popup_border_style = "rounded",
 
     commands = {
@@ -73,14 +74,19 @@ return {
       add_to_favorites = FavoritesCommands.add_to_favorites,
       remove_from_favorites = FavoritesCommands.remove_from_favorites,
       toggle_favorite = FavoritesCommands.toggle_favorite,
+      add_to_flat_favorites = FlatFavoritesCommands.add_to_flat_favorites,
+      remove_from_flat_favorites = FlatFavoritesCommands.remove_from_flat_favorites,
+      toggle_flat_favorite = FlatFavoritesCommands.toggle_flat_favorite,
     },
 
     window = {
       mappings = {
         ["Y"] = Utils.copy_path,
         ["R"] = Utils.grug_far_open,
-        ["S"] = "add_to_favorites",
-        ["D"] = "remove_from_favorites",
+        ["s"] = "add_to_favorites",
+        ["d"] = "remove_from_favorites",
+        ["S"] = "add_to_flat_favorites",
+        ["D"] = "remove_from_flat_favorites",
       },
     },
 
@@ -92,6 +98,7 @@ return {
         { source = "buffers", display_name = "  Buffers " },
         { source = "git_status", display_name = "  Git " },
         { source = "favorites", display_name = " ⭐ Favorites " },
+        { source = "flat_favorites", display_name = " 📦 Flat " },
       },
     },
 
@@ -123,6 +130,31 @@ return {
     favorites = {
       bind_to_cwd = false,
       follow_current_file = { enabled = false },
+      renderers = {
+        directory = {
+          { "indent" },
+          { "icon" },
+          { "current_filter" },
+          { "name" },
+        },
+        file = {
+          { "indent" },
+          { "icon" },
+          { "name", use_git_status_colors = true },
+          { "git_status" },
+        },
+      },
+    },
+
+    flat_favorites = {
+      bind_to_cwd = false,
+      follow_current_file = { enabled = false },
+      window = {
+        mappings = {
+          ["S"] = "add_to_flat_favorites",
+          ["D"] = "remove_from_flat_favorites",
+        },
+      },
       renderers = {
         directory = {
           { "indent" },
