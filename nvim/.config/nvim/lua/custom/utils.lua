@@ -1,4 +1,4 @@
--- В файле: lua/custom/utils.lua
+--  nvim/.config/nvim/lua/custom/utils.lua
 
 local M = {}
 
@@ -261,5 +261,89 @@ function M.smart_import()
   end
 
   process_next_task()
+end
+-- V-- ВОТ НАША НОВАЯ ФУНКЦИЯ ДЛЯ NEO-TREE --V
+function M.copy_path(state)
+  local node = state.tree:get_node()
+  if not node then
+    vim.notify("Could not get node from neo-tree", vim.log.levels.WARN)
+    return
+  end
+  local filepath = node:get_id()
+  local filename = node.name
+  local modify = vim.fn.fnamemodify
+
+  local results = {
+    filepath,
+    modify(filepath, ":."),
+    modify(filepath, ":~"),
+    filename,
+    modify(filename, ":r"),
+    modify(filename, ":e"),
+  }
+
+  vim.ui.select({
+    "1. Absolute path: " .. results[1],
+    "2. Path relative to CWD: " .. results[2],
+    "3. Path relative to HOME: " .. results[3],
+    "4. Filename: " .. results[4],
+    "5. Filename without extension: " .. results[5],
+    "6. Extension of the filename: " .. results[6],
+  }, { prompt = "Choose to copy to clipboard:" }, function(choice)
+    if choice then
+      local i = tonumber(choice:sub(1, 1))
+      if i and results[i] then
+        local result = results[i]
+        vim.fn.setreg("+", result)
+        vim.notify("Copied to system clipboard: " .. result)
+      else
+        vim.notify("Invalid selection", vim.log.levels.WARN)
+      end
+    else
+      vim.notify("Selection cancelled")
+    end
+  end)
+end
+-- ^-- КОНЕЦ НОВОЙ ФУНКЦИИ --^
+-- Вспомогательная функция для grug-far
+function M.open_grug_far(prefills)
+  local grug_far = require("grug-far")
+
+  if not grug_far.has_instance("explorer") then
+    grug_far.open({ instanceName = "explorer" })
+  else
+    grug_far.open_instance("explorer")
+  end
+  grug_far.update_instance_prefills("explorer", prefills, false)
+end
+
+-- Команда для grug-far (обычный режим)
+function M.grug_far_replace(state)
+  local node = state.tree:get_node()
+  local prefills = {
+    paths = node.type == "directory" and vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":p"))
+      or vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":h")),
+  }
+  M.open_grug_far(prefills)
+end
+
+-- Команда для grug-far (визуальный режим)
+function M.grug_far_replace_visual(state, selected_nodes, callback)
+  local paths = {}
+  for _, node in pairs(selected_nodes) do
+    local path = node.type == "directory" and vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":p"))
+      or vim.fn.fnameescape(vim.fn.fnamemodify(node:get_id(), ":h"))
+    table.insert(paths, path)
+  end
+  local prefills = { paths = table.concat(paths, "\n") }
+  M.open_grug_far(prefills)
+end
+
+-- Функция для маппинга 'R'
+function M.grug_far_open(state)
+  local node = state.tree:get_node()
+  if node then
+    require("grug-far").open({ prefills = { paths = node.path } })
+  end
 end
 return M
