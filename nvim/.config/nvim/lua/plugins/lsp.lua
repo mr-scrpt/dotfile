@@ -4,18 +4,22 @@ return {
     opts = function(_, opts)
       local utils = require("custom.utils")
 
-      -- НЕ ИСПОЛЬЗУЕМ больше эту строку! Она устарела:
-      -- local keys = require("lazyvim.plugins.lsp.keymaps").get()  ← УДАЛИЛИ!
-
       -- Настраиваем diagnostics
       opts.diagnostics = opts.diagnostics or {}
       opts.diagnostics.virtual_text = false
       opts.diagnostics.float = { border = "rounded" }
 
+      -- Настраиваем серверы (НОВЫЙ способ для LazyVim)
+      opts.servers = opts.servers or {}
+
+      -- Глобальные настройки для всех LSP серверов
+      opts.servers["*"] = opts.servers["*"] or {}
+
       -- КРИТИЧЕСКИ ВАЖНО: Добавляем capabilities с поддержкой file operations
-      opts.capabilities = opts.capabilities or {}
-      opts.capabilities.workspace = opts.capabilities.workspace or {}
-      opts.capabilities.workspace.fileOperations = {
+      -- НОВЫЙ способ - через servers["*"].capabilities
+      opts.servers["*"].capabilities = opts.servers["*"].capabilities or {}
+      opts.servers["*"].capabilities.workspace = opts.servers["*"].capabilities.workspace or {}
+      opts.servers["*"].capabilities.workspace.fileOperations = {
         dynamicRegistration = true,
         didCreate = true,
         willCreate = true,
@@ -25,14 +29,8 @@ return {
         willDelete = true,
       }
 
-      -- Настраиваем серверы (НОВЫЙ способ для LazyVim)
-      opts.servers = opts.servers or {}
-
       -- Глобальные keymaps для всех LSP серверов
-      opts.servers["*"] = opts.servers["*"] or {}
       opts.servers["*"].keys = opts.servers["*"].keys or {}
-
-      -- НОВЫЙ способ: берем keys из servers["*"]
       local keys = opts.servers["*"].keys
 
       -- Добавляем ваши кастомные биндинги

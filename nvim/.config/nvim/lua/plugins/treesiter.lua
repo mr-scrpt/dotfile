@@ -1,259 +1,259 @@
 return {
-  {
-    "folke/which-key.nvim",
-    opts = {
-      spec = {
-        { "<BS>", desc = "Decrement Selection", mode = "x" },
-        { "<C-i>", desc = "Increment Selection", mode = { "x", "n" } },
-      },
-    },
-  },
-
-  {
-    "nvim-treesitter/nvim-treesitter",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      "folke/flash.nvim",
-    },
-    keys = {
-      { "<C-i>", desc = "Increment Selection" },
-      { "<bs>", desc = "Decrement Selection", mode = "x" },
-    },
-    opts = {
-      highlight = { enable = true },
-      indent = { enable = true },
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = "<C-i>",
-          node_incremental = "<C-i>",
-          scope_incremental = false,
-          node_decremental = "<bs>",
-        },
-      },
-      ensure_installed = {
-        "bash",
-        "c",
-        "diff",
-        "html",
-        "javascript",
-        "jsdoc",
-        "json",
-        "jsonc",
-        "lua",
-        "luadoc",
-        "luap",
-        "markdown",
-        "markdown_inline",
-        "printf",
-        "python",
-        "query",
-        "regex",
-        "toml",
-        "tsx",
-        "typescript",
-        "vim",
-        "vimdoc",
-        "xml",
-        "yaml",
-        "css",
-        "scss",
-        "pug",
-      },
-      textobjects = {
-        select = {
-          enable = true,
-          lookahead = true,
-          keymaps = {
-            ["af"] = { query = "@function.outer", desc = "Select outer function" },
-            ["if"] = { query = "@function.inner", desc = "Select inner function" },
-            ["ac"] = { query = "@class.outer", desc = "Select outer class" },
-            ["ic"] = { query = "@class.inner", desc = "Select inner class" },
-            ["aa"] = { query = "@parameter.outer", desc = "Select outer parameter" },
-            ["ia"] = { query = "@parameter.inner", desc = "Select inner parameter" },
-            ["ai"] = { query = "@conditional.outer", desc = "Select outer conditional" },
-            ["ii"] = { query = "@conditional.inner", desc = "Select inner conditional" },
-            ["al"] = { query = "@loop.outer", desc = "Select outer loop" },
-            ["il"] = { query = "@loop.inner", desc = "Select inner loop" },
-            ["aF"] = { query = "@call.outer", desc = "Select outer function call" },
-            ["iF"] = { query = "@call.inner", desc = "Select inner function call" },
-            ["ab"] = { query = "@block.outer", desc = "Select outer block" },
-            ["ib"] = { query = "@block.inner", desc = "Select inner block" },
-            ["a/"] = { query = "@comment.outer", desc = "Select outer comment" },
-            ["i/"] = { query = "@comment.inner", desc = "Select inner comment" },
-          },
-          selection_modes = {
-            ["@parameter.outer"] = "v",
-            ["@function.outer"] = "V",
-            ["@class.outer"] = "V",
-          },
-        },
-        move = {
-          enable = true,
-          set_jumps = true,
-          goto_next_start = {
-            ["]f"] = { query = "@function.outer", desc = "Next function start" },
-            ["]c"] = { query = "@class.outer", desc = "Next class start" },
-            ["]a"] = { query = "@parameter.inner", desc = "Next parameter" },
-            ["]l"] = { query = "@loop.outer", desc = "Next loop" },
-            ["]i"] = { query = "@conditional.outer", desc = "Next conditional" },
-          },
-          goto_next_end = {
-            ["]F"] = { query = "@function.outer", desc = "Next function end" },
-            ["]C"] = { query = "@class.outer", desc = "Next class end" },
-          },
-          goto_previous_start = {
-            ["[f"] = { query = "@function.outer", desc = "Previous function start" },
-            ["[c"] = { query = "@class.outer", desc = "Previous class start" },
-            ["[a"] = { query = "@parameter.inner", desc = "Previous parameter" },
-            ["[l"] = { query = "@loop.outer", desc = "Previous loop" },
-            ["[i"] = { query = "@conditional.outer", desc = "Previous conditional" },
-          },
-          goto_previous_end = {
-            ["[F"] = { query = "@function.outer", desc = "Previous function end" },
-            ["[C"] = { query = "@class.outer", desc = "Previous class end" },
-          },
-        },
-        swap = {
-          enable = true,
-          swap_next = {
-            ["<leader>sa"] = { query = "@parameter.inner", desc = "Swap with next parameter" },
-            ["<leader>sf"] = { query = "@function.outer", desc = "Swap with next function" },
-          },
-          swap_previous = {
-            ["<leader>sA"] = { query = "@parameter.inner", desc = "Swap with previous parameter" },
-            ["<leader>sF"] = { query = "@function.outer", desc = "Swap with previous function" },
-          },
-        },
-        lsp_interop = {
-          enable = true,
-          border = "rounded",
-          peek_definition_code = {
-            ["<leader>pf"] = { query = "@function.outer", desc = "Peek function definition" },
-            ["<leader>pc"] = { query = "@class.outer", desc = "Peek class definition" },
-          },
-        },
-      },
-    },
-    config = function(_, opts)
-      local ok, ts = pcall(require, "nvim-treesitter.configs")
-      if not ok then
-        vim.notify("nvim-treesitter not loaded", vim.log.levels.ERROR)
-        return
-      end
-
-      ts.setup(opts)
-
-      -- Повторяемые движения
-      local repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
-      vim.keymap.set({ "n", "x", "o" }, ";", repeat_move.repeat_last_move_next)
-      vim.keymap.set({ "n", "x", "o" }, ",", repeat_move.repeat_last_move_previous)
-      vim.keymap.set({ "n", "x", "o" }, "f", repeat_move.builtin_f_expr, { expr = true })
-      vim.keymap.set({ "n", "x", "o" }, "F", repeat_move.builtin_F_expr, { expr = true })
-      vim.keymap.set({ "n", "x", "o" }, "t", repeat_move.builtin_t_expr, { expr = true })
-      vim.keymap.set({ "n", "x", "o" }, "T", repeat_move.builtin_T_expr, { expr = true })
-
-      -- Flash интеграция ✨
-      local flash = require("flash")
-      vim.keymap.set({ "o", "x" }, "r", function()
-        flash.treesitter()
-      end, { desc = "Flash Treesitter Range" })
-    end,
-  },
-
-  {
-    "chrisgrieser/nvim-various-textobjs",
-    event = "VeryLazy",
-    opts = {
-      keymaps = { useDefaults = false },
-    },
-    keys = {
-      { "iv", "<cmd>lua require('various-textobjs').value('inner')<CR>", mode = { "o", "x" }, desc = "Inner value" },
-      { "av", "<cmd>lua require('various-textobjs').value('outer')<CR>", mode = { "o", "x" }, desc = "Outer value" },
-      { "ik", "<cmd>lua require('various-textobjs').key('inner')<CR>", mode = { "o", "x" }, desc = "Inner key" },
-      { "ak", "<cmd>lua require('various-textobjs').key('outer')<CR>", mode = { "o", "x" }, desc = "Outer key" },
-      { "in", "<cmd>lua require('various-textobjs').number('inner')<CR>", mode = { "o", "x" }, desc = "Inner number" },
-      { "an", "<cmd>lua require('various-textobjs').number('outer')<CR>", mode = { "o", "x" }, desc = "Outer number" },
-      {
-        "iS",
-        "<cmd>lua require('various-textobjs').subword('inner')<CR>",
-        mode = { "o", "x" },
-        desc = "Inner subword",
-      },
-      {
-        "aS",
-        "<cmd>lua require('various-textobjs').subword('outer')<CR>",
-        mode = { "o", "x" },
-        desc = "Outer subword",
-      },
-      {
-        "io",
-        "<cmd>lua require('various-textobjs').anyBracket('inner')<CR>",
-        mode = { "o", "x" },
-        desc = "Inner any bracket",
-      },
-      {
-        "ao",
-        "<cmd>lua require('various-textobjs').anyBracket('outer')<CR>",
-        mode = { "o", "x" },
-        desc = "Outer any bracket",
-      },
-      {
-        "iq",
-        "<cmd>lua require('various-textobjs').anyQuote('inner')<CR>",
-        mode = { "o", "x" },
-        desc = "Inner any quote",
-      },
-      {
-        "aq",
-        "<cmd>lua require('various-textobjs').anyQuote('outer')<CR>",
-        mode = { "o", "x" },
-        desc = "Outer any quote",
-      },
-      {
-        "C",
-        "<cmd>lua require('various-textobjs').toNextClosingBracket()<CR>",
-        mode = { "o", "x" },
-        desc = "To next closing bracket",
-      },
-      {
-        "Q",
-        "<cmd>lua require('various-textobjs').toNextQuotationMark()<CR>",
-        mode = { "o", "x" },
-        desc = "To next quotation mark",
-      },
-      { "L", "<cmd>lua require('various-textobjs').url()<CR>", mode = { "o", "x" }, desc = "URL" },
-      {
-        "im",
-        "<cmd>lua require('various-textobjs').chainMember('inner')<CR>",
-        mode = { "o", "x" },
-        desc = "Inner chain member",
-      },
-      {
-        "am",
-        "<cmd>lua require('various-textobjs').chainMember('outer')<CR>",
-        mode = { "o", "x" },
-        desc = "Outer chain member",
-      },
-      {
-        "ii",
-        "<cmd>lua require('various-textobjs').indentation('inner', 'inner')<CR>",
-        mode = { "o", "x" },
-        desc = "Inner indentation",
-      },
-      {
-        "ai",
-        "<cmd>lua require('various-textobjs').indentation('outer', 'outer')<CR>",
-        mode = { "o", "x" },
-        desc = "Outer indentation",
-      },
-      {
-        "aI",
-        "<cmd>lua require('various-textobjs').indentation('outer', 'inner')<CR>",
-        mode = { "o", "x" },
-        desc = "Outer indentation (no blank lines)",
-      },
-      { "gG", "<cmd>lua require('various-textobjs').entireBuffer()<CR>", mode = { "o", "x" }, desc = "Entire buffer" },
-    },
-  },
+  -- {
+  --   "folke/which-key.nvim",
+  --   opts = {
+  --     spec = {
+  --       { "<BS>", desc = "Decrement Selection", mode = "x" },
+  --       { "<C-i>", desc = "Increment Selection", mode = { "x", "n" } },
+  --     },
+  --   },
+  -- },
+  --
+  -- {
+  --   "nvim-treesitter/nvim-treesitter",
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter-textobjects",
+  --     "folke/flash.nvim",
+  --   },
+  --   keys = {
+  --     { "<C-i>", desc = "Increment Selection" },
+  --     { "<bs>", desc = "Decrement Selection", mode = "x" },
+  --   },
+  --   opts = {
+  --     highlight = { enable = true },
+  --     indent = { enable = true },
+  --     incremental_selection = {
+  --       enable = true,
+  --       keymaps = {
+  --         init_selection = "<C-i>",
+  --         node_incremental = "<C-i>",
+  --         scope_incremental = false,
+  --         node_decremental = "<bs>",
+  --       },
+  --     },
+  --     ensure_installed = {
+  --       "bash",
+  --       "c",
+  --       "diff",
+  --       "html",
+  --       "javascript",
+  --       "jsdoc",
+  --       "json",
+  --       "jsonc",
+  --       "lua",
+  --       "luadoc",
+  --       "luap",
+  --       "markdown",
+  --       "markdown_inline",
+  --       "printf",
+  --       "python",
+  --       "query",
+  --       "regex",
+  --       "toml",
+  --       "tsx",
+  --       "typescript",
+  --       "vim",
+  --       "vimdoc",
+  --       "xml",
+  --       "yaml",
+  --       "css",
+  --       "scss",
+  --       "pug",
+  --     },
+  --     textobjects = {
+  --       select = {
+  --         enable = true,
+  --         lookahead = true,
+  --         keymaps = {
+  --           ["af"] = { query = "@function.outer", desc = "Select outer function" },
+  --           ["if"] = { query = "@function.inner", desc = "Select inner function" },
+  --           ["ac"] = { query = "@class.outer", desc = "Select outer class" },
+  --           ["ic"] = { query = "@class.inner", desc = "Select inner class" },
+  --           ["aa"] = { query = "@parameter.outer", desc = "Select outer parameter" },
+  --           ["ia"] = { query = "@parameter.inner", desc = "Select inner parameter" },
+  --           ["ai"] = { query = "@conditional.outer", desc = "Select outer conditional" },
+  --           ["ii"] = { query = "@conditional.inner", desc = "Select inner conditional" },
+  --           ["al"] = { query = "@loop.outer", desc = "Select outer loop" },
+  --           ["il"] = { query = "@loop.inner", desc = "Select inner loop" },
+  --           ["aF"] = { query = "@call.outer", desc = "Select outer function call" },
+  --           ["iF"] = { query = "@call.inner", desc = "Select inner function call" },
+  --           ["ab"] = { query = "@block.outer", desc = "Select outer block" },
+  --           ["ib"] = { query = "@block.inner", desc = "Select inner block" },
+  --           ["a/"] = { query = "@comment.outer", desc = "Select outer comment" },
+  --           ["i/"] = { query = "@comment.inner", desc = "Select inner comment" },
+  --         },
+  --         selection_modes = {
+  --           ["@parameter.outer"] = "v",
+  --           ["@function.outer"] = "V",
+  --           ["@class.outer"] = "V",
+  --         },
+  --       },
+  --       move = {
+  --         enable = true,
+  --         set_jumps = true,
+  --         goto_next_start = {
+  --           ["]f"] = { query = "@function.outer", desc = "Next function start" },
+  --           ["]c"] = { query = "@class.outer", desc = "Next class start" },
+  --           ["]a"] = { query = "@parameter.inner", desc = "Next parameter" },
+  --           ["]l"] = { query = "@loop.outer", desc = "Next loop" },
+  --           ["]i"] = { query = "@conditional.outer", desc = "Next conditional" },
+  --         },
+  --         goto_next_end = {
+  --           ["]F"] = { query = "@function.outer", desc = "Next function end" },
+  --           ["]C"] = { query = "@class.outer", desc = "Next class end" },
+  --         },
+  --         goto_previous_start = {
+  --           ["[f"] = { query = "@function.outer", desc = "Previous function start" },
+  --           ["[c"] = { query = "@class.outer", desc = "Previous class start" },
+  --           ["[a"] = { query = "@parameter.inner", desc = "Previous parameter" },
+  --           ["[l"] = { query = "@loop.outer", desc = "Previous loop" },
+  --           ["[i"] = { query = "@conditional.outer", desc = "Previous conditional" },
+  --         },
+  --         goto_previous_end = {
+  --           ["[F"] = { query = "@function.outer", desc = "Previous function end" },
+  --           ["[C"] = { query = "@class.outer", desc = "Previous class end" },
+  --         },
+  --       },
+  --       swap = {
+  --         enable = true,
+  --         swap_next = {
+  --           ["<leader>sa"] = { query = "@parameter.inner", desc = "Swap with next parameter" },
+  --           ["<leader>sf"] = { query = "@function.outer", desc = "Swap with next function" },
+  --         },
+  --         swap_previous = {
+  --           ["<leader>sA"] = { query = "@parameter.inner", desc = "Swap with previous parameter" },
+  --           ["<leader>sF"] = { query = "@function.outer", desc = "Swap with previous function" },
+  --         },
+  --       },
+  --       lsp_interop = {
+  --         enable = true,
+  --         border = "rounded",
+  --         peek_definition_code = {
+  --           ["<leader>pf"] = { query = "@function.outer", desc = "Peek function definition" },
+  --           ["<leader>pc"] = { query = "@class.outer", desc = "Peek class definition" },
+  --         },
+  --       },
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     local ok, ts = pcall(require, "nvim-treesitter.configs")
+  --     if not ok then
+  --       vim.notify("nvim-treesitter not loaded", vim.log.levels.ERROR)
+  --       return
+  --     end
+  --
+  --     ts.setup(opts)
+  --
+  --     -- Повторяемые движения
+  --     local repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
+  --     vim.keymap.set({ "n", "x", "o" }, ";", repeat_move.repeat_last_move_next)
+  --     vim.keymap.set({ "n", "x", "o" }, ",", repeat_move.repeat_last_move_previous)
+  --     vim.keymap.set({ "n", "x", "o" }, "f", repeat_move.builtin_f_expr, { expr = true })
+  --     vim.keymap.set({ "n", "x", "o" }, "F", repeat_move.builtin_F_expr, { expr = true })
+  --     vim.keymap.set({ "n", "x", "o" }, "t", repeat_move.builtin_t_expr, { expr = true })
+  --     vim.keymap.set({ "n", "x", "o" }, "T", repeat_move.builtin_T_expr, { expr = true })
+  --
+  --     -- Flash интеграция ✨
+  --     local flash = require("flash")
+  --     vim.keymap.set({ "o", "x" }, "r", function()
+  --       flash.treesitter()
+  --     end, { desc = "Flash Treesitter Range" })
+  --   end,
+  -- },
+  --
+  -- {
+  --   "chrisgrieser/nvim-various-textobjs",
+  --   event = "VeryLazy",
+  --   opts = {
+  --     keymaps = { useDefaults = false },
+  --   },
+  --   keys = {
+  --     { "iv", "<cmd>lua require('various-textobjs').value('inner')<CR>", mode = { "o", "x" }, desc = "Inner value" },
+  --     { "av", "<cmd>lua require('various-textobjs').value('outer')<CR>", mode = { "o", "x" }, desc = "Outer value" },
+  --     { "ik", "<cmd>lua require('various-textobjs').key('inner')<CR>", mode = { "o", "x" }, desc = "Inner key" },
+  --     { "ak", "<cmd>lua require('various-textobjs').key('outer')<CR>", mode = { "o", "x" }, desc = "Outer key" },
+  --     { "in", "<cmd>lua require('various-textobjs').number('inner')<CR>", mode = { "o", "x" }, desc = "Inner number" },
+  --     { "an", "<cmd>lua require('various-textobjs').number('outer')<CR>", mode = { "o", "x" }, desc = "Outer number" },
+  --     {
+  --       "iS",
+  --       "<cmd>lua require('various-textobjs').subword('inner')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Inner subword",
+  --     },
+  --     {
+  --       "aS",
+  --       "<cmd>lua require('various-textobjs').subword('outer')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Outer subword",
+  --     },
+  --     {
+  --       "io",
+  --       "<cmd>lua require('various-textobjs').anyBracket('inner')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Inner any bracket",
+  --     },
+  --     {
+  --       "ao",
+  --       "<cmd>lua require('various-textobjs').anyBracket('outer')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Outer any bracket",
+  --     },
+  --     {
+  --       "iq",
+  --       "<cmd>lua require('various-textobjs').anyQuote('inner')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Inner any quote",
+  --     },
+  --     {
+  --       "aq",
+  --       "<cmd>lua require('various-textobjs').anyQuote('outer')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Outer any quote",
+  --     },
+  --     {
+  --       "C",
+  --       "<cmd>lua require('various-textobjs').toNextClosingBracket()<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "To next closing bracket",
+  --     },
+  --     {
+  --       "Q",
+  --       "<cmd>lua require('various-textobjs').toNextQuotationMark()<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "To next quotation mark",
+  --     },
+  --     { "L", "<cmd>lua require('various-textobjs').url()<CR>", mode = { "o", "x" }, desc = "URL" },
+  --     {
+  --       "im",
+  --       "<cmd>lua require('various-textobjs').chainMember('inner')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Inner chain member",
+  --     },
+  --     {
+  --       "am",
+  --       "<cmd>lua require('various-textobjs').chainMember('outer')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Outer chain member",
+  --     },
+  --     {
+  --       "ii",
+  --       "<cmd>lua require('various-textobjs').indentation('inner', 'inner')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Inner indentation",
+  --     },
+  --     {
+  --       "ai",
+  --       "<cmd>lua require('various-textobjs').indentation('outer', 'outer')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Outer indentation",
+  --     },
+  --     {
+  --       "aI",
+  --       "<cmd>lua require('various-textobjs').indentation('outer', 'inner')<CR>",
+  --       mode = { "o", "x" },
+  --       desc = "Outer indentation (no blank lines)",
+  --     },
+  --     { "gG", "<cmd>lua require('various-textobjs').entireBuffer()<CR>", mode = { "o", "x" }, desc = "Entire buffer" },
+  --   },
+  -- },
 }
