@@ -1,0 +1,46 @@
+{
+  "hyprland/workspaces#primary": {
+    "disable-scroll": true,
+    "active-only": false,
+    "all-outputs": false,
+    "enable-bar-scroll": false,
+    "format": "{icon}",
+    "persistent-workspaces": {
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": []
+    },
+    "format-icons": {
+      "1": "  code",
+      "2": "  msg",
+      "3": "  edu",
+      "4": "  brain",
+      "5": "  info"
+    },
+    "on-click": "activate",
+    "sort-by-number": true
+  },
+  "hyprland/workspaces#secondary": {
+    "disable-scroll": true,
+    "active-only": false,
+    "all-outputs": false,
+    "enable-bar-scroll": false,
+    "format": "{icon}",
+    "on-click": "activate",
+    "sort-by-number": true,
+    "persistent-workspaces": {
+      "6": [],
+      "7": [],
+      "8": [],
+      "9": []
+    },
+    "format-icons": {
+      "6": "󱖫 project",
+      "7": "󱖫 project",
+      "8": " lab",
+      "9": " media"
+    }
+  }
+}

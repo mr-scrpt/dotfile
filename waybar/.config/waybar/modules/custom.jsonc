@@ -1,0 +1,23 @@
+// Custom indicators and special modules
+{
+    "hyprland/language": {
+        "format": "{}",
+        "format-en": "<span color='#a6e3a1'>US</span>",
+        "format-ru": "<span color='#f38ba8'>RU</span>",
+        "on-click": "hyprctl switchxkblayout all next"
+    },
+    "custom/update": {
+        "format": "",
+        "exec": "omarchy-update-available",
+        "on-click": "omarchy-launch-floating-terminal-with-presentation omarchy-update",
+        "tooltip-format": "Omarchy update available",
+        "signal": 7,
+        "interval": 21600
+    },
+    "custom/screenrecording-indicator": {
+        "on-click": "omarchy-cmd-screenrecord",
+        "exec": "$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
+        "signal": 8,
+        "return-type": "json"
+    }
+}
