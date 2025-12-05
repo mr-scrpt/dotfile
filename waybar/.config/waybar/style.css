@@ -1,8 +1,8 @@
-@import "../omarchy/current/theme/waybar.css";
+@import "./colors.css";
 
 * {
   background-color: transparent;
-  color: @foreground;
+  /* color: @foreground; */
   border: none;
   border-radius: 0;
   min-height: 0;
@@ -11,9 +11,35 @@
 }
 
 #waybar {
-  background-color: @background;
+  /* background-color: @background; */
   margin: 0 8px;
   border-radius: 8px;
+}
+
+.modules-left,
+.modules-center,
+.modules-right {
+  background-color: @base;
+  /* Или любой другой цвет фона */
+  border-radius: 12px;
+  /* Закругление краев островков */
+  padding: 4px 25px;
+  /* Внутренние отступы, чтобы текст не прилипал к краям */
+  /* margin: 5px; */
+  /* Расстояние между островками */
+
+  /* Опционально: тень или рамка */
+  /* border: 1px solid @surface1; */
+}
+
+.deco .modules-left,
+.deco .modules-center,
+.deco .modules-right {
+  background-color: transparent;
+  /* padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0; */
 }
 
 .modules-left {
@@ -41,6 +67,7 @@
 #tray-expander {
   color: red;
 }
+
 #tray,
 #cpu,
 #battery,
@@ -51,7 +78,7 @@
 #custom-update {
   min-width: 12px;
   margin: 0 7.5px;
-  color: @rosewater;
+  /* color: @rosewater; */
 }
 
 #custom-expand-icon {
@@ -69,7 +96,7 @@ tooltip {
 
 #clock {
   margin-left: 8.75px;
-  color: @sapphire;
+  /* color: @sapphire; */
 }
 
 .hidden {
@@ -87,30 +114,39 @@ tooltip {
 .hdmi_1 #workspaces button:nth-child(1) label {
   color: @pink;
 }
+
 .hdmi_1 #workspaces button:nth-child(2) label {
   color: @mauve;
 }
+
 .hdmi_1 #workspaces button:nth-child(3) label {
   color: @blue;
 }
+
 .hdmi_1 #workspaces button:nth-child(4) label {
   color: @teal;
 }
+
 .hdmi_1 #workspaces button:nth-child(5) label {
   color: @green;
 }
+
 .hdmi_1 #workspaces button:nth-child(6) label {
   color: @yellow;
 }
+
 .hdmi_1 #workspaces button:nth-child(7) label {
   color: @peach;
 }
+
 .hdmi_1 #workspaces button:nth-child(8) label {
   color: @red;
 }
+
 .hdmi_1 #workspaces button:nth-child(9) label {
   color: @lavender;
 }
+
 .hdmi_1 #workspaces button:nth-child(10) label {
   color: @sapphire;
 }
@@ -119,30 +155,39 @@ tooltip {
 .hdmi_1 #workspaces button:nth-child(1).active {
   border-bottom-color: @pink;
 }
+
 .hdmi_1 #workspaces button:nth-child(2).active {
   border-bottom-color: @mauve;
 }
+
 .hdmi_1 #workspaces button:nth-child(3).active {
   border-bottom-color: @blue;
 }
+
 .hdmi_1 #workspaces button:nth-child(4).active {
   border-bottom-color: @teal;
 }
+
 .hdmi_1 #workspaces button:nth-child(5).active {
   border-bottom-color: @green;
 }
+
 .hdmi_1 #workspaces button:nth-child(6).active {
   border-bottom-color: @yellow;
 }
+
 .hdmi_1 #workspaces button:nth-child(7).active {
   border-bottom-color: @peach;
 }
+
 .hdmi_1 #workspaces button:nth-child(8).active {
   border-bottom-color: @red;
 }
+
 .hdmi_1 #workspaces button:nth-child(9).active {
   border-bottom-color: @lavender;
 }
+
 .hdmi_1 #workspaces button:nth-child(10).active {
   border-bottom-color: @sapphire;
 }
@@ -151,30 +196,39 @@ tooltip {
 .dp_1 #workspaces button:nth-child(1) label {
   color: @sapphire;
 }
+
 .dp_1 #workspaces button:nth-child(2) label {
   color: @lavender;
 }
+
 .dp_1 #workspaces button:nth-child(3) label {
   color: @red;
 }
+
 .dp_1 #workspaces button:nth-child(4) label {
   color: @peach;
 }
+
 .dp_1 #workspaces button:nth-child(5) label {
   color: @yellow;
 }
+
 .dp_1 #workspaces button:nth-child(6) label {
   color: @green;
 }
+
 .dp_1 #workspaces button:nth-child(7) label {
   color: @teal;
 }
+
 .dp_1 #workspaces button:nth-child(8) label {
   color: @blue;
 }
+
 .dp_1 #workspaces button:nth-child(9) label {
   color: @mauve;
 }
+
 .dp_1 #workspaces button:nth-child(10) label {
   color: @pink;
 }
@@ -183,30 +237,39 @@ tooltip {
 .dp_1 #workspaces button:nth-child(1).active {
   border-bottom-color: @sapphire;
 }
+
 .dp_1 #workspaces button:nth-child(2).active {
   border-bottom-color: @lavender;
 }
+
 .dp_1 #workspaces button:nth-child(3).active {
   border-bottom-color: @red;
 }
+
 .dp_1 #workspaces button:nth-child(4).active {
   border-bottom-color: @peach;
 }
+
 .dp_1 #workspaces button:nth-child(5).active {
   border-bottom-color: @yellow;
 }
+
 .dp_1 #workspaces button:nth-child(6).active {
   border-bottom-color: @green;
 }
+
 .dp_1 #workspaces button:nth-child(7).active {
   border-bottom-color: @teal;
 }
+
 .dp_1 #workspaces button:nth-child(8).active {
   border-bottom-color: @blue;
 }
+
 .dp_1 #workspaces button:nth-child(9).active {
   border-bottom-color: @mauve;
 }
+
 .dp_1 #workspaces button:nth-child(10).active {
   border-bottom-color: @pink;
 }
@@ -222,7 +285,7 @@ tooltip {
 .dp_1 * {
   /* background-color: @background; */
   font-size: 14px;
-  padding: 1px;
+  /* padding: 1px; */
 }
 
 .deco * {
@@ -230,18 +293,16 @@ tooltip {
 }
 
 .deco {
-  background: linear-gradient(
-    90deg,
-    #f5c2e7,
-    #cba6f7,
-    #89b4fa,
-    #94e2d5,
-    #a6e3a1,
-    #f9e2af,
-    #fab387,
-    #f38ba8,
-    #f5c2e7
-  );
+  background: linear-gradient(90deg,
+      #f5c2e7,
+      #cba6f7,
+      #89b4fa,
+      #94e2d5,
+      #a6e3a1,
+      #f9e2af,
+      #fab387,
+      #f38ba8,
+      #f5c2e7);
   background-size: 200% 100%;
   animation: gradient-flow 6s linear infinite;
 }
@@ -250,7 +311,16 @@ tooltip {
   0% {
     background-position: 0% 0%;
   }
+
   100% {
     background-position: 200% 0%;
   }
+}
+
+.lang .ru {
+  color: red
+}
+
+.lang .us {
+  color: yellow
 }

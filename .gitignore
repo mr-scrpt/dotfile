@@ -1,4 +1,11 @@
-tmux/.config/tmux/plugins/tmux-sessionx/
+# Игнорируем все плагины tmux
+tmux/.config/tmux/plugins/*
+
+# Но оставляем tpm
+!tmux/.config/tmux/plugins/tpm/
+!tmux/.config/tmux/plugins/tpm/**
+
+# Приватные файлы
 fish/.config/fish/private.env
 nvim/.config/nvim/mcpservers.json
 mcpservers.json
