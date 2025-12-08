@@ -7,8 +7,12 @@
   //   "height": 18
   // },
   "logo": {
-    "source": "arch",
-    "type": "builtin"
+    // "source": "$(ghosttime)",
+    // "padding": {
+    //   "top": 1
+    // }
+    // "source": "arch",
+    // "type": "builtin"
   },
   "display": {
     "separator": " ➜ ",
