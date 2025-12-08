@@ -1,2 +1,2 @@
-[mgr]
+[manager]
 linemode = "size"  # или "mtime" для даты модификации

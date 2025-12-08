@@ -1,0 +1,68 @@
+[[mgr.prepend_keymap]]
+on  = "<C-n>"
+run = 'shell -- ripdrag "$@"'
+desc = "Drag and drop via Ripdrag"
+
+[[mgr.prepend_keymap]]
+on   = "y"
+run  = [ 'shell -- for path in "$@"; do echo "file://$path"; done | wl-copy -t text/uri-list', "yank" ]
+desc = "Yank and copy to clipboard"
+
+[[mgr.prepend_keymap]]
+on   = [ "c", "a" ]
+run  = "plugin compress"
+desc = "Archive selected files"
+
+
+# --- Группа DOWNLOADS (g -> d -> ...) ---
+[[mgr.prepend_keymap]]
+on   = [ "g", "d", "d" ]
+run  = "cd ~/Downloads"
+desc = "Go to Downloads"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "d", "u" ]
+run  = "cd ~/Downloads/torrent"
+desc = "Go to Torrents"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "d", "t" ]
+run  = "cd ~/Downloads/telegram"
+desc = "Go to Telegram"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "d", "b" ]
+run  = "cd ~/Downloads/browser"
+desc = "Go to Browser DLs"
+
+# --- Группа PROJECT / HELLKITCHEN (g -> h -> ...) ---
+[[mgr.prepend_keymap]]
+on   = [ "g", "h", "h" ]
+run  = "cd ~/Hellkitchen"
+desc = "Go to Hellkitchen"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "h", "p" ]
+run  = "cd ~/Hellkitchen/project"
+desc = "Go to Projects"
+
+# --- Остальное ---
+[[mgr.prepend_keymap]]
+on   = [ "g", "r" ]
+run  = "cd ~"
+desc = "Go to Home (~)"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "c", "c" ]
+run  = "cd ~/.config"
+desc = "Go to .config"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "s", "r" ]
+run  = "cd /"
+desc = "Go to Root (/)"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "s", "m" ]
+run  = "cd /run/media"
+desc = "Go to Drives/USB"
