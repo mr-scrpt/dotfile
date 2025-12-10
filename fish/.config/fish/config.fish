@@ -8,6 +8,7 @@ if status is-interactive
     end
     # Commands to run in interactive sessions can go here
     set -g fish_greeting
+    zoxide init fish | source
     fish_vi_key_bindings
     atuin init fish | source
     mise activate fish | source
