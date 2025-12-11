@@ -14,4 +14,6 @@ if status is-interactive
     mise activate fish | source
     clear
     fastfetch
+
+    alias v="nvim"
 end

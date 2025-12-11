@@ -1,0 +1,15 @@
+[pyprland]
+plugins = ["scratchpads"]
+
+[scratchpads.yazi]
+animation = "fromTop"
+
+# ИЗМЕНЕНИЕ: Добавили --title=scratch-yazi
+command = "ghostty --class=scratch-yazi --title=scratch-yazi -e fish -c 'yd'"
+
+class = "scratch-yazi"
+size = "80% 70%"
+max_size = "1920px 100%"
+# Раскомментируй это, когда все настроишь, чтобы оно пряталось само
+unfocus = "hide" 
+lazy = true

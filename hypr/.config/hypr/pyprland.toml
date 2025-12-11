@@ -1,0 +1,49 @@
+[pyprland]
+plugins = ["scratchpads"]
+
+# --- 1. Сверху (Meta+Shift+U) ---
+[scratchpads.term_u]
+animation = "fromTop"
+# Просто задаем заголовок. Это работает железно.
+command = "ghostty --title=scratch-u"
+# Поле class здесь нужно для Pyprland, но Hyprland мы научим смотреть на заголовок
+class = "scratch-u"
+size = "80% 60%"
+unfocus = "hide"
+lazy = true
+
+# --- 2. Сверху "Липкий" (Meta+Shift+I) ---
+[scratchpads.term_i]
+animation = "fromTop"
+command = "ghostty --title=scratch-i"
+class = "scratch-i"
+size = "80% 60%"
+# unfocus удален -> окно не будет скрываться само
+lazy = true
+
+# --- 3. Справа (Meta+Shift+L) ---
+[scratchpads.term_l]
+animation = "fromRight"
+command = "ghostty --title=scratch-l"
+class = "scratch-l"
+size = "45% 90%"
+unfocus = "hide"
+lazy = true
+
+# --- 4. Слева (Meta+Shift+H) ---
+[scratchpads.term_h]
+animation = "fromLeft"
+command = "ghostty --title=scratch-h"
+class = "scratch-h"
+size = "45% 90%"
+unfocus = "hide"
+lazy = true
+
+# --- 5. Снизу (Meta+Shift+M) ---
+[scratchpads.term_m]
+animation = "fromBottom"
+command = "ghostty --title=scratch-m"
+class = "scratch-m"
+size = "80% 40%"
+unfocus = "hide"
+lazy = true
