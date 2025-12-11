@@ -3,26 +3,30 @@
 # Флаг для отслеживания, была ли произведена очистка
 cleaned=0
 
-# Список возможных путей (аналог set -l possible_paths из fish)
+# Список возможных путей
 possible_paths=(
     "$HOME/.tmux/resurrect"
     "$HOME/.local/share/tmux/resurrect"
     "$HOME/.config/tmux/resurrect"
 )
 
-# Проходим по массиву путей
+# 1. Удаляем файлы сохранений
 for p in "${possible_paths[@]}"; do
     if [ -d "$p" ]; then
-        # Удаляем и создаем заново, чтобы очистить содержимое
         rm -rf "$p"
         mkdir -p "$p"
         cleaned=1
     fi
 done
 
-# Отправляем уведомление в зависимости от результата
+# 2. Убиваем сервер Tmux, чтобы сбросить состояние из памяти
+# 2>/dev/null скрывает ошибку, если сервер и так не запущен
+tmux kill-server 2>/dev/null
+
+# 3. Отправляем уведомление
 if [ "$cleaned" -eq 1 ]; then
-    notify-send -h string:x-canonical-private-synchronous:sys-notify "Tmux" "🧹 История сессий (resurrect) очищена"
+    notify-send -h string:x-canonical-private-synchronous:sys-notify "Tmux" "🧹 Файлы удалены, сервер перезапущен"
 else
-    notify-send -u low -h string:x-canonical-private-synchronous:sys-notify "Tmux" "Файлы сессий не найдены"
+    # Даже если файлов не было, мы все равно убили сервер для надежности
+    notify-send -u low -h string:x-canonical-private-synchronous:sys-notify "Tmux" "Файлы не найдены, сервер остановлен"
 fi
