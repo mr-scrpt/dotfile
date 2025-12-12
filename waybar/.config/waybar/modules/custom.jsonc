@@ -19,5 +19,15 @@
         "exec": "$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
         "signal": 8,
         "return-type": "json"
-    }
+    },
+    "custom/tor": {
+        "format": "{}", 
+        "return-type": "json",
+        // ВАЖНО: Тут добавляем флаг --check
+        "exec": "~/.config/hypr/custom/scripts/toggler/tor-toggler.sh --check",
+        // Тут БЕЗ флага (обычное переключение)
+        "on-click": "~/.config/hypr/custom/scripts/toggler/tor-toggler.sh",
+        "signal": 10,
+        "interval": 3600
+   }
 }

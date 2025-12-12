@@ -324,3 +324,17 @@ tooltip {
 .lang .us {
   color: yellow
 }
+
+
+#custom-tor {
+    font-size: 14px; /* Можно подстроить размер иконки */
+    padding: 0 5px;
+}
+
+#custom-tor.active {
+    color: #f5c2e7; /* Pink */
+}
+
+#custom-tor.inactive {
+    color: #6c7086; /* Gray/Overlay */
+}

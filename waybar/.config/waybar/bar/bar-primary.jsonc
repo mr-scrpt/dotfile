@@ -24,7 +24,10 @@
     "custom/separator",
     "clock#date",
     "custom/update",
-    "custom/screenrecording-indicator"
+    "custom/screenrecording-indicator",
+    "custom/separator",
+    "custom/tor",
+
   ],
   "modules-right": [
     "tray",

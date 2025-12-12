@@ -1,64 +1,71 @@
 #!/bin/bash
 
-# --- БЛОК ПРОВЕРОК ---
+# --- БЛОК 1: РЕЖИМ ПРОВЕРКИ СТАТУСА (Для Waybar) ---
+# Если скрипт запущен с флагом --check, он просто выводит JSON и завершается.
+if [[ "$1" == "--check" ]]; then
+    STATUS=$(gsettings get org.gnome.system.proxy mode)
+    
+    if [ "$STATUS" = "'manual'" ]; then
+        # ВКЛЮЧЕН (Розовый через CSS класс active)
+        echo '{"text": "tor", "tooltip": "Tor Proxy: ACTIVE", "class": "active"}'
+    else
+        # ВЫКЛЮЧЕН (Серый через CSS класс inactive)
+        echo '{"text": "", "tooltip": "Tor Proxy: Disabled", "class": "inactive"}'
+    fi
+    exit 0
+fi
 
-# 1. Проверяем, установлен ли Tor
+# ==============================================================================
+# --- БЛОК 2: РЕЖИМ ПЕРЕКЛЮЧЕНИЯ (Toggle) ---
+# Этот код выполняется, если скрипт запущен БЕЗ аргументов (по клику)
+# ==============================================================================
+
+# 1. Проверки наличия нужных пакетов
 if ! command -v tor &> /dev/null; then
-    notify-send -u critical -t 8000 "Tor Ошибка ❌" "Пакет 'tor' не установлен!\nВыполните: sudo pacman -S tor"
+    notify-send -u critical "Tor Error" "Package 'tor' not found!"
     exit 1
 fi
 
-# 2. Проверяем, запущена ли служба (иначе прокси будет вести в никуда)
 if ! systemctl is-active --quiet tor; then
-    notify-send -u critical -t 8000 "Tor Ошибка ❌" "Служба Tor остановлена!\nЗапустите: sudo systemctl enable --now tor"
+    notify-send -u critical "Tor Error" "Service 'tor' is not running!"
     exit 1
 fi
 
-# 3. Проверяем наличие gsettings (нужен для настройки GNOME/Браузеров)
-if ! command -v gsettings &> /dev/null; then
-    notify-send -u critical -t 8000 "Ошибка" "Не найден 'gsettings'.\nУстановите: sudo pacman -S glib2"
-    exit 1
-fi
-
-# --- ОСНОВНАЯ ЛОГИКА ---
-
-# Проверяем текущий статус по настройкам GNOME
+# 2. Настройки
 CURRENT_MODE=$(gsettings get org.gnome.system.proxy mode)
-
-# Адрес прокси
 PROXY_HOST="127.0.0.1"
 PROXY_PORT="9050"
-# ВАЖНО: socks5h означает, что DNS запросы тоже идут через TOR (обход блокировок)
-PROXY_URL="socks5h://$PROXY_HOST:$PROXY_PORT"
+PROXY_URL="socks5h://$PROXY_HOST:$PROXY_PORT" # socks5h для DNS через Tor
 
 if [ "$CURRENT_MODE" = "'none'" ]; then
     # --- ВКЛЮЧЕНИЕ ---
     
-    # 1. Настройка для GUI приложений (Yandex Browser, Chrome и др.)
+    # GUI
     gsettings set org.gnome.system.proxy.socks host "$PROXY_HOST"
     gsettings set org.gnome.system.proxy.socks port $PROXY_PORT
     gsettings set org.gnome.system.proxy mode 'manual'
 
-    # 2. Настройка для Fish Shell (Терминал, git, curl, yay)
-    # Используем -Ux для экспорта глобальной переменной во все сессии
+    # Terminal (Fish)
     /usr/bin/fish -c "set -Ux all_proxy '$PROXY_URL'"
     /usr/bin/fish -c "set -Ux http_proxy '$PROXY_URL'"
     /usr/bin/fish -c "set -Ux https_proxy '$PROXY_URL'"
     
-    # Уведомление
-    notify-send -u critical -t 3000 "Tor Proxy" "ВКЛЮЧЕН (Browser + Terminal) 🧅"
+    notify-send -u critical -t 2000 "Tor Proxy" "ENABLED 🧅"
 
 else
     # --- ВЫКЛЮЧЕНИЕ ---
     
-    # 1. Сброс для GUI
+    # GUI
     gsettings set org.gnome.system.proxy mode 'none'
 
-    # 2. Сброс для Fish Shell (Удаляем переменные)
+    # Terminal (Fish)
     /usr/bin/fish -c "set -Ue all_proxy"
     /usr/bin/fish -c "set -Ue http_proxy"
     /usr/bin/fish -c "set -Ue https_proxy"
     
-    # Уведомление
-    notify-send -u low -t 2000 "Tor Proxy" "Выключен ❌"
+    notify-send -u low -t 2000 "Tor Proxy" "Disabled ❌"
 fi
+
+# 3. Обновляем Waybar (Посылаем сигнал модулю)
+# Это заставит waybar перезапустить этот же скрипт, но с флагом --check
+pkill -SIGRTMIN+10 waybar
