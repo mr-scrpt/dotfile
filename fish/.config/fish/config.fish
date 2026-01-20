@@ -1,6 +1,6 @@
 if status is-interactive
     if test -f ~/.config/fish/env.fish
-        source ~/.config/fish/env
+        source ~/.config/fish/env.fish
     end
 
     if test -f ~/.config/fish/path.fish

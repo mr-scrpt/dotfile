@@ -1,6 +1,6 @@
 [tools]
 bun = "latest"
 node = "25.2.1"
-"npm:@google/gemini-cli" = "latest"
 "npm:ghosttime" = "latest"
 pnpm = "latest"
+yarn = "latest"

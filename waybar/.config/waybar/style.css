@@ -95,7 +95,7 @@ tooltip {
 }
 
 #clock {
-  margin-left: 8.75px;
+  margin-left: 5px;
   /* color: @sapphire; */
 }
 
@@ -289,20 +289,22 @@ tooltip {
 }
 
 .deco * {
-  padding: 12px;
+  padding: 14px;
 }
 
 .deco {
-  background: linear-gradient(90deg,
-      #f5c2e7,
-      #cba6f7,
-      #89b4fa,
-      #94e2d5,
-      #a6e3a1,
-      #f9e2af,
-      #fab387,
-      #f38ba8,
-      #f5c2e7);
+  background: linear-gradient(
+    90deg,
+    #f5c2e7,
+    #cba6f7,
+    #89b4fa,
+    #94e2d5,
+    #a6e3a1,
+    #f9e2af,
+    #fab387,
+    #f38ba8,
+    #f5c2e7
+  );
   background-size: 200% 100%;
   animation: gradient-flow 6s linear infinite;
 }
@@ -318,23 +320,31 @@ tooltip {
 }
 
 .lang .ru {
-  color: red
+  color: red;
 }
 
 .lang .us {
-  color: yellow
+  color: yellow;
 }
 
-
 #custom-tor {
-    font-size: 14px; /* Можно подстроить размер иконки */
-    padding: 0 5px;
+  font-size: 14px; /* Можно подстроить размер иконки */
+  padding: 0 5px;
 }
 
 #custom-tor.active {
-    color: #f5c2e7; /* Pink */
+  color: #f5c2e7; /* Pink */
 }
 
 #custom-tor.inactive {
-    color: #6c7086; /* Gray/Overlay */
+  color: #6c7086; /* Gray/Overlay */
+}
+
+#custom-voxtype {
+  min-width: 12px;
+  margin: 0 0 0 7.5px;
+}
+
+#custom-voxtype.recording {
+  color: #a55555;
 }

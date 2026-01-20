@@ -1,5 +1,5 @@
 # Dynamic theme colors
-config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
+# config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
 # Font
 font-family = "JetBrainsMono Nerd Font"
@@ -7,7 +7,8 @@ font-style = Regular
 font-size = 12
 
 # Theme
-theme = catppuccin-mocha
+# theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 # Window
 window-theme = ghostty
@@ -42,3 +43,9 @@ copy-on-select = true
 
 # Поведение клика по ссылкам (по умолчанию ctrl+click, можно изменить)
 link-url = true
+
+
+custom-shader = shaders/1/cursor_tail.glsl
+custom-shader = shaders/1/sonic_boom_cursor.glsl
+# custom-shader = shaders/2/cursor_blaze_no_trail.glsl
+# custom-shader = shaders/2/cursor_smear.glsl
