@@ -1,0 +1,38 @@
+#!/bin/bash
+
+unset TMUX
+
+TARGET_NAME="$1"
+START_DIR="$2"
+
+GLOBAL_SESSION="_global_popups"
+
+if [ -z "$TARGET_NAME" ]; then TARGET_NAME="default"; fi
+if [ -z "$START_DIR" ]; then START_DIR="$HOME"; fi
+
+if ! tmux has-session -t "$GLOBAL_SESSION" 2>/dev/null; then
+
+  tmux new-session -d -s "$GLOBAL_SESSION" -c "$START_DIR" -n "$TARGET_NAME"
+
+  tmux set-option -t "$GLOBAL_SESSION" detach-on-destroy off
+  tmux set-option -t "$GLOBAL_SESSION" status on
+else
+
+  if ! tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${TARGET_NAME}$"; then
+
+    tmux new-window -t "$GLOBAL_SESSION" -n "$TARGET_NAME" -c "$START_DIR"
+  fi
+fi
+
+SHADOW_SESSION="popup_shadow_$$"
+
+tmux new-session -d -t "$GLOBAL_SESSION" -s "$SHADOW_SESSION"
+
+tmux set-option -t "$SHADOW_SESSION" status off
+tmux set-option -t "$SHADOW_SESSION" detach-on-destroy on
+
+tmux select-window -t "$SHADOW_SESSION:${TARGET_NAME}"
+
+trap "tmux kill-session -t '$SHADOW_SESSION' 2>/dev/null" EXIT
+
+tmux attach-session -t "$SHADOW_SESSION"

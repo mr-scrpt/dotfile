@@ -1,5 +1,6 @@
 # ./fish/conf.d/tide_theme.fish
 
+set -g _tide_cache_enabled 0
 # --- PALETTE (Global variables for reuse) ---
 # Эти переменные должны быть определены глобально, чтобы они были видны
 # в фоновом процессе отрисовки Tide.

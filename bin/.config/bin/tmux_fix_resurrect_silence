@@ -1,0 +1,18 @@
+#!/bin/bash
+RESURRECT_DIR="$HOME/.local/share/tmux/resurrect"
+LAST_LINK="$RESURRECT_DIR/last"
+
+if [ ! -L "$LAST_LINK" ]; then exit 0; fi
+
+TARGET_FILE=$(readlink -f "$LAST_LINK")
+
+if [ ! -f "$TARGET_FILE" ] || [ ! -s "$TARGET_FILE" ]; then
+
+  rm -f "$TARGET_FILE" "$LAST_LINK"
+
+  VALID_BACKUP=$(find "$RESURRECT_DIR" -name "tmux_resurrect_*.txt" -size +100c -printf "%T@ %p\n" | sort -n | tail -1 | cut -d' ' -f2-)
+
+  if [ -n "$VALID_BACKUP" ]; then
+    ln -s "$VALID_BACKUP" "$LAST_LINK"
+  fi
+fi

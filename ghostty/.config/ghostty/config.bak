@@ -1,0 +1,60 @@
+# Dynamic theme colors
+# config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
+
+# Font
+font-family = "JetBrainsMono Nerd Font"
+font-style = Regular
+font-size = 12
+
+# Theme
+# theme = catppuccin-mocha
+theme = Catppuccin Mocha
+
+# Window
+window-theme = ghostty
+window-padding-x = 8
+window-padding-y = 4
+confirm-close-surface=false
+resize-overlay = never
+gtk-toolbar-style = flat
+
+# Cursor styling
+cursor-style = "block"
+cursor-style-blink = false
+
+# Cursor styling + SSH session terminfo
+# (all shell integration options must be passed together)
+shell-integration-features = no-cursor,ssh-env
+
+# Keyboard bindings
+keybind = shift+insert=paste_from_clipboard
+keybind = control+insert=copy_to_clipboard
+keybind = super+control+shift+alt+arrow_down=resize_split:down,100
+keybind = super+control+shift+alt+arrow_up=resize_split:up,100
+keybind = super+control+shift+alt+arrow_left=resize_split:left,100
+keybind = super+control+shift+alt+arrow_right=resize_split:right,100
+
+# Slowdown mouse scrolling
+mouse-scroll-multiplier = 0.95
+
+# Автоматически копировать выделенный текст в буфер (как в Putty/Alacritty)
+# Многие линуксоиды это любят, но если мешает - не ставь.
+copy-on-select = true
+
+# Поведение клика по ссылкам (по умолчанию ctrl+click, можно изменить)
+link-url = true
+
+
+custom-shader = shaders/1/cursor_tail.glsl
+custom-shader = shaders/1/sonic_boom_cursor.glsl
+# custom-shader = shaders/2/cursor_blaze_no_trail.glsl
+# custom-shader = shaders/2/cursor_smear.glsl
+
+# Ctrl+Backspace → ESC + DEL, Fish это понимает как backward-kill-word
+keybind = ctrl+backspace=text:\x1b\x7f
+
+# Ctrl+Right → стандартный CSI forward-word
+keybind = ctrl+right=csi:1;5C
+
+# Ctrl+Left → стандартный CSI backward-word
+keybind = ctrl+left=csi:1;5D

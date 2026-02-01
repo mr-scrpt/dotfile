@@ -49,3 +49,6 @@ custom-shader = shaders/1/cursor_tail.glsl
 custom-shader = shaders/1/sonic_boom_cursor.glsl
 # custom-shader = shaders/2/cursor_blaze_no_trail.glsl
 # custom-shader = shaders/2/cursor_smear.glsl
+
+keybind = ctrl+backspace=unbind
+

@@ -1,3 +1,4 @@
+#  bin/.config/bin/tmux_fix_resurrect
 #!/usr/bin/env bash
 
 RESURRECT_DIR="$HOME/.local/share/tmux/resurrect"
@@ -5,29 +6,29 @@ LAST_LINK="$RESURRECT_DIR/last"
 
 # Проверяем, существует ли ссылка last
 if [ -L "$LAST_LINK" ]; then
-    # Получаем реальный файл, на который указывает ссылка
-    TARGET_FILE=$(readlink -f "$LAST_LINK")
-    
-    # Проверяем размер файла
-    if [ -f "$TARGET_FILE" ] && [ ! -s "$TARGET_FILE" ]; then
-        echo "⚠️ Обнаружен поврежденный (0 байт) файл сохранения: $TARGET_FILE"
-        
-        # Удаляем пустой файл
-        rm "$TARGET_FILE"
-        rm "$LAST_LINK"
-        
-        # Ищем последний нормальный файл (размером больше 0)
-        # Сортируем по времени (ls -t), берем первый, который больше 0 байт
-        VALID_BACKUP=$(find "$RESURRECT_DIR" -name "tmux_resurrect_*.txt" -size +1c -printf "%T@ %p\n" | sort -n | tail -1 | cut -d' ' -f2-)
-        
-        if [ -n "$VALID_BACKUP" ]; then
-            ln -s "$VALID_BACKUP" "$LAST_LINK"
-            echo "✅ Ссылка 'last' восстановлена на: $(basename "$VALID_BACKUP")"
-            notify-send -u critical "Tmux Resurrect" "Восстановлен битый файл сохранения"
-        else
-            echo "❌ Рабочих бэкапов не найдено."
-        fi
+  # Получаем реальный файл, на который указывает ссылка
+  TARGET_FILE=$(readlink -f "$LAST_LINK")
+
+  # Проверяем размер файла
+  if [ -f "$TARGET_FILE" ] && [ ! -s "$TARGET_FILE" ]; then
+    echo "⚠️ Обнаружен поврежденный (0 байт) файл сохранения: $TARGET_FILE"
+
+    # Удаляем пустой файл
+    rm "$TARGET_FILE"
+    rm "$LAST_LINK"
+
+    # Ищем последний нормальный файл (размером больше 0)
+    # Сортируем по времени (ls -t), берем первый, который больше 0 байт
+    VALID_BACKUP=$(find "$RESURRECT_DIR" -name "tmux_resurrect_*.txt" -size +1c -printf "%T@ %p\n" | sort -n | tail -1 | cut -d' ' -f2-)
+
+    if [ -n "$VALID_BACKUP" ]; then
+      ln -s "$VALID_BACKUP" "$LAST_LINK"
+      echo "✅ Ссылка 'last' восстановлена на: $(basename "$VALID_BACKUP")"
+      notify-send -u critical "Tmux Resurrect" "Восстановлен битый файл сохранения"
     else
-        echo "С файлом сохранения все в порядке."
+      echo "❌ Рабочих бэкапов не найдено."
     fi
+  else
+    echo "С файлом сохранения все в порядке."
+  fi
 fi
