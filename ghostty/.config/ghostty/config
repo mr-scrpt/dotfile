@@ -6,6 +6,9 @@ font-family = "JetBrainsMono Nerd Font"
 font-style = Regular
 font-size = 12
 
+
+# term = xterm-256color
+
 # Theme
 # theme = catppuccin-mocha
 theme = Catppuccin Mocha
@@ -26,14 +29,26 @@ cursor-style-blink = false
 # (all shell integration options must be passed together)
 shell-integration-features = no-cursor,ssh-env
 
-# Keyboard bindings
-keybind = shift+insert=paste_from_clipboard
-keybind = control+insert=copy_to_clipboard
+
+# --- Keyboard bindings ---
+
+# 1. Твои существующие настройки ресайза
 keybind = super+control+shift+alt+arrow_down=resize_split:down,100
 keybind = super+control+shift+alt+arrow_up=resize_split:up,100
 keybind = super+control+shift+alt+arrow_left=resize_split:left,100
 keybind = super+control+shift+alt+arrow_right=resize_split:right,100
 
+# 2. Фиксы для Shell (Fish/Zsh/Bash)
+# Ctrl+Backspace -> Ctrl+W (удаление слова назад)
+keybind = ctrl+backspace=text:\x17
+
+# Ctrl+Delete -> Alt+d (удаление слова вперед)
+keybind = ctrl+delete=text:\x1bd
+
+# 3. Отключаем Ctrl+H (чтобы не дублировал Backspace)
+# Мы биндим его на отправку "пустоты". 
+# Теперь нажатие Ctrl+H будет просто игнорироваться.
+keybind = ctrl+h=text:
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 
@@ -49,6 +64,4 @@ custom-shader = shaders/1/cursor_tail.glsl
 custom-shader = shaders/1/sonic_boom_cursor.glsl
 # custom-shader = shaders/2/cursor_blaze_no_trail.glsl
 # custom-shader = shaders/2/cursor_smear.glsl
-
-keybind = ctrl+backspace=unbind
 
