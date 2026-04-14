@@ -1,10 +1,24 @@
+-- TEST: мульти-файл раунд 2 (файл 3)
 return {
   {
     "neovim/nvim-lspconfig",
     opts = function(_, opts)
       local utils = require("custom.utils")
+      -- Внутри твоего return { "neovim/nvim-lspconfig", ... }
+      opts.servers = opts.servers or {}
+      opts.servers.lua_ls = {
+        settings = {
+          Lua = {
+            hint = { enable = false }, -- Настройка самого сервера
+          },
+        },
+        -- Дополнительная страховка: убираем возможность сервера сообщать, что он умеет в hints
+        on_attach = function(client, _)
+          client.server_capabilities.inlayHintProvider = false
+        end,
+      }
 
-      -- Настраиваем diagnostics
+      -- Выключаем inlay hints
       opts.diagnostics = opts.diagnostics or {}
       opts.diagnostics.virtual_text = false
       opts.diagnostics.float = { border = "rounded" }

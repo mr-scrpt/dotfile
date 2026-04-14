@@ -1,0 +1,60 @@
+#!/bin/sh
+
+create_session() {
+  local session_name="$1"
+
+  # Создаем сессию с первым окном (editor), в котором будет запущен shell
+  tmux new -s "$session_name" -d -n ' editor'
+
+  # Если nvim установлен, отправляем команду на его запуск в созданное окно
+  if command -v nvim >/dev/null 2>&1; then
+    tmux send-keys -t "$session_name:1" 'nvim' Enter
+  else
+    echo "Warning: nvim not found"
+  fi
+
+  # Создаем окно server (пустое)
+  tmux new-window -t "$session_name" -n ' server'
+
+  # Создаем окно infra (пустое)
+  tmux new-window -t "$session_name" -n ' infra'
+
+  # Создаем окно terminal (пустое)
+  tmux new-window -t "$session_name" -n ' terminal'
+
+  # Создаем окно docker с lazydocker
+  if command -v lazydocker >/dev/null 2>&1; then
+    tmux new-window -t "$session_name" -n ' docker' 'lazydocker'
+  else
+    tmux new-window -t "$session_name" -n ' docker'
+    echo "Warning: lazydocker not found"
+  fi
+
+  # Создаем окно file-manager с yazi (yy это wrapper для yazi)
+  if command -v yazi >/dev/null 2>&1; then
+    tmux new-window -t "$session_name" -n ' file-manager' 'yazi'
+  else
+    tmux new-window -t "$session_name" -n ' file-manager' 'fish'
+    tmux send-keys -t "$session_name:6" 'yy' Enter
+  fi
+
+  # Возвращаемся к первому окну
+  tmux select-window -t "$session_name:1"
+}
+
+# Проверяем, передано ли имя сессии
+if [ -z "$1" ]; then
+  echo "Usage: tdev <session-name>"
+  exit 1
+fi
+
+# Проверяем, находимся ли мы внутри tmux сессии
+if [ -n "$TMUX" ]; then
+  # Если мы в tmux, создаём новую сессию и переключаемся на неё
+  create_session "$1"
+  tmux switch-client -t "$1"
+else
+  # Если мы не в tmux, создаём сессию и присоединяемся к ней
+  create_session "$1"
+  tmux -2 attach-session -t "$1"
+fi

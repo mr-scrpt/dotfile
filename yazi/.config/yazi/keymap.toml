@@ -1,3 +1,10 @@
+# --- WINDOW MANAGEMENT / TMUX DUAL PANE ---
+[[mgr.prepend_keymap]]
+on   = "<C-s>"
+run  = "plugin dual-pane"
+desc = "Toggle Dual Pane (Tmux + Single Column Mode)"
+
+
 [[mgr.prepend_keymap]]
 on  = "<C-n>"
 run = 'shell -- ripdrag "$@"'
@@ -40,6 +47,12 @@ desc = "Go to Browser DLs"
 on   = [ "g", "h", "h" ]
 run  = "cd ~/Hellkitchen"
 desc = "Go to Hellkitchen"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "h", "w" ]
+run  = "cd ~/Hellkitchen/workspace/"
+desc = "Go to Hellkitchen"
+
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "h", "p" ]

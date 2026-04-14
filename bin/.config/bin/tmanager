@@ -1,0 +1,107 @@
+#!/usr/bin/env bun
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { stat, rm, readlink } from 'fs/promises';
+import { resolve } from 'path';
+
+const execAsync = promisify(exec);
+
+const HOME = process.env.HOME || '/home/mr';
+const DOTFILES_BIN = `${HOME}/Hellkitchen/dotfile/bin/.config/bin`;
+const RESURRECT_DIR = `${HOME}/.config/tmux/plugins/tmux-resurrect/scripts`;
+const BACKUP_DIR = `${HOME}/.local/share/tmux/resurrect`;
+
+async function runCmd(cmd: string, ignoreError = false): Promise<string> {
+  try {
+    const { stdout, stderr } = await execAsync(cmd, { shell: '/bin/bash' });
+    if (stderr && !stderr.includes('no current client')) {
+      console.error(`[Manager/Warning] ${cmd} stderr:\n${stderr.trim()}`);
+    }
+    return stdout.trim();
+  } catch (error: any) {
+    if (!ignoreError) {
+      console.error(`[Manager/ERROR] Command failed: ${cmd}\n`, error.message);
+      throw error;
+    }
+    return '';
+  }
+}
+
+async function handleRestore() {
+  console.log('[Manager] Starting restore phase...');
+  
+  // ФИКС: Удаляем застрявший лок, чтобы фоновые хуки автосохранения снова работали
+  await runCmd(`rm -rf /tmp/tmux_save.lock`, true);
+  
+  await runCmd(`${DOTFILES_BIN}/tmux_fix_resurrect_silence`, true);
+  await new Promise(r => setTimeout(r, 1000));
+
+  console.log('[Manager] Executing tmux-resurrect restore.sh...');
+  await runCmd(`${RESURRECT_DIR}/restore.sh`, true);
+
+  const sessionCountStr = await runCmd(`tmux list-sessions | wc -l`, true);
+  const sessionCount = parseInt(sessionCountStr, 10) || 0;
+
+  if (sessionCount > 1) {
+    console.log(`[Manager] Found ${sessionCount} sessions. Killing systemd-init dummy...`);
+    await runCmd(`tmux kill-session -t systemd-init`, true);
+  } else {
+    console.log('[Manager] No user sessions restored. Leaving systemd-init alive.');
+  }
+  console.log('[Manager] Restore phase completed successfully.');
+}
+
+async function handleStop() {
+  console.log('[Manager] Starting stop/cleanup phase...');
+  
+  // ФИКС: Убрали жесткий timeout 4s. Архивация pane_contents требует времени!
+  // Таймаут теперь контроллируется самим Systemd.
+  console.log('[Manager] Saving sessions (waiting for tmux-resurrect to finish)...');
+  await runCmd(`${RESURRECT_DIR}/save.sh`, true);
+
+  console.log('[Manager] Auditing save file integrity...');
+  try {
+    const lastLinkPath = `${BACKUP_DIR}/last`;
+    const target = await readlink(lastLinkPath);
+    const targetPath = resolve(BACKUP_DIR, target);
+    
+    const stats = await stat(targetPath);
+    if (stats.size < 600) {
+      console.error(`[Manager/CRITICAL] Generated save file is too small (${stats.size} bytes). Corrupted! Rolling back...`);
+      await rm(lastLinkPath).catch(()=>{});
+      await rm(targetPath).catch(()=>{});
+    } else {
+      console.log(`[Manager] Save successful. File size: ${stats.size} bytes.`);
+    }
+  } catch (e) {
+    console.log('[Manager] Audit skipped (no previous backup found).');
+  }
+
+  console.log('[Manager] Cleaning up tmux-spawn scopes...');
+  const killScopesCmd = `systemctl --user list-units --state=running --no-legend | grep "tmux-spawn-" | awk '{print $1}' | xargs -r systemctl --user kill -s SIGKILL`;
+  await runCmd(killScopesCmd, true);
+
+  console.log('[Manager] Cleaning up embedded nvim processes...');
+  await runCmd(`pgrep -f "nvim --embed" | xargs -r kill -9 || true`, true);
+
+  console.log('[Manager] Killing tmux server...');
+  await runCmd(`tmux kill-server`, true);
+
+  console.log('[Manager] Stop phase completed. Goodnight!');
+}
+
+async function main() {
+  const action = process.argv[2];
+  switch (action) {
+    case 'restore': await handleRestore(); break;
+    case 'stop': await handleStop(); break;
+    default:
+      console.error('Usage: tmanager <restore|stop>');
+      process.exit(1);
+  }
+}
+
+main().catch(err => {
+  console.error('[Manager] Fatal error:', err);
+  process.exit(1);
+});

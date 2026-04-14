@@ -1,3 +1,4 @@
+--  nvim/.config/nvim/lua/plugins/neotree.lua
 local Utils = require("custom.utils")
 local INITIAL_CWD = vim.uv.cwd()
 
@@ -83,7 +84,7 @@ return {
       commands = {
         grug_far_replace = Utils.grug_far_replace,
         grug_far_replace_visual = Utils.grug_far_replace_visual,
-        
+
         -- Favorites commands
         add_to_flat_favorites = function(state)
           require("neotree-favorites.commands").add_to_flat_favorites(state)
@@ -135,8 +136,8 @@ return {
         window = {
           mappings = {
             -- Favorites commands (работают в filesystem view)
-            ["s"] = "toggle_flat_favorite",  -- Toggle favorite для текущего файла
-            ["I"] = "show_favorites_info",    -- Показать инфо об избранном
+            ["s"] = "toggle_flat_favorite", -- Toggle favorite для текущего файла
+            ["I"] = "show_favorites_info", -- Показать инфо об избранном
             -- NOTE: "w" = стандартный "open_with_window_picker", не переопределяем
             -- Для flat_favorites view используйте "X" для очистки всех
           },
@@ -180,13 +181,13 @@ return {
             ["D"] = "fuzzy_finder_directory",
             ["f"] = "filter_on_submit",
             ["<c-x>"] = "clear_filter",
-            
+
             -- Favorites management
-            ["s"] = "remove_invalid_favorites",  -- Remove deleted/moved paths
-            ["S"] = "toggle_flat_favorite",      -- Toggle favorite for current node
-            ["X"] = "clear_all_flat_favorites",  -- Clear all favorites
-            ["I"] = "show_favorites_info",       -- Show favorites info
-            ["H"] = "toggle_hidden",             -- Toggle gitignored/hidden files
+            ["s"] = "remove_invalid_favorites", -- Remove deleted/moved paths
+            ["S"] = "toggle_flat_favorite", -- Toggle favorite for current node
+            ["X"] = "clear_all_flat_favorites", -- Clear all favorites
+            ["I"] = "show_favorites_info", -- Show favorites info
+            ["H"] = "toggle_hidden", -- Toggle gitignored/hidden files
           },
           -- fuzzy_finder_mappings наследуются из init.lua (filesystem defaults)
           -- Enter НЕ мапится здесь - обрабатывается через on_submit в filter.lua
@@ -197,13 +198,13 @@ return {
             { "icon", use_filtered_colors = true },
             { "current_filter" },
             { "name", use_filtered_colors = true },
-            { "filtered_by" },  -- Показывать статус (gitignored, dotfile, etc)
+            { "filtered_by" }, -- Показывать статус (gitignored, dotfile, etc)
           },
           file = {
             { "indent" },
             { "icon", use_filtered_colors = true },
             { "name", use_git_status_colors = true, use_filtered_colors = true },
-            { "filtered_by" },  -- Показывать статус (gitignored, dotfile, etc)
+            { "filtered_by" }, -- Показывать статус (gitignored, dotfile, etc)
             { "git_status" },
           },
         },

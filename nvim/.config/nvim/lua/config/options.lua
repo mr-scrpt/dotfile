@@ -10,5 +10,6 @@ opt.clipboard = ""
 opt.laststatus = 3
 opt.showmode = false
 opt.relativenumber = true
+opt.spelllang = { "en", "ru" }
 
 vim.g.ai_cmp = false

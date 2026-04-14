@@ -41,3 +41,5 @@ map("n", "<C-l>", "<C-w>l", { desc = "Go to right window" })
 
 map({ "n", "v" }, "<leader>j", "<cmd>cnext<CR>zz", { desc = "[J] Jump Next" })
 map({ "n", "v" }, "<leader>k", "<cmd>cprev<CR>zz", { desc = "[K] Jump Prev" })
+
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })

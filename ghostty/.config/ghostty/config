@@ -7,7 +7,6 @@ font-style = Regular
 font-size = 12
 
 
-# term = xterm-256color
 
 # Theme
 # theme = catppuccin-mocha
@@ -48,7 +47,7 @@ keybind = ctrl+delete=text:\x1bd
 # 3. Отключаем Ctrl+H (чтобы не дублировал Backspace)
 # Мы биндим его на отправку "пустоты". 
 # Теперь нажатие Ctrl+H будет просто игнорироваться.
-keybind = ctrl+h=text:
+keybind = ctrl+h=unbind
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 
@@ -64,4 +63,14 @@ custom-shader = shaders/1/cursor_tail.glsl
 custom-shader = shaders/1/sonic_boom_cursor.glsl
 # custom-shader = shaders/2/cursor_blaze_no_trail.glsl
 # custom-shader = shaders/2/cursor_smear.glsl
+#
 
+keybind = shift+insert=paste_from_clipboard
+
+# Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
+async-backend = epoll
+
+
+
+clipboard-read = allow
+clipboard-paste-protection = false

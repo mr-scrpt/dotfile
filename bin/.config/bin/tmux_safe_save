@@ -1,0 +1,100 @@
+#!/bin/bash
+
+REAL_SAVE_SCRIPT="/home/mr/.config/tmux/plugins/tmux-resurrect/scripts/save.sh"
+LOG_FILE="/tmp/tmux_save_guard.log"
+LOCK_DIR="/tmp/tmux_save.lock"
+
+log() { echo "[$(date '+%H:%M:%S')] $1" >>"$LOG_FILE"; }
+
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  exit 0
+fi
+trap 'rm -rf "$LOCK_DIR"' EXIT
+
+# ==========================================
+# ИСПРАВЛЕННАЯ ЛОГИКА SYSTEMD-INIT
+# ==========================================
+if tmux has-session -t "systemd-init" 2>/dev/null; then
+  SESSION_COUNT=$(tmux list-sessions 2>/dev/null | wc -l)
+
+  if [ "$SESSION_COUNT" -gt 1 ]; then
+    # Пользователь создал сессию! Убиваем техническую заглушку.
+    log "GUARD: Found real session. Killing dummy systemd-init..."
+    tmux kill-session -t "systemd-init" 2>/dev/null
+  else
+    # Есть только заглушка. Сохранять пустой сервер нельзя.
+    exit 0
+  fi
+fi
+# ==========================================
+
+WIN_COUNT=$(tmux list-windows -a 2>/dev/null | wc -l)
+
+if [ -z "$WIN_COUNT" ] || [ "$WIN_COUNT" -lt 1 ]; then
+  log "GUARD: Server empty or dying. SKIP."
+  exit 0
+fi
+
+log "ACTION: User active (Windows: $WIN_COUNT). Saving..."
+
+"$REAL_SAVE_SCRIPT" >>"$LOG_FILE" 2>&1
+
+RESURRECT_DIR="/home/mr/.local/share/tmux/resurrect"
+LAST_LINK="$RESURRECT_DIR/last"
+
+if [ -L "$LAST_LINK" ]; then
+  TARGET=$(readlink -f "$LAST_LINK")
+  if [ -f "$TARGET" ]; then
+    SIZE=$(stat -c%s "$TARGET")
+
+    if [ "$SIZE" -lt 600 ]; then
+      log "ERROR: Generated file too small ($SIZE bytes). Deleting to protect history."
+      rm "$LAST_LINK"
+      rm "$TARGET"
+    fi
+  fi
+fi
+##!/bin/bash
+#
+#REAL_SAVE_SCRIPT="/home/mr/.config/tmux/plugins/tmux-resurrect/scripts/save.sh"
+#LOG_FILE="/tmp/tmux_save_guard.log"
+#LOCK_DIR="/tmp/tmux_save.lock"
+#
+#log() { echo "[$(date '+%H:%M:%S')] $1" >>"$LOG_FILE"; }
+#
+#if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+#  exit 0
+#fi
+#trap 'rm -rf "$LOCK_DIR"' EXIT
+#
+#if tmux has-session -t "systemd-init" 2>/dev/null; then
+#
+#  exit 0
+#fi
+#
+#WIN_COUNT=$(tmux list-windows -a 2>/dev/null | wc -l)
+#
+#if [ -z "$WIN_COUNT" ] || [ "$WIN_COUNT" -lt 1 ]; then
+#  log "GUARD: Server empty or dying. SKIP."
+#  exit 0
+#fi
+#
+#log "ACTION: User active (Windows: $WIN_COUNT). Saving..."
+#
+#"$REAL_SAVE_SCRIPT" >>"$LOG_FILE" 2>&1
+#
+#RESURRECT_DIR="/home/mr/.local/share/tmux/resurrect"
+#LAST_LINK="$RESURRECT_DIR/last"
+#
+#if [ -L "$LAST_LINK" ]; then
+#  TARGET=$(readlink -f "$LAST_LINK")
+#  if [ -f "$TARGET" ]; then
+#    SIZE=$(stat -c%s "$TARGET")
+#
+#    if [ "$SIZE" -lt 600 ]; then
+#      log "ERROR: Generated file too small ($SIZE bytes). Deleting to protect history."
+#      rm "$LAST_LINK"
+#      rm "$TARGET"
+#    fi
+#  fi
+#fi

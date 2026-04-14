@@ -5,34 +5,57 @@ unset TMUX
 TARGET_NAME="$1"
 START_DIR="$2"
 GLOBAL_SESSION="_global_popups"
+MEM_KEY="@popup_mem_${TARGET_NAME}"
 
 if [ -z "$TARGET_NAME" ]; then TARGET_NAME="default"; fi
 if [ -z "$START_DIR" ]; then START_DIR="$HOME"; fi
 
-# --- FIX: ПОЛУЧЕНИЕ АКТУАЛЬНОГО WAYLAND_DISPLAY ---
-# 1. Спрашиваем у текущего клиента (того, где ты нажал Ctrl+g), какой у него дисплей.
-# #{client_env:VAR} — это самый надежный способ получить свежую переменную.
-WD=$(tmux display-message -p "#{client_env:WAYLAND_DISPLAY}")
+# ==============================================================================
+# ЧАСТЬ 1: ПОИСК СОКЕТА (SOCKET HUNTER + TIME SORT)
+# ==============================================================================
 
-# Если вдруг не получилось (пусто), берем из текущего окружения скрипта
+# 1. Сначала пробуем стандартные методы (на случай, если они работают)
+WD=$(tmux display-message -p "#{client_env:WAYLAND_DISPLAY}")
+if [ -z "$WD" ]; then WD="$WAYLAND_DISPLAY"; fi
+
+# 2. ЕСЛИ ПУСТО (после перезагрузки): Ищем самый свежий файл на диске
 if [ -z "$WD" ]; then
-  WD="$WAYLAND_DISPLAY"
+  USER_ID=$(id -u)
+  RUNTIME_DIR="/run/user/$USER_ID"
+
+  # IMPROVEMENT:
+  # Вместо find (который берет любой), используем ls -t (сортировка по времени).
+  # head -n 1 берет самый верхний (самый новый).
+  # Это защищает от старых "зомби-сокетов", оставшихся после сбоев.
+  FOUND_SOCKET=$(ls -t "$RUNTIME_DIR"/wayland-* 2>/dev/null | head -n 1)
+
+  if [ -n "$FOUND_SOCKET" ]; then
+    # Отрезаем путь, оставляем только имя (например, wayland-1)
+    WD=$(basename "$FOUND_SOCKET")
+  fi
 fi
 
-# 2. ПРИНУДИТЕЛЬНО ОБНОВЛЯЕМ ГЛОБАЛЬНОЕ ОКРУЖЕНИЕ TMUX
-# Это нужно, чтобы команда 'copy-pipe' (wl-copy), которую запускает сервер, видела новый сокет.
+# 3. АВАРИЙНЫЙ ВАРИАНТ (Если вообще ничего не нашли, ставим дефолт)
+if [ -z "$WD" ]; then WD="wayland-1"; fi
+
+# ==============================================================================
+# ЧАСТЬ 2: ЖЕСТКОЕ ОБНОВЛЕНИЕ ОКРУЖЕНИЯ
+# ==============================================================================
+
+# Мы нашли сокет физически. Теперь ТЫКАЕМ его в Tmux.
+# Обновляем глобально (-g), чтобы wl-copy (запускаемый сервером) увидел его.
 tmux set-environment -g WAYLAND_DISPLAY "$WD"
 
-# --- КОНЕЦ FIX ---
+# ==============================================================================
+# ЧАСТЬ 3: ПОДГОТОВКА СЕССИИ
+# ==============================================================================
 
 if ! tmux has-session -t "$GLOBAL_SESSION" 2>/dev/null; then
-  # Создаем сессию с правильной переменной
   tmux new-session -d -s "$GLOBAL_SESSION" -c "$START_DIR" -n "$TARGET_NAME" -e "WAYLAND_DISPLAY=$WD"
-
   tmux set-option -t "$GLOBAL_SESSION" detach-on-destroy off
   tmux set-option -t "$GLOBAL_SESSION" status on
 else
-  # Если сессия уже жива (восстановлена), ОБНОВЛЯЕМ В НЕЙ ПЕРЕМЕННУЮ
+  # Если сессия есть — обновляем переменную ВНУТРИ неё
   tmux set-environment -t "$GLOBAL_SESSION" WAYLAND_DISPLAY "$WD"
 
   if ! tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${TARGET_NAME}$"; then
@@ -40,16 +63,207 @@ else
   fi
 fi
 
-SHADOW_SESSION="popup_shadow_$$"
+# ==============================================================================
+# ЧАСТЬ 4: ЛОГИКА ПАМЯТИ
+# ==============================================================================
 
-# Теневая сессия подхватит обновленное окружение
+LAST_WIN=$(tmux show-option -gqv "$MEM_KEY")
+
+if [[ -n "$LAST_WIN" ]] && tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${LAST_WIN}$"; then
+  OPEN_WIN="$LAST_WIN"
+else
+  OPEN_WIN="$TARGET_NAME"
+fi
+
+# ==============================================================================
+# ЧАСТЬ 5: ЗАПУСК
+# ==============================================================================
+
+SHADOW_SESSION="popup_shadow_$$"
 tmux new-session -d -t "$GLOBAL_SESSION" -s "$SHADOW_SESSION"
 
+# Обновляем ENV тени
+tmux set-environment -t "$SHADOW_SESSION" WAYLAND_DISPLAY "$WD"
+
 tmux set-option -t "$SHADOW_SESSION" status off
-tmux set-option -t "$SHADOW_SESSION" detach-on-destroy on
+tmux set-option -t "$SHADOW_SESSION" detach-on-destroy off
 
-tmux select-window -t "$SHADOW_SESSION:${TARGET_NAME}"
+tmux select-window -t "$SHADOW_SESSION:${OPEN_WIN}"
 
-trap "tmux kill-session -t '$SHADOW_SESSION' 2>/dev/null" EXIT
+trap "tmux kill-session -t '$SHADOW_SESSION' 2>/dev/null" EXIT INT TERM
 
+# ЗАПУСК И ОЖИДАНИЕ (Скрипт висит тут пока ты работаешь)
 tmux attach-session -t "$SHADOW_SESSION"
+
+# ==============================================================================
+# ЧАСТЬ 6: СОХРАНЕНИЕ
+# ==============================================================================
+
+FINAL_WIN=$(tmux display-message -t "$SHADOW_SESSION" -p "#{window_name}" 2>/dev/null)
+
+if [ -n "$FINAL_WIN" ]; then
+  tmux set-option -g "$MEM_KEY" "$FINAL_WIN"
+fi
+
+##!/bin/bash
+#
+#unset TMUX
+#
+#TARGET_NAME="$1"
+#START_DIR="$2"
+#GLOBAL_SESSION="_global_popups"
+#MEM_KEY="@popup_mem_${TARGET_NAME}"
+#
+#if [ -z "$TARGET_NAME" ]; then TARGET_NAME="default"; fi
+#if [ -z "$START_DIR" ]; then START_DIR="$HOME"; fi
+#
+## ==============================================================================
+## ЧАСТЬ 1: ПОИСК СОКЕТА (SOCKET HUNTER)
+## ==============================================================================
+#
+## 1. Сначала пробуем стандартные методы (на случай, если они работают)
+#WD=$(tmux display-message -p "#{client_env:WAYLAND_DISPLAY}")
+#if [ -z "$WD" ]; then WD="$WAYLAND_DISPLAY"; fi
+#
+## 2. ЕСЛИ ПУСТО (твой случай после перезагрузки): Ищем файл на диске
+#if [ -z "$WD" ]; then
+#  USER_ID=$(id -u)
+#  RUNTIME_DIR="/run/user/$USER_ID"
+#
+#  # Hyprland обычно использует wayland-1, но проверим всё
+#  # Ищем файлы сокетов wayland-* и берем первый попавшийся
+#  FOUND_SOCKET=$(find "$RUNTIME_DIR" -maxdepth 1 -name "wayland-*" -type s -print -quit 2>/dev/null)
+#
+#  if [ -n "$FOUND_SOCKET" ]; then
+#    # Отрезаем путь, оставляем только имя (например, wayland-1)
+#    WD=$(basename "$FOUND_SOCKET")
+#  fi
+#fi
+#
+## 3. АВАРИЙНЫЙ ВАРИАНТ (Если вообще ничего не нашли, ставим дефолт для Hyprland)
+#if [ -z "$WD" ]; then WD="wayland-1"; fi
+#
+## ==============================================================================
+## ЧАСТЬ 2: ЖЕСТКОЕ ОБНОВЛЕНИЕ ОКРУЖЕНИЯ
+## ==============================================================================
+#
+## Мы нашли сокет физически. Теперь ТЫКАЕМ его в Tmux.
+## Обновляем глобально (-g), чтобы wl-copy (запускаемый сервером) увидел его.
+#tmux set-environment -g WAYLAND_DISPLAY "$WD"
+#
+## ==============================================================================
+## ЧАСТЬ 3: ПОДГОТОВКА СЕССИИ
+## ==============================================================================
+#
+#if ! tmux has-session -t "$GLOBAL_SESSION" 2>/dev/null; then
+#  tmux new-session -d -s "$GLOBAL_SESSION" -c "$START_DIR" -n "$TARGET_NAME" -e "WAYLAND_DISPLAY=$WD"
+#  tmux set-option -t "$GLOBAL_SESSION" detach-on-destroy off
+#  tmux set-option -t "$GLOBAL_SESSION" status on
+#else
+#  # Если сессия есть — обновляем переменную ВНУТРИ неё
+#  tmux set-environment -t "$GLOBAL_SESSION" WAYLAND_DISPLAY "$WD"
+#
+#  if ! tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${TARGET_NAME}$"; then
+#    tmux new-window -t "$GLOBAL_SESSION" -n "$TARGET_NAME" -c "$START_DIR"
+#  fi
+#fi
+#
+## ==============================================================================
+## ЧАСТЬ 4: ЛОГИКА ПАМЯТИ
+## ==============================================================================
+#
+#LAST_WIN=$(tmux show-option -gqv "$MEM_KEY")
+#
+#if [[ -n "$LAST_WIN" ]] && tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${LAST_WIN}$"; then
+#  OPEN_WIN="$LAST_WIN"
+#else
+#  OPEN_WIN="$TARGET_NAME"
+#fi
+#
+## ==============================================================================
+## ЧАСТЬ 5: ЗАПУСК
+## ==============================================================================
+#
+#SHADOW_SESSION="popup_shadow_$$"
+#tmux new-session -d -t "$GLOBAL_SESSION" -s "$SHADOW_SESSION"
+#
+## Обновляем ENV тени
+#tmux set-environment -t "$SHADOW_SESSION" WAYLAND_DISPLAY "$WD"
+#
+#tmux set-option -t "$SHADOW_SESSION" status off
+#tmux set-option -t "$SHADOW_SESSION" detach-on-destroy off
+#
+#tmux select-window -t "$SHADOW_SESSION:${OPEN_WIN}"
+#
+#trap "tmux kill-session -t '$SHADOW_SESSION' 2>/dev/null" EXIT INT TERM
+#
+## ЗАПУСК И ОЖИДАНИЕ (Скрипт висит тут пока ты работаешь)
+#tmux attach-session -t "$SHADOW_SESSION"
+#
+## ==============================================================================
+## ЧАСТЬ 6: СОХРАНЕНИЕ
+## ==============================================================================
+#
+#FINAL_WIN=$(tmux display-message -t "$SHADOW_SESSION" -p "#{window_name}" 2>/dev/null)
+#
+#if [ -n "$FINAL_WIN" ]; then
+#  tmux set-option -g "$MEM_KEY" "$FINAL_WIN"
+#fi
+
+###############################
+################################
+#########
+
+# Trap сработает автоматически и убьет тень
+##!/bin/bash
+#
+#unset TMUX
+#
+#TARGET_NAME="$1"
+#START_DIR="$2"
+#GLOBAL_SESSION="_global_popups"
+#MEM_KEY="@popup_mem_${TARGET_NAME}"
+#
+#if [ -z "$TARGET_NAME" ]; then TARGET_NAME="default"; fi
+#if [ -z "$START_DIR" ]; then START_DIR="$HOME"; fi
+#
+#WD=$(tmux display-message -p "#{client_env:WAYLAND_DISPLAY}")
+#if [ -z "$WD" ]; then WD="$WAYLAND_DISPLAY"; fi
+#tmux set-environment -g WAYLAND_DISPLAY "$WD" 2>/dev/null
+#
+#if ! tmux has-session -t "$GLOBAL_SESSION" 2>/dev/null; then
+#  tmux new-session -d -s "$GLOBAL_SESSION" -c "$START_DIR" -n "$TARGET_NAME" -e "WAYLAND_DISPLAY=$WD"
+#  tmux set-option -t "$GLOBAL_SESSION" detach-on-destroy off
+#  tmux set-option -t "$GLOBAL_SESSION" status on
+#else
+#  tmux set-environment -t "$GLOBAL_SESSION" WAYLAND_DISPLAY "$WD" 2>/dev/null
+#  if ! tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${TARGET_NAME}$"; then
+#    tmux new-window -t "$GLOBAL_SESSION" -n "$TARGET_NAME" -c "$START_DIR"
+#  fi
+#fi
+#
+#LAST_WIN=$(tmux show-option -gqv "$MEM_KEY")
+#
+#if [[ -n "$LAST_WIN" ]] && tmux list-windows -t "$GLOBAL_SESSION" -F "#{window_name}" | grep -q "^${LAST_WIN}$"; then
+#  OPEN_WIN="$LAST_WIN"
+#else
+#  OPEN_WIN="$TARGET_NAME"
+#fi
+#
+#SHADOW_SESSION="popup_shadow_$$"
+#tmux new-session -d -t "$GLOBAL_SESSION" -s "$SHADOW_SESSION"
+#
+#tmux set-option -t "$SHADOW_SESSION" status off
+#tmux set-option -t "$SHADOW_SESSION" detach-on-destroy off
+#
+#tmux select-window -t "$SHADOW_SESSION:${OPEN_WIN}"
+#
+#trap "tmux kill-session -t '$SHADOW_SESSION' 2>/dev/null" EXIT INT TERM
+#
+#tmux attach-session -t "$SHADOW_SESSION"
+#
+#FINAL_WIN=$(tmux display-message -t "$SHADOW_SESSION" -p "#{window_name}" 2>/dev/null)
+#
+#if [ -n "$FINAL_WIN" ]; then
+#  tmux set-option -g "$MEM_KEY" "$FINAL_WIN"
+#fi

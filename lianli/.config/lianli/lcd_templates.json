@@ -1,0 +1,569 @@
+{
+  "templates": [
+    {
+      "id": "user-cpu-temp",
+      "name": "CPU Temperature",
+      "base_width": 400,
+      "base_height": 400,
+      "background": {
+        "type": "color",
+        "rgb": [49, 50, 68, 255]
+      },
+      "widgets": [
+        {
+          "id": "label-cpu",
+          "x": 200,
+          "y": 130,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "CPU",
+            "font": { "path": null },
+            "font_size": 44,
+            "color": [205, 214, 244, 255],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-temp",
+          "x": 200,
+          "y": 200,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "command",
+              "cmd": "sensors | grep 'Tctl' | awk '{print $2}' | tr -d '+°C'"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [88, 91, 112, 255],
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+            ]
+          }
+        },
+        {
+          "id": "value-temp",
+          "x": 200,
+          "y": 195,
+          "width": 200,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "sensors | grep 'Tctl' | awk '{print $2}' | tr -d '+°C'"
+            },
+            "format": "{:.0}",
+            "unit": "°C",
+            "font": { "path": null },
+            "font_size": 80,
+            "color": [234, 118, 203, 255],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+            ]
+          }
+        },
+        {
+          "id": "label-temp",
+          "x": 200,
+          "y": 260,
+          "width": 160,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "TEMP",
+            "font": { "path": null },
+            "font_size": 34,
+            "color": [137, 180, 250, 255],
+            "align": "center"
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    },
+    {
+      "id": "user-cpu-usage",
+      "name": "CPU Usage",
+      "base_width": 400,
+      "base_height": 400,
+      "background": {
+        "type": "color",
+        "rgb": [49, 50, 68, 255]
+      },
+      "widgets": [
+        {
+          "id": "label-cpu",
+          "x": 200,
+          "y": 130,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "CPU",
+            "font": { "path": null },
+            "font_size": 44,
+            "color": [205, 214, 244, 255],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-cpu",
+          "x": 200,
+          "y": 200,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "cpu_usage"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [88, 91, 112, 255],
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+            ]
+          }
+        },
+        {
+          "id": "value-cpu",
+          "x": 200,
+          "y": 195,
+          "width": 200,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "cpu_usage"
+            },
+            "format": "{:.0}",
+            "unit": "%",
+            "font": { "path": null },
+            "font_size": 80,
+            "color": [234, 118, 203, 255],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+            ]
+          }
+        },
+        {
+          "id": "label-usage",
+          "x": 200,
+          "y": 260,
+          "width": 160,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "USAGE",
+            "font": { "path": null },
+            "font_size": 34,
+            "color": [137, 180, 250, 255],
+            "align": "center"
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    },
+    {
+      "id": "user-ram-usage",
+      "name": "RAM Usage",
+      "base_width": 400,
+      "base_height": 400,
+      "background": {
+        "type": "color",
+        "rgb": [49, 50, 68, 255]
+      },
+      "widgets": [
+        {
+          "id": "label-ram",
+          "x": 200,
+          "y": 130,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "RAM",
+            "font": { "path": null },
+            "font_size": 44,
+            "color": [205, 214, 244, 255],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-ram",
+          "x": 200,
+          "y": 200,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "mem_usage"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [88, 91, 112, 255],
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+            ]
+          }
+        },
+        {
+          "id": "value-ram",
+          "x": 200,
+          "y": 195,
+          "width": 200,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "mem_usage"
+            },
+            "format": "{:.0}",
+            "unit": "%",
+            "font": { "path": null },
+            "font_size": 80,
+            "color": [234, 118, 203, 255],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+            ]
+          }
+        },
+        {
+          "id": "label-mem",
+          "x": 200,
+          "y": 260,
+          "width": 160,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "USAGE",
+            "font": { "path": null },
+            "font_size": 34,
+            "color": [137, 180, 250, 255],
+            "align": "center"
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    },
+    {
+      "id": "user-net-usage",
+      "name": "Network Usage",
+      "base_width": 400,
+      "base_height": 400,
+      "background": {
+        "type": "color",
+        "rgb": [49, 50, 68, 255]
+      },
+      "widgets": [
+        {
+          "id": "label-net",
+          "x": 200,
+          "y": 130,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "NET",
+            "font": { "path": null },
+            "font_size": 44,
+            "color": [205, 214, 244, 255],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-net",
+          "x": 200,
+          "y": 200,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 2000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "command",
+              "cmd": "R1=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T1=$(cat /sys/class/net/wlan0/statistics/tx_bytes); sleep 1; R2=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T2=$(cat /sys/class/net/wlan0/statistics/tx_bytes); echo $(( (R2 - R1 + T2 - T1) / 1024 ))"
+            },
+            "value_min": 0.0,
+            "value_max": 10240.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [88, 91, 112, 255],
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+            ]
+          }
+        },
+        {
+          "id": "value-net",
+          "x": 200,
+          "y": 195,
+          "width": 260,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 2000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "R1=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T1=$(cat /sys/class/net/wlan0/statistics/tx_bytes); sleep 1; R2=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T2=$(cat /sys/class/net/wlan0/statistics/tx_bytes); echo $(( (R2 - R1 + T2 - T1) / 1024 ))"
+            },
+            "format": "{:.0}",
+            "unit": "KB/s",
+            "font": { "path": null },
+            "font_size": 64,
+            "color": [234, 118, 203, 255],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 10240.0,
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+            ]
+          }
+        },
+        {
+          "id": "label-speed",
+          "x": 200,
+          "y": 260,
+          "width": 200,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "TRAFFIC",
+            "font": { "path": null },
+            "font_size": 34,
+            "color": [137, 180, 250, 255],
+            "align": "center"
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    },
+    {
+      "id": "user-ping",
+      "name": "Ping Latency",
+      "base_width": 400,
+      "base_height": 400,
+      "background": {
+        "type": "color",
+        "rgb": [49, 50, 68, 255]
+      },
+      "widgets": [
+        {
+          "id": "label-ping",
+          "x": 200,
+          "y": 120,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "PING",
+            "font": { "path": null },
+            "font_size": 44,
+            "color": [205, 214, 244, 255],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-ping",
+          "x": 200,
+          "y": 200,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 3000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/ping_stats.sh | cut -d'|' -f1"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [88, 91, 112, 255],
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+            ]
+          }
+        },
+        {
+          "id": "value-ping",
+          "x": 200,
+          "y": 180,
+          "width": 220,
+          "height": 80,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 3000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/ping_stats.sh | cut -d'|' -f1"
+            },
+            "format": "{:.1}",
+            "unit": "ms",
+            "font": { "path": null },
+            "font_size": 72,
+            "color": [234, 118, 203, 255],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+            ]
+          }
+        },
+        {
+          "id": "label-avg",
+          "x": 200,
+          "y": 240,
+          "width": 200,
+          "height": 35,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "AVG / 1 MIN",
+            "font": { "path": null },
+            "font_size": 22,
+            "color": [137, 180, 250, 255],
+            "align": "center"
+          }
+        },
+        {
+          "id": "value-avg",
+          "x": 200,
+          "y": 272,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 3000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/ping_stats.sh | cut -d'|' -f2"
+            },
+            "format": "{:.1}",
+            "unit": "ms",
+            "font": { "path": null },
+            "font_size": 36,
+            "color": [137, 180, 250, 255],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              { "max": null, "color": [137, 180, 250], "alpha": 255 }
+            ]
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    }
+  ]
+}
