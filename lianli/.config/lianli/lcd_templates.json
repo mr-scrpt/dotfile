@@ -7,13 +7,18 @@
       "base_height": 400,
       "background": {
         "type": "color",
-        "rgb": [49, 50, 68, 255]
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
       },
       "widgets": [
         {
           "id": "label-cpu",
           "x": 200,
-          "y": 130,
+          "y": 115,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -23,9 +28,16 @@
           "kind": {
             "type": "label",
             "text": "CPU",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 44,
-            "color": [205, 214, 244, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         },
@@ -50,9 +62,22 @@
             "start_angle": 270,
             "sweep_angle": 360,
             "inner_radius_pct": 0.7,
-            "background_color": [88, 91, 112, 255],
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
             ]
           }
         },
@@ -74,21 +99,36 @@
             },
             "format": "{:.0}",
             "unit": "°C",
-            "font": { "path": null },
-            "font_size": 80,
-            "color": [234, 118, 203, 255],
+            "font": {
+              "path": null
+            },
+            "font_size": 96,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
             "align": "center",
             "value_min": 0.0,
             "value_max": 100.0,
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
             ]
           }
         },
         {
           "id": "label-temp",
           "x": 200,
-          "y": 260,
+          "y": 275,
           "width": 160,
           "height": 40,
           "rotation": 0.0,
@@ -98,9 +138,16 @@
           "kind": {
             "type": "label",
             "text": "TEMP",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 34,
-            "color": [137, 180, 250, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         }
@@ -115,13 +162,18 @@
       "base_height": 400,
       "background": {
         "type": "color",
-        "rgb": [49, 50, 68, 255]
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
       },
       "widgets": [
         {
           "id": "label-cpu",
           "x": 200,
-          "y": 130,
+          "y": 115,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -131,9 +183,16 @@
           "kind": {
             "type": "label",
             "text": "CPU",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 44,
-            "color": [205, 214, 244, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         },
@@ -157,9 +216,22 @@
             "start_angle": 270,
             "sweep_angle": 360,
             "inner_radius_pct": 0.7,
-            "background_color": [88, 91, 112, 255],
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
             ]
           }
         },
@@ -180,21 +252,36 @@
             },
             "format": "{:.0}",
             "unit": "%",
-            "font": { "path": null },
-            "font_size": 80,
-            "color": [234, 118, 203, 255],
+            "font": {
+              "path": null
+            },
+            "font_size": 96,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
             "align": "center",
             "value_min": 0.0,
             "value_max": 100.0,
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
             ]
           }
         },
         {
           "id": "label-usage",
           "x": 200,
-          "y": 260,
+          "y": 275,
           "width": 160,
           "height": 40,
           "rotation": 0.0,
@@ -204,9 +291,16 @@
           "kind": {
             "type": "label",
             "text": "USAGE",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 34,
-            "color": [137, 180, 250, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         }
@@ -221,13 +315,18 @@
       "base_height": 400,
       "background": {
         "type": "color",
-        "rgb": [49, 50, 68, 255]
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
       },
       "widgets": [
         {
           "id": "label-ram",
           "x": 200,
-          "y": 130,
+          "y": 115,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -237,9 +336,16 @@
           "kind": {
             "type": "label",
             "text": "RAM",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 44,
-            "color": [205, 214, 244, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         },
@@ -263,9 +369,22 @@
             "start_angle": 270,
             "sweep_angle": 360,
             "inner_radius_pct": 0.7,
-            "background_color": [88, 91, 112, 255],
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
             ]
           }
         },
@@ -286,21 +405,36 @@
             },
             "format": "{:.0}",
             "unit": "%",
-            "font": { "path": null },
-            "font_size": 80,
-            "color": [234, 118, 203, 255],
+            "font": {
+              "path": null
+            },
+            "font_size": 96,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
             "align": "center",
             "value_min": 0.0,
             "value_max": 100.0,
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
             ]
           }
         },
         {
           "id": "label-mem",
           "x": 200,
-          "y": 260,
+          "y": 275,
           "width": 160,
           "height": 40,
           "rotation": 0.0,
@@ -310,9 +444,16 @@
           "kind": {
             "type": "label",
             "text": "USAGE",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 34,
-            "color": [137, 180, 250, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         }
@@ -327,13 +468,18 @@
       "base_height": 400,
       "background": {
         "type": "color",
-        "rgb": [49, 50, 68, 255]
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
       },
       "widgets": [
         {
           "id": "label-net",
           "x": 200,
-          "y": 130,
+          "y": 115,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -343,9 +489,16 @@
           "kind": {
             "type": "label",
             "text": "NET",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 44,
-            "color": [205, 214, 244, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         },
@@ -370,9 +523,22 @@
             "start_angle": 270,
             "sweep_angle": 360,
             "inner_radius_pct": 0.7,
-            "background_color": [88, 91, 112, 255],
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
             ]
           }
         },
@@ -394,21 +560,36 @@
             },
             "format": "{:.0}",
             "unit": "KB/s",
-            "font": { "path": null },
-            "font_size": 64,
-            "color": [234, 118, 203, 255],
+            "font": {
+              "path": null
+            },
+            "font_size": 78,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
             "align": "center",
             "value_min": 0.0,
             "value_max": 10240.0,
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
             ]
           }
         },
         {
           "id": "label-speed",
           "x": 200,
-          "y": 260,
+          "y": 275,
           "width": 200,
           "height": 40,
           "rotation": 0.0,
@@ -418,9 +599,16 @@
           "kind": {
             "type": "label",
             "text": "TRAFFIC",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 34,
-            "color": [137, 180, 250, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         }
@@ -435,13 +623,18 @@
       "base_height": 400,
       "background": {
         "type": "color",
-        "rgb": [49, 50, 68, 255]
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
       },
       "widgets": [
         {
           "id": "label-ping",
           "x": 200,
-          "y": 120,
+          "y": 108,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -451,9 +644,16 @@
           "kind": {
             "type": "label",
             "text": "PING",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 44,
-            "color": [205, 214, 244, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         },
@@ -478,9 +678,22 @@
             "start_angle": 270,
             "sweep_angle": 360,
             "inner_radius_pct": 0.7,
-            "background_color": [88, 91, 112, 255],
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 230 }
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
             ]
           }
         },
@@ -502,21 +715,36 @@
             },
             "format": "{:.1}",
             "unit": "ms",
-            "font": { "path": null },
-            "font_size": 72,
-            "color": [234, 118, 203, 255],
+            "font": {
+              "path": null
+            },
+            "font_size": 86,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
             "align": "center",
             "value_min": 0.0,
             "value_max": 100.0,
             "ranges": [
-              { "max": null, "color": [234, 118, 203], "alpha": 255 }
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
             ]
           }
         },
         {
           "id": "label-avg",
           "x": 200,
-          "y": 240,
+          "y": 252,
           "width": 200,
           "height": 35,
           "rotation": 0.0,
@@ -526,16 +754,23 @@
           "kind": {
             "type": "label",
             "text": "AVG / 1 MIN",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 22,
-            "color": [137, 180, 250, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center"
           }
         },
         {
           "id": "value-avg",
           "x": 200,
-          "y": 272,
+          "y": 284,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -550,15 +785,608 @@
             },
             "format": "{:.1}",
             "unit": "ms",
-            "font": { "path": null },
+            "font": {
+              "path": null
+            },
             "font_size": 36,
-            "color": [137, 180, 250, 255],
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
             "align": "center",
             "value_min": 0.0,
             "value_max": 100.0,
             "ranges": [
-              { "max": null, "color": [137, 180, 250], "alpha": 255 }
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 255
+              }
             ]
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    },
+    {
+      "id": "user-8inch-dashboard",
+      "name": "8.8\" Dashboard (CPU/USAGE/RAM/NET)",
+      "base_width": 1920,
+      "base_height": 480,
+      "background": {
+        "type": "color",
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
+      },
+      "widgets": [
+        {
+          "id": "bg-video",
+          "x": 960,
+          "y": 240,
+          "width": 1920,
+          "height": 480,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": 30,
+          "kind": {
+            "type": "video",
+            "path": "/home/mr/.config/lianli/media/bg_space_1920x480.mp4",
+            "loop_playback": true,
+            "opacity": 1.0,
+            "fit": "cover",
+            "corner_radius": 0.0
+          }
+        },
+        {
+          "id": "label-cpu-0",
+          "x": 240,
+          "y": 155,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "CPU",
+            "font": {
+              "path": null
+            },
+            "font_size": 44,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-temp-0",
+          "x": 240,
+          "y": 240,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "command",
+              "cmd": "sensors | grep 'Tctl' | awk '{print $2}' | tr -d '+°C'"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-temp-0",
+          "x": 240,
+          "y": 235,
+          "width": 200,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "sensors | grep 'Tctl' | awk '{print $2}' | tr -d '+°C'"
+            },
+            "format": "{:.0}",
+            "unit": "°C",
+            "font": {
+              "path": null
+            },
+            "font_size": 96,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-temp-0",
+          "x": 240,
+          "y": 315,
+          "width": 160,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "TEMP",
+            "font": {
+              "path": null
+            },
+            "font_size": 34,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "label-cpu-1",
+          "x": 720,
+          "y": 155,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "CPU",
+            "font": {
+              "path": null
+            },
+            "font_size": 44,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-cpu-1",
+          "x": 720,
+          "y": 240,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "cpu_usage"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-cpu-1",
+          "x": 720,
+          "y": 235,
+          "width": 200,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "cpu_usage"
+            },
+            "format": "{:.0}",
+            "unit": "%",
+            "font": {
+              "path": null
+            },
+            "font_size": 96,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-usage-1",
+          "x": 720,
+          "y": 315,
+          "width": 160,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "USAGE",
+            "font": {
+              "path": null
+            },
+            "font_size": 34,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "label-ram-2",
+          "x": 1200,
+          "y": 155,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "RAM",
+            "font": {
+              "path": null
+            },
+            "font_size": 44,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-ram-2",
+          "x": 1200,
+          "y": 240,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "mem_usage"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-ram-2",
+          "x": 1200,
+          "y": 235,
+          "width": 200,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 1000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "mem_usage"
+            },
+            "format": "{:.0}",
+            "unit": "%",
+            "font": {
+              "path": null
+            },
+            "font_size": 96,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-mem-2",
+          "x": 1200,
+          "y": 315,
+          "width": 160,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "USAGE",
+            "font": {
+              "path": null
+            },
+            "font_size": 34,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "label-net-3",
+          "x": 1680,
+          "y": 155,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "NET",
+            "font": {
+              "path": null
+            },
+            "font_size": 44,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "gauge-net-3",
+          "x": 1680,
+          "y": 240,
+          "width": 410,
+          "height": 410,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 2000,
+          "fps": null,
+          "kind": {
+            "type": "radial_gauge",
+            "source": {
+              "type": "command",
+              "cmd": "R1=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T1=$(cat /sys/class/net/wlan0/statistics/tx_bytes); sleep 1; R2=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T2=$(cat /sys/class/net/wlan0/statistics/tx_bytes); echo $(( (R2 - R1 + T2 - T1) / 1024 ))"
+            },
+            "value_min": 0.0,
+            "value_max": 10240.0,
+            "start_angle": 270,
+            "sweep_angle": 360,
+            "inner_radius_pct": 0.7,
+            "background_color": [
+              88,
+              91,
+              112,
+              255
+            ],
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-net-3",
+          "x": 1680,
+          "y": 235,
+          "width": 260,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 2000,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "R1=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T1=$(cat /sys/class/net/wlan0/statistics/tx_bytes); sleep 1; R2=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T2=$(cat /sys/class/net/wlan0/statistics/tx_bytes); echo $(( (R2 - R1 + T2 - T1) / 1024 ))"
+            },
+            "format": "{:.0}",
+            "unit": "KB/s",
+            "font": {
+              "path": null
+            },
+            "font_size": 78,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 10240.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-speed-3",
+          "x": 1680,
+          "y": 315,
+          "width": 200,
+          "height": 40,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "TRAFFIC",
+            "font": {
+              "path": null
+            },
+            "font_size": 34,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
           }
         }
       ],
