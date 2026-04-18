@@ -888,8 +888,9 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "sensors | grep 'Tctl' | awk '{print $2}' | tr -d '+°C'"
+              "type": "hwmon",
+              "name": "k10temp",
+              "label": "Tctl"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -928,8 +929,9 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "sensors | grep 'Tctl' | awk '{print $2}' | tr -d '+°C'"
+              "type": "hwmon",
+              "name": "k10temp",
+              "label": "Tctl"
             },
             "format": "{:.0}",
             "unit": "°C",
@@ -1293,7 +1295,7 @@
             "type": "radial_gauge",
             "source": {
               "type": "command",
-              "cmd": "R1=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T1=$(cat /sys/class/net/wlan0/statistics/tx_bytes); sleep 1; R2=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T2=$(cat /sys/class/net/wlan0/statistics/tx_bytes); echo $(( (R2 - R1 + T2 - T1) / 1024 ))"
+              "cmd": "/home/mr/.config/lianli/scripts/net_rate.sh wlan0"
             },
             "value_min": 0.0,
             "value_max": 10240.0,
@@ -1333,7 +1335,7 @@
             "type": "value_text",
             "source": {
               "type": "command",
-              "cmd": "R1=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T1=$(cat /sys/class/net/wlan0/statistics/tx_bytes); sleep 1; R2=$(cat /sys/class/net/wlan0/statistics/rx_bytes); T2=$(cat /sys/class/net/wlan0/statistics/tx_bytes); echo $(( (R2 - R1 + T2 - T1) / 1024 ))"
+              "cmd": "/home/mr/.config/lianli/scripts/net_rate.sh wlan0"
             },
             "format": "{:.0}",
             "unit": "KB/s",
@@ -1380,6 +1382,580 @@
               "path": null
             },
             "font_size": 34,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        }
+      ],
+      "rotated": false,
+      "target_device": null
+    },
+    {
+      "id": "user-8inch-bars",
+      "name": "8.8\" Bars Dashboard (CPU/RAM/GPU)",
+      "base_width": 1920,
+      "base_height": 480,
+      "background": {
+        "type": "color",
+        "rgb": [
+          49,
+          50,
+          68,
+          255
+        ]
+      },
+      "widgets": [
+        {
+          "id": "bg-video",
+          "x": 960,
+          "y": 240,
+          "width": 1920,
+          "height": 480,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": 30,
+          "kind": {
+            "type": "video",
+            "path": "/home/mr/.config/lianli/media/bg_space_1920x480.mp4",
+            "loop_playback": true,
+            "opacity": 1.0,
+            "fit": "cover",
+            "corner_radius": 0.0
+          }
+        },
+        {
+          "id": "label-top-0",
+          "x": 240,
+          "y": 90,
+          "width": 400,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "CPU",
+            "font": {
+              "path": null
+            },
+            "font_size": 48,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "bar-0",
+          "x": 240,
+          "y": 195,
+          "width": 420,
+          "height": 44,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "horizontal_bar",
+            "source": {
+              "type": "hwmon",
+              "name": "k10temp",
+              "label": "Tctl"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "background_color": [
+              49,
+              50,
+              68,
+              180
+            ],
+            "corner_radius": 10,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-0",
+          "x": 240,
+          "y": 290,
+          "width": 420,
+          "height": 110,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "hwmon",
+              "name": "k10temp",
+              "label": "Tctl"
+            },
+            "format": "{:.0}",
+            "unit": "°C",
+            "font": {
+              "path": null
+            },
+            "font_size": 90,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-bot-0",
+          "x": 240,
+          "y": 390,
+          "width": 400,
+          "height": 36,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "TEMP",
+            "font": {
+              "path": null
+            },
+            "font_size": 30,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "label-top-1",
+          "x": 720,
+          "y": 90,
+          "width": 400,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "CPU",
+            "font": {
+              "path": null
+            },
+            "font_size": 48,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "bar-1",
+          "x": 720,
+          "y": 195,
+          "width": 420,
+          "height": 44,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "horizontal_bar",
+            "source": {
+              "type": "cpu_usage"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "background_color": [
+              49,
+              50,
+              68,
+              180
+            ],
+            "corner_radius": 10,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-1",
+          "x": 720,
+          "y": 290,
+          "width": 420,
+          "height": 110,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "cpu_usage"
+            },
+            "format": "{:.0}",
+            "unit": "%",
+            "font": {
+              "path": null
+            },
+            "font_size": 90,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-bot-1",
+          "x": 720,
+          "y": 390,
+          "width": 400,
+          "height": 36,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "USAGE",
+            "font": {
+              "path": null
+            },
+            "font_size": 30,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "label-top-2",
+          "x": 1200,
+          "y": 90,
+          "width": 400,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "RAM",
+            "font": {
+              "path": null
+            },
+            "font_size": 48,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "bar-2",
+          "x": 1200,
+          "y": 195,
+          "width": 420,
+          "height": 44,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "horizontal_bar",
+            "source": {
+              "type": "mem_usage"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "background_color": [
+              49,
+              50,
+              68,
+              180
+            ],
+            "corner_radius": 10,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-2",
+          "x": 1200,
+          "y": 290,
+          "width": 420,
+          "height": 110,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "mem_usage"
+            },
+            "format": "{:.0}",
+            "unit": "%",
+            "font": {
+              "path": null
+            },
+            "font_size": 90,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-bot-2",
+          "x": 1200,
+          "y": 390,
+          "width": 400,
+          "height": 36,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "USAGE",
+            "font": {
+              "path": null
+            },
+            "font_size": 30,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "label-top-3",
+          "x": 1680,
+          "y": 90,
+          "width": 400,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "GPU",
+            "font": {
+              "path": null
+            },
+            "font_size": 48,
+            "color": [
+              234,
+              118,
+              203,
+              255
+            ],
+            "align": "center"
+          }
+        },
+        {
+          "id": "bar-3",
+          "x": 1680,
+          "y": 195,
+          "width": 420,
+          "height": 44,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "horizontal_bar",
+            "source": {
+              "type": "hwmon",
+              "name": "amdgpu",
+              "label": "edge"
+            },
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "background_color": [
+              49,
+              50,
+              68,
+              180
+            ],
+            "corner_radius": 10,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  234,
+                  118,
+                  203
+                ],
+                "alpha": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-3",
+          "x": 1680,
+          "y": 290,
+          "width": 420,
+          "height": 110,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "hwmon",
+              "name": "amdgpu",
+              "label": "edge"
+            },
+            "format": "{:.0}",
+            "unit": "°C",
+            "font": {
+              "path": null
+            },
+            "font_size": 90,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 100.0,
+            "ranges": [
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              }
+            ]
+          }
+        },
+        {
+          "id": "label-bot-3",
+          "x": 1680,
+          "y": 390,
+          "width": 400,
+          "height": 36,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": null,
+          "fps": null,
+          "kind": {
+            "type": "label",
+            "text": "TEMP",
+            "font": {
+              "path": null
+            },
+            "font_size": 30,
             "color": [
               234,
               118,

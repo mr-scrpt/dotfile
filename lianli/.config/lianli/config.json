@@ -100,12 +100,12 @@
     {
       "index": null,
       "serial": "hid:382a0bafa4860706",
-      "type": "video",
-      "path": "/home/mr/.config/lianli/media/bg_space_1920x480.mp4",
+      "type": "custom",
+      "path": null,
       "fps": 30.0,
       "update_interval_ms": null,
       "rgb": null,
-      "orientation": 270.0,
+      "orientation": 90.0,
       "sensor": null,
       "sensor_source_1": {
         "type": "cpu_usage"
@@ -114,10 +114,41 @@
         "type": "mem_usage"
       },
       "doublegauge": null,
-      "template_id": null
+      "template_id": "user-8inch-bars"
     }
   ],
   "fan_curves": [],
   "fans": null,
-  "rgb": null
+  "rgb": {
+    "enabled": true,
+    "openrgb_server": false,
+    "openrgb_port": 6743,
+    "devices": [
+      {
+        "device_id": "hid:0416:8050:1-9.3.3",
+        "mb_rgb_sync": false,
+        "zones": [
+          {
+            "zone_index": 0,
+            "effect": {
+              "mode": "Static",
+              "colors": [
+                [
+                  137,
+                  220,
+                  235
+                ]
+              ],
+              "speed": 2,
+              "brightness": 4,
+              "direction": "Clockwise",
+              "scope": "All"
+            },
+            "swap_lr": false,
+            "swap_tb": false
+          }
+        ]
+      }
+    ]
+  }
 }
