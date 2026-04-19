@@ -9,3 +9,6 @@ tmux/.config/tmux/plugins/*
 fish/.config/fish/private.env
 nvim/.config/nvim/mcpservers.json
 mcpservers.json
+
+# Rust build artifacts
+lianli/sensor-service/target/
