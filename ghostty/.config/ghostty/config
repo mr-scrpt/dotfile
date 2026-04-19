@@ -45,9 +45,14 @@ keybind = ctrl+backspace=text:\x17
 keybind = ctrl+delete=text:\x1bd
 
 # 3. Отключаем Ctrl+H (чтобы не дублировал Backspace)
-# Мы биндим его на отправку "пустоты". 
+# Мы биндим его на отправку "пустоты".
 # Теперь нажатие Ctrl+H будет просто игнорироваться.
 keybind = ctrl+h=unbind
+
+# 4. Отключаем Ctrl+Z, чтобы не отправлять SIGTSTP в Claude Code и не
+# выбрасывать в shell. В обмен теряем suspend фоновых процессов — если
+# понадобится, используй `kill -STOP %1` руками.
+keybind = ctrl+z=unbind
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 

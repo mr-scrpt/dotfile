@@ -3,9 +3,16 @@
     "type": "command",
     "command": "/home/mr/.local/bin/cs"
   },
-  "skipDangerousModePermissionPrompt": true,
-  "editorMode": "vim",
   "enabledPlugins": {
     "lua-lsp@claude-plugins-official": true
-  }
+  },
+  "language": "Russian",
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "voiceEnabled": true,
+  "editorMode": "vim"
 }
