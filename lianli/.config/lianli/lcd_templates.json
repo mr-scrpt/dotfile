@@ -2035,8 +2035,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "amd_gpu_usage",
-              "card_index": 1
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/cached_sensor.sh gpu_load 1 cat /sys/class/drm/card1/device/gpu_busy_percent"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -2079,7 +2079,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "cpu_usage"
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/cached_sensor.sh cpu_load 1 /home/mr/.config/lianli/scripts/read_cpu_usage.sh"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -2122,14 +2123,15 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "mem_used"
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/cached_sensor.sh mem_used 1 /home/mr/.config/lianli/scripts/read_mem_used_gb.sh"
             },
             "format": "{:.1}",
             "unit": " GB",
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },
-            "font_size": 38,
+            "font_size": 49,
             "color": [
               255,
               255,
@@ -2173,7 +2175,7 @@
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },
-            "font_size": 38,
+            "font_size": 49,
             "color": [
               255,
               255,
@@ -2209,9 +2211,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "hwmon",
-              "name": "amdgpu",
-              "label": "edge"
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/cached_sensor.sh gpu_temp 1 2 /home/mr/.config/lianli/scripts/read_gpu_temp.sh"
             },
             "format": "{:.0}",
             "unit": "",
@@ -2254,9 +2255,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "hwmon",
-              "name": "k10temp",
-              "label": "Tctl"
+              "type": "command",
+              "cmd": "/home/mr/.config/lianli/scripts/cached_sensor.sh cpu_temp 1 2 /home/mr/.config/lianli/scripts/read_cpu_temp.sh"
             },
             "format": "{:.0}",
             "unit": "",
