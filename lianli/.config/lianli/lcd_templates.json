@@ -2024,7 +2024,7 @@
         },
         {
           "id": "val-gpu-load",
-          "x": 280,
+          "x": 270,
           "y": 427,
           "width": 300,
           "height": 60,
@@ -2068,7 +2068,7 @@
         },
         {
           "id": "val-cpu-load",
-          "x": 1680,
+          "x": 1633,
           "y": 427,
           "width": 300,
           "height": 60,
@@ -2094,7 +2094,7 @@
               255,
               255
             ],
-            "align": "left",
+            "align": "right",
             "value_min": 0.0,
             "value_max": 1000.0,
             "ranges": [
@@ -2112,10 +2112,10 @@
         },
         {
           "id": "val-ram",
-          "x": 864,
+          "x": 960,
           "y": 427,
-          "width": 260,
-          "height": 70,
+          "width": 500,
+          "height": 80,
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
@@ -2127,55 +2127,11 @@
               "cmd": "/home/mr/.config/lianli/scripts/cached_sensor.sh mem_used 1 /home/mr/.config/lianli/scripts/read_mem_used_gb.sh"
             },
             "format": "{:.1}",
-            "unit": " GB",
+            "unit": " / 30 GB",
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },
-            "font_size": 65,
-            "color": [
-              255,
-              255,
-              255,
-              255
-            ],
-            "align": "center",
-            "value_min": 0.0,
-            "value_max": 1000.0,
-            "ranges": [
-              {
-                "max": null,
-                "color": [
-                  255,
-                  255,
-                  255
-                ],
-                "alpha": 255
-              }
-            ]
-          }
-        },
-        {
-          "id": "val-cpu-fan",
-          "x": 1039,
-          "y": 427,
-          "width": 260,
-          "height": 70,
-          "rotation": 0.0,
-          "visible": true,
-          "update_interval_ms": null,
-          "fps": null,
-          "kind": {
-            "type": "value_text",
-            "source": {
-              "type": "wireless_coolant",
-              "device_id": "8b:06:ef:e5:66:e1"
-            },
-            "format": "{:.0}",
-            "unit": "°C",
-            "font": {
-              "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
-            },
-            "font_size": 65,
+            "font_size": 78,
             "color": [
               255,
               255,
