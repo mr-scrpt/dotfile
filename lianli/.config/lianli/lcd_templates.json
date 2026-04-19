@@ -2112,10 +2112,10 @@
         },
         {
           "id": "val-ram",
-          "x": 152,
-          "y": 410,
-          "width": 160,
-          "height": 55,
+          "x": 167,
+          "y": 427,
+          "width": 260,
+          "height": 70,
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
@@ -2131,7 +2131,7 @@
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },
-            "font_size": 49,
+            "font_size": 65,
             "color": [
               255,
               255,
@@ -2156,10 +2156,10 @@
         },
         {
           "id": "val-cpu-fan",
-          "x": 347,
-          "y": 410,
-          "width": 160,
-          "height": 55,
+          "x": 338,
+          "y": 427,
+          "width": 260,
+          "height": 70,
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
@@ -2175,7 +2175,7 @@
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },
-            "font_size": 49,
+            "font_size": 65,
             "color": [
               255,
               255,
