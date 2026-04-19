@@ -5,7 +5,9 @@
       "context": "Chat",
       "bindings": {
         "meta+v": "chat:imagePaste",
-        "shift+ctrl+v": "chat:imagePaste"
+        "shift+ctrl+v": "chat:imagePaste",
+        "ctrl+e": "chat:externalEditor",
+        "ctrl+g": null
       }
     }
   ]
