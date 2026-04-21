@@ -24,14 +24,11 @@
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
-          "fps": 15,
           "kind": {
-            "type": "video",
-            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.mp4",
-            "loop_playback": true,
+            "type": "image",
+            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.png",
             "opacity": 1.0,
-            "fit": "cover",
-            "corner_radius": 0.0
+            "fit": "cover"
           }
         },
         {
@@ -64,8 +61,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/cpu_temp"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/cpu_temp"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -104,11 +101,11 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/cpu_temp"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/cpu_temp"
             },
             "format": "{:.0}",
-            "unit": "\u00b0C",
+            "unit": "°C",
             "font": {
               "path": null
             },
@@ -163,14 +160,11 @@
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
-          "fps": 15,
           "kind": {
-            "type": "video",
-            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.mp4",
-            "loop_playback": true,
+            "type": "image",
+            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.png",
             "opacity": 1.0,
-            "fit": "cover",
-            "corner_radius": 0.0
+            "fit": "cover"
           }
         },
         {
@@ -203,8 +197,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/cpu_load"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/cpu_load"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -243,8 +237,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/cpu_load"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/cpu_load"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -302,14 +296,11 @@
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
-          "fps": 15,
           "kind": {
-            "type": "video",
-            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.mp4",
-            "loop_playback": true,
+            "type": "image",
+            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.png",
             "opacity": 1.0,
-            "fit": "cover",
-            "corner_radius": 0.0
+            "fit": "cover"
           }
         },
         {
@@ -342,8 +333,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/mem_pct"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/mem_pct"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -382,8 +373,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/mem_pct"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/mem_pct"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -441,14 +432,11 @@
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
-          "fps": 15,
           "kind": {
-            "type": "video",
-            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.mp4",
-            "loop_playback": true,
+            "type": "image",
+            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.png",
             "opacity": 1.0,
-            "fit": "cover",
-            "corner_radius": 0.0
+            "fit": "cover"
           }
         },
         {
@@ -481,8 +469,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/net_rate"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/net_rate"
             },
             "value_min": 0.0,
             "value_max": 10240.0,
@@ -521,8 +509,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/net_rate"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/net_rate"
             },
             "format": "{:.0}",
             "unit": "KB/s",
@@ -580,14 +568,11 @@
           "rotation": 0.0,
           "visible": true,
           "update_interval_ms": null,
-          "fps": 15,
           "kind": {
-            "type": "video",
-            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.mp4",
-            "loop_playback": true,
+            "type": "image",
+            "path": "/home/mr/.config/lianli/media/bg_space_fan_400.png",
             "opacity": 1.0,
-            "fit": "cover",
-            "corner_radius": 0.0
+            "fit": "cover"
           }
         },
         {
@@ -620,8 +605,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "/home/mr/.config/lianli/scripts/smooth_sensor.sh ping_s 3 1 sh -c \"/home/mr/.config/lianli/scripts/ping_stats.sh | cut -d'|' -f1\""
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/ping_cur"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -660,8 +645,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "/home/mr/.config/lianli/scripts/ping_stats.sh | cut -d'|' -f1"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/ping_cur"
             },
             "format": "{:.1}",
             "unit": "ms",
@@ -704,8 +689,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "/home/mr/.config/lianli/scripts/ping_stats.sh | cut -d'|' -f2"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/ping_avg"
             },
             "format": "{:.1}",
             "unit": "ms",
@@ -858,7 +843,7 @@
               "label": "Tctl"
             },
             "format": "{:.0}",
-            "unit": "\u00b0C",
+            "unit": "°C",
             "font": {
               "path": null
             },
@@ -1218,8 +1203,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "command",
-              "cmd": "/home/mr/.config/lianli/scripts/net_rate.sh wlan0"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/net_rate"
             },
             "value_min": 0.0,
             "value_max": 10240.0,
@@ -1258,8 +1243,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "/home/mr/.config/lianli/scripts/net_rate.sh wlan0"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/net_rate"
             },
             "format": "{:.0}",
             "unit": "KB/s",
@@ -1436,7 +1421,7 @@
               "label": "Tctl"
             },
             "format": "{:.0}",
-            "unit": "\u00b0C",
+            "unit": "°C",
             "font": {
               "path": null
             },
@@ -1838,7 +1823,7 @@
               "label": "edge"
             },
             "format": "{:.0}",
-            "unit": "\u00b0C",
+            "unit": "°C",
             "font": {
               "path": null
             },
@@ -1959,8 +1944,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/gpu_load"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/gpu_load"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -2003,8 +1988,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/cpu_load"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/cpu_load"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -2047,8 +2032,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/mem_used"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/mem_used"
             },
             "format": "{:.1}",
             "unit": " / 30 GB",
@@ -2091,8 +2076,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/gpu_temp"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/gpu_temp"
             },
             "format": "{:.0}",
             "unit": "",
@@ -2135,8 +2120,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "command",
-              "cmd": "cat /tmp/lianli-sensors/cpu_temp"
+              "type": "runtime_file",
+              "path": "/tmp/lianli-sensors/cpu_temp"
             },
             "format": "{:.0}",
             "unit": "",
@@ -2205,7 +2190,7 @@
           "fps": null,
           "kind": {
             "type": "label",
-            "text": "\u00b0C",
+            "text": "°C",
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },
@@ -2231,7 +2216,7 @@
           "fps": null,
           "kind": {
             "type": "label",
-            "text": "\u00b0C",
+            "text": "°C",
             "font": {
               "path": "/home/mr/.local/share/fonts/bebas_neue/BebasNeue-Regular.ttf"
             },

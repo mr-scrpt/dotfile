@@ -4,9 +4,11 @@
 //! Templates read these files with `cat` for cheap smooth-animated display.
 
 use std::{
+    collections::VecDeque,
     fs,
     io::Write,
     path::{Path, PathBuf},
+    process::Command,
     thread,
     time::{Duration, Instant},
 };
@@ -30,6 +32,14 @@ const HWMON_CPU_TEMP: &str = "/sys/class/hwmon/hwmon3/temp1_input";
 const HWMON_GPU_TEMP: &str = "/sys/class/hwmon/hwmon2/temp1_input";
 const AMD_GPU_BUSY: &str = "/sys/class/drm/card1/device/gpu_busy_percent";
 const NET_IFACE: &str = "wlan0";
+
+// Ping target and cadence. Runs on a dedicated thread so the 60 Hz publish
+// loop never blocks on network I/O. One fork per second instead of one per
+// render frame — the render loop reads the published file directly.
+const PING_TARGET: &str = "1.1.1.1";
+const PING_INTERVAL: Duration = Duration::from_secs(1);
+const PING_TIMEOUT_SEC: u32 = 2;
+const PING_AVG_WINDOW: Duration = Duration::from_secs(60);
 
 fn read_str(path: &str) -> Option<String> {
     fs::read_to_string(path).ok()
@@ -136,9 +146,79 @@ fn write_atomic(dir: &Path, name: &str, payload: &str) {
     }
 }
 
+/// Parses the `time=NN.N ms` field from `ping` output. Returns None on
+/// packet loss or malformed output; caller treats that as "keep previous".
+fn parse_ping_time_ms(stdout: &str) -> Option<f64> {
+    for line in stdout.lines() {
+        if let Some(start) = line.find("time=") {
+            let rest = &line[start + 5..];
+            let end = rest.find(' ').unwrap_or(rest.len());
+            if let Ok(v) = rest[..end].parse::<f64>() {
+                return Some(v);
+            }
+        }
+    }
+    None
+}
+
+/// Runs one ICMP probe per `PING_INTERVAL` on a dedicated thread and
+/// publishes the latest sample + rolling 60 s average under OUT_DIR.
+fn spawn_ping_thread(out_dir: PathBuf) {
+    thread::spawn(move || {
+        let mut window: VecDeque<(Instant, f64)> = VecDeque::with_capacity(64);
+
+        loop {
+            let now = Instant::now();
+
+            let reading = Command::new("ping")
+                .args([
+                    "-c",
+                    "1",
+                    "-W",
+                    &PING_TIMEOUT_SEC.to_string(),
+                    "-n", // numeric, skip reverse DNS
+                    PING_TARGET,
+                ])
+                .output()
+                .ok()
+                .and_then(|out| {
+                    if out.status.success() {
+                        parse_ping_time_ms(&String::from_utf8_lossy(&out.stdout))
+                    } else {
+                        None
+                    }
+                });
+
+            if let Some(ms) = reading {
+                window.push_back((now, ms));
+                let cutoff = now - PING_AVG_WINDOW;
+                while window.front().map_or(false, |&(t, _)| t < cutoff) {
+                    window.pop_front();
+                }
+                let avg = if window.is_empty() {
+                    ms
+                } else {
+                    window.iter().map(|&(_, v)| v).sum::<f64>() / window.len() as f64
+                };
+                write_atomic(&out_dir, "ping_cur", &format!("{:.1}", ms));
+                write_atomic(&out_dir, "ping_avg", &format!("{:.1}", avg));
+            }
+            // On packet loss we keep the previously published values rather
+            // than churning the files — smoother display, no "0 ms" spikes.
+
+            let spent = now.elapsed();
+            if spent < PING_INTERVAL {
+                thread::sleep(PING_INTERVAL - spent);
+            }
+        }
+    });
+}
+
 fn main() {
     let out_dir = Path::new(OUT_DIR);
     fs::create_dir_all(out_dir).expect("create OUT_DIR");
+
+    spawn_ping_thread(out_dir.to_path_buf());
 
     let mut cpu_load = Sensor::new("cpu_load", MAX_CPU_LOAD_PER_SEC, 0);
     let mut cpu_temp = Sensor::new("cpu_temp", MAX_CPU_TEMP_PER_SEC, 0);
