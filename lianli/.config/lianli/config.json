@@ -117,8 +117,61 @@
       "template_id": "user-8inch-88003"
     }
   ],
-  "fan_curves": [],
-  "fans": null,
+  "fan_curves": [
+    {
+      "name": "cpu_temp",
+      "temp_command": "cat /tmp/lianli-sensors/cpu_temp",
+      "curve": [
+        [
+          40.0,
+          25.0
+        ],
+        [
+          60.0,
+          30.0
+        ],
+        [
+          65.0,
+          40.0
+        ],
+        [
+          70.0,
+          55.0
+        ],
+        [
+          78.0,
+          80.0
+        ],
+        [
+          85.0,
+          100.0
+        ]
+      ]
+    }
+  ],
+  "fans": {
+    "update_interval_ms": 1000,
+    "speeds": [
+      {
+        "device_id": "wireless:1f:51:87:e5:66:e1",
+        "speeds": [
+          "cpu_temp",
+          "cpu_temp",
+          "cpu_temp",
+          0
+        ]
+      },
+      {
+        "device_id": "wireless:9f:f0:76:e5:66:e1",
+        "speeds": [
+          "cpu_temp",
+          "cpu_temp",
+          0,
+          0
+        ]
+      }
+    ]
+  },
   "rgb": {
     "enabled": true,
     "openrgb_server": false,
@@ -129,23 +182,130 @@
         "mb_rgb_sync": false,
         "zones": [
           {
-            "zone_index": 0,
             "effect": {
-              "mode": "Static",
+              "brightness": 4,
               "colors": [
                 [
-                  137,
-                  220,
-                  235
+                  0,
+                  215,
+                  255
                 ]
               ],
-              "speed": 2,
-              "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "mode": "Static",
+              "scope": "All",
+              "speed": 2
             },
             "swap_lr": false,
-            "swap_tb": false
+            "swap_tb": false,
+            "zone_index": 0
+          }
+        ]
+      },
+      {
+        "device_id": "wireless:1f:51:87:e5:66:e1",
+        "mb_rgb_sync": false,
+        "zones": [
+          {
+            "effect": {
+              "brightness": 4,
+              "colors": [
+                [
+                  0,
+                  215,
+                  255
+                ]
+              ],
+              "direction": "Clockwise",
+              "mode": "Static",
+              "scope": "All",
+              "speed": 2
+            },
+            "swap_lr": false,
+            "swap_tb": false,
+            "zone_index": 0
+          },
+          {
+            "effect": {
+              "brightness": 4,
+              "colors": [
+                [
+                  0,
+                  215,
+                  255
+                ]
+              ],
+              "direction": "Clockwise",
+              "mode": "Static",
+              "scope": "All",
+              "speed": 2
+            },
+            "swap_lr": false,
+            "swap_tb": false,
+            "zone_index": 1
+          },
+          {
+            "effect": {
+              "brightness": 4,
+              "colors": [
+                [
+                  0,
+                  215,
+                  255
+                ]
+              ],
+              "direction": "Clockwise",
+              "mode": "Static",
+              "scope": "All",
+              "speed": 2
+            },
+            "swap_lr": false,
+            "swap_tb": false,
+            "zone_index": 2
+          }
+        ]
+      },
+      {
+        "device_id": "wireless:9f:f0:76:e5:66:e1",
+        "mb_rgb_sync": false,
+        "zones": [
+          {
+            "effect": {
+              "brightness": 4,
+              "colors": [
+                [
+                  0,
+                  215,
+                  255
+                ]
+              ],
+              "direction": "Clockwise",
+              "mode": "Static",
+              "scope": "All",
+              "speed": 2
+            },
+            "swap_lr": false,
+            "swap_tb": false,
+            "zone_index": 0
+          },
+          {
+            "effect": {
+              "brightness": 4,
+              "colors": [
+                [
+                  0,
+                  215,
+                  255
+                ]
+              ],
+              "direction": "Clockwise",
+              "mode": "Static",
+              "scope": "All",
+              "speed": 2
+            },
+            "swap_lr": false,
+            "swap_tb": false,
+            "zone_index": 1
           }
         ]
       }

@@ -1,0 +1,19 @@
+[Unit]
+Description=Apply saved RGB profile colours via OpenRGB client
+# Runs once after openrgb-server is up and has had time to detect controllers.
+# OpenRGB state lives in server RAM only — we never load .orp profile files
+# because CLI --save-profile has a known habit of corrupting ENE DRAM state.
+After=openrgb-server.service
+Requires=openrgb-server.service
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+# Wait for OpenRGB to enumerate SMBus (ENE DRAM) and HID (mobo/Strimer).
+# Detection typically finishes within 1-2s on this machine; 4s is a safety margin.
+ExecStartPre=/bin/sleep 4
+ExecStart=/home/mr/.config/lianli/scripts/rgb_profile.sh apply
+RemainAfterExit=no
+
+[Install]
+WantedBy=graphical-session.target

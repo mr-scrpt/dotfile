@@ -12,3 +12,6 @@ mcpservers.json
 
 # Rust build artifacts
 lianli/sensor-service/target/
+
+# Runtime state files (transient, not config)
+lianli/.config/lianli/current_rgb_profile
