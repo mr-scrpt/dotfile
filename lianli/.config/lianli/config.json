@@ -100,8 +100,8 @@
     {
       "index": null,
       "serial": "hid:382a0bafa4860706",
-      "type": "custom",
-      "path": null,
+      "type": "video",
+      "path": "/home/mr/.config/lianli/media/bg_space_1920x480.mp4",
       "fps": 30.0,
       "update_interval_ms": null,
       "rgb": null,
@@ -150,7 +150,6 @@
     }
   ],
   "fans": {
-    "update_interval_ms": 1000,
     "speeds": [
       {
         "device_id": "wireless:1f:51:87:e5:66:e1",
@@ -170,7 +169,8 @@
           0
         ]
       }
-    ]
+    ],
+    "update_interval_ms": 1000
   },
   "rgb": {
     "enabled": true,
@@ -182,8 +182,9 @@
         "mb_rgb_sync": false,
         "zones": [
           {
+            "zone_index": 0,
             "effect": {
-              "brightness": 4,
+              "mode": "Static",
               "colors": [
                 [
                   0,
@@ -191,14 +192,13 @@
                   255
                 ]
               ],
+              "speed": 2,
+              "brightness": 4,
               "direction": "Clockwise",
-              "mode": "Static",
-              "scope": "All",
-              "speed": 2
+              "scope": "All"
             },
             "swap_lr": false,
-            "swap_tb": false,
-            "zone_index": 0
+            "swap_tb": false
           }
         ]
       },
@@ -207,8 +207,9 @@
         "mb_rgb_sync": false,
         "zones": [
           {
+            "zone_index": 0,
             "effect": {
-              "brightness": 4,
+              "mode": "Static",
               "colors": [
                 [
                   0,
@@ -216,18 +217,18 @@
                   255
                 ]
               ],
+              "speed": 2,
+              "brightness": 4,
               "direction": "Clockwise",
-              "mode": "Static",
-              "scope": "All",
-              "speed": 2
+              "scope": "All"
             },
             "swap_lr": false,
-            "swap_tb": false,
-            "zone_index": 0
+            "swap_tb": false
           },
           {
+            "zone_index": 1,
             "effect": {
-              "brightness": 4,
+              "mode": "Static",
               "colors": [
                 [
                   0,
@@ -235,18 +236,18 @@
                   255
                 ]
               ],
+              "speed": 2,
+              "brightness": 4,
               "direction": "Clockwise",
-              "mode": "Static",
-              "scope": "All",
-              "speed": 2
+              "scope": "All"
             },
             "swap_lr": false,
-            "swap_tb": false,
-            "zone_index": 1
+            "swap_tb": false
           },
           {
+            "zone_index": 2,
             "effect": {
-              "brightness": 4,
+              "mode": "Static",
               "colors": [
                 [
                   0,
@@ -254,14 +255,13 @@
                   255
                 ]
               ],
+              "speed": 2,
+              "brightness": 4,
               "direction": "Clockwise",
-              "mode": "Static",
-              "scope": "All",
-              "speed": 2
+              "scope": "All"
             },
             "swap_lr": false,
-            "swap_tb": false,
-            "zone_index": 2
+            "swap_tb": false
           }
         ]
       },
@@ -270,8 +270,9 @@
         "mb_rgb_sync": false,
         "zones": [
           {
+            "zone_index": 0,
             "effect": {
-              "brightness": 4,
+              "mode": "Static",
               "colors": [
                 [
                   0,
@@ -279,18 +280,18 @@
                   255
                 ]
               ],
+              "speed": 2,
+              "brightness": 4,
               "direction": "Clockwise",
-              "mode": "Static",
-              "scope": "All",
-              "speed": 2
+              "scope": "All"
             },
             "swap_lr": false,
-            "swap_tb": false,
-            "zone_index": 0
+            "swap_tb": false
           },
           {
+            "zone_index": 1,
             "effect": {
-              "brightness": 4,
+              "mode": "Static",
               "colors": [
                 [
                   0,
@@ -298,17 +299,53 @@
                   255
                 ]
               ],
+              "speed": 2,
+              "brightness": 4,
               "direction": "Clockwise",
-              "mode": "Static",
-              "scope": "All",
-              "speed": 2
+              "scope": "All"
             },
             "swap_lr": false,
-            "swap_tb": false,
-            "zone_index": 1
+            "swap_tb": false
           }
         ]
       }
     ]
+  },
+  "aio": {
+    "wireless:8b:06:ef:e5:66:e1": {
+      "pump_target_rpm": 128,
+      "fan_speeds": [
+        128,
+        128,
+        128,
+        128
+      ],
+      "theme_index": 7,
+      "brightness": 80,
+      "rotation": 2,
+      "loop_interval": 3,
+      "cpu_temp_source": null,
+      "cpu_load_source": null,
+      "gpu_temp_source": null,
+      "gpu_load_source": null,
+      "str_color": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "val_color": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "unit_color": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
   }
 }

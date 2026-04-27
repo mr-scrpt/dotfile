@@ -61,8 +61,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/cpu_temp"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/cpu_temp"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -101,8 +101,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/cpu_temp"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/cpu_temp"
             },
             "format": "{:.0}",
             "unit": "°C",
@@ -197,8 +197,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/cpu_load"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/cpu_load"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -237,8 +237,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/cpu_load"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/cpu_load"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -333,8 +333,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/mem_pct"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/mem_pct"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -373,8 +373,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/mem_pct"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/mem_pct"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -469,11 +469,11 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/net_rate"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/net_rate_mb"
             },
             "value_min": 0.0,
-            "value_max": 10240.0,
+            "value_max": 1000.0,
             "start_angle": 270,
             "sweep_angle": 360,
             "inner_radius_pct": 0.73,
@@ -497,7 +497,7 @@
           }
         },
         {
-          "id": "value-net",
+          "id": "value-net-kb",
           "x": 200,
           "y": 195,
           "width": 260,
@@ -509,8 +509,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/net_rate"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/net_rate"
             },
             "format": "{:.0}",
             "unit": "KB/s",
@@ -526,8 +526,70 @@
             ],
             "align": "center",
             "value_min": 0.0,
-            "value_max": 10240.0,
+            "value_max": 2048.0,
             "ranges": [
+              {
+                "max": 50.0,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              },
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-net-mb",
+          "x": 200,
+          "y": 195,
+          "width": 260,
+          "height": 90,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 200,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/net_rate_mb"
+            },
+            "format": "{:.0}",
+            "unit": "MB/s",
+            "font": {
+              "path": null
+            },
+            "font_size": 78,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 2.0,
+            "ranges": [
+              {
+                "max": 50.0,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 0
+              },
               {
                 "max": null,
                 "color": [
@@ -605,8 +667,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/ping_cur"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/ping_cur"
             },
             "value_min": 0.0,
             "value_max": 100.0,
@@ -633,7 +695,7 @@
           }
         },
         {
-          "id": "value-ping",
+          "id": "value-ping-lo",
           "x": 200,
           "y": 180,
           "width": 220,
@@ -645,8 +707,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/ping_cur"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/ping_cur"
             },
             "format": "{:.1}",
             "unit": "ms",
@@ -662,8 +724,70 @@
             ],
             "align": "center",
             "value_min": 0.0,
-            "value_max": 100.0,
+            "value_max": 20.0,
             "ranges": [
+              {
+                "max": 50.0,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              },
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-ping-hi",
+          "x": 200,
+          "y": 180,
+          "width": 220,
+          "height": 80,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 200,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/ping_cur"
+            },
+            "format": "{:.0}",
+            "unit": "ms",
+            "font": {
+              "path": null
+            },
+            "font_size": 86,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 20.0,
+            "ranges": [
+              {
+                "max": 50.0,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 0
+              },
               {
                 "max": null,
                 "color": [
@@ -677,7 +801,7 @@
           }
         },
         {
-          "id": "value-avg",
+          "id": "value-avg-lo",
           "x": 200,
           "y": 284,
           "width": 200,
@@ -689,8 +813,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/ping_avg"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/ping_avg"
             },
             "format": "{:.1}",
             "unit": "ms",
@@ -706,8 +830,70 @@
             ],
             "align": "center",
             "value_min": 0.0,
-            "value_max": 100.0,
+            "value_max": 20.0,
             "ranges": [
+              {
+                "max": 50.0,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 255
+              },
+              {
+                "max": null,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "value-avg-hi",
+          "x": 200,
+          "y": 284,
+          "width": 200,
+          "height": 50,
+          "rotation": 0.0,
+          "visible": true,
+          "update_interval_ms": 200,
+          "fps": null,
+          "kind": {
+            "type": "value_text",
+            "source": {
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/ping_avg"
+            },
+            "format": "{:.0}",
+            "unit": "ms",
+            "font": {
+              "path": null
+            },
+            "font_size": 36,
+            "color": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "align": "center",
+            "value_min": 0.0,
+            "value_max": 20.0,
+            "ranges": [
+              {
+                "max": 50.0,
+                "color": [
+                  255,
+                  255,
+                  255
+                ],
+                "alpha": 0
+              },
               {
                 "max": null,
                 "color": [
@@ -1203,8 +1389,8 @@
           "kind": {
             "type": "radial_gauge",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/net_rate"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/net_rate"
             },
             "value_min": 0.0,
             "value_max": 10240.0,
@@ -1243,8 +1429,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/net_rate"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/net_rate"
             },
             "format": "{:.0}",
             "unit": "KB/s",
@@ -1944,8 +2130,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/gpu_load"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/gpu_load"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -1988,8 +2174,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/cpu_load"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/cpu_load"
             },
             "format": "{:.0}",
             "unit": "%",
@@ -2032,8 +2218,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/mem_used"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/mem_used"
             },
             "format": "{:.1}",
             "unit": " / 30 GB",
@@ -2076,8 +2262,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/gpu_temp"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/gpu_temp"
             },
             "format": "{:.0}",
             "unit": "",
@@ -2120,8 +2306,8 @@
           "kind": {
             "type": "value_text",
             "source": {
-              "type": "runtime_file",
-              "path": "/tmp/lianli-sensors/cpu_temp"
+              "type": "command",
+              "cmd": "cat /tmp/lianli-sensors/cpu_temp"
             },
             "format": "{:.0}",
             "unit": "",
