@@ -26,6 +26,7 @@ const MAX_GPU_TEMP_PER_SEC: f64 = 12.0;
 const MAX_MEM_USED_PER_SEC: f64 = 2.0;
 const MAX_MEM_PCT_PER_SEC: f64 = 40.0;
 const MAX_NET_RATE_PER_SEC: f64 = 4000.0; // KB/s
+const MAX_NET_RATE_MB_PER_SEC: f64 = 4.0; // MB/s — same slew curve scaled to MB
 
 // Hardware paths (Arch-local). Adjust if hwmon indices change.
 const HWMON_CPU_TEMP: &str = "/sys/class/hwmon/hwmon3/temp1_input";
@@ -227,6 +228,7 @@ fn main() {
     let mut mem_used = Sensor::new("mem_used", MAX_MEM_USED_PER_SEC, 1);
     let mut mem_pct = Sensor::new("mem_pct", MAX_MEM_PCT_PER_SEC, 0);
     let mut net_rate = Sensor::new("net_rate", MAX_NET_RATE_PER_SEC, 0);
+    let mut net_rate_mb = Sensor::new("net_rate_mb", MAX_NET_RATE_MB_PER_SEC, 2);
 
     // State for delta-based sensors
     let mut prev_cpu: Option<(u64, u64)> = None;
@@ -294,6 +296,7 @@ fn main() {
                     if dt_sec > 0.05 {
                         let rate_kb_sec = bytes.saturating_sub(pb) as f64 / dt_sec / 1024.0;
                         net_rate.target = rate_kb_sec.max(0.0);
+                        net_rate_mb.target = (rate_kb_sec / 1024.0).max(0.0);
                     }
                 }
                 prev_net = Some((bytes, now));
@@ -310,6 +313,7 @@ fn main() {
             &mut mem_used,
             &mut mem_pct,
             &mut net_rate,
+            &mut net_rate_mb,
         ] {
             s.tick(dt_sec);
             write_atomic(out_dir, s.name, &s.format());

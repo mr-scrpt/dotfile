@@ -15,3 +15,7 @@ lianli/sensor-service/target/
 
 # Runtime state files (transient, not config)
 lianli/.config/lianli/current_rgb_profile
+
+# Local backup snapshots (kept in working tree for quick rollback, not committed)
+lianli/.config/lianli/*.bak-*
+lianli/sensor-service/src/*.bak-*
