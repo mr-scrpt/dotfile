@@ -499,7 +499,7 @@
         {
           "id": "value-net-kb",
           "x": 200,
-          "y": 195,
+          "y": 186,
           "width": 260,
           "height": 90,
           "rotation": 0.0,
@@ -552,7 +552,7 @@
         {
           "id": "value-net-mb",
           "x": 200,
-          "y": 195,
+          "y": 186,
           "width": 260,
           "height": 90,
           "rotation": 0.0,
@@ -697,7 +697,7 @@
         {
           "id": "value-ping-lo",
           "x": 200,
-          "y": 180,
+          "y": 190,
           "width": 220,
           "height": 80,
           "rotation": 0.0,
@@ -750,7 +750,7 @@
         {
           "id": "value-ping-hi",
           "x": 200,
-          "y": 180,
+          "y": 190,
           "width": 220,
           "height": 80,
           "rotation": 0.0,
@@ -803,7 +803,7 @@
         {
           "id": "value-avg-lo",
           "x": 200,
-          "y": 284,
+          "y": 279,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
@@ -856,7 +856,7 @@
         {
           "id": "value-avg-hi",
           "x": 200,
-          "y": 284,
+          "y": 279,
           "width": 200,
           "height": 50,
           "rotation": 0.0,
