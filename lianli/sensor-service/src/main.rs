@@ -30,8 +30,10 @@ const MAX_NET_RATE_MB_PER_SEC: f64 = 4.0; // MB/s — same slew curve scaled to 
 
 // Hardware paths (Arch-local). Adjust if hwmon indices change.
 const HWMON_CPU_TEMP: &str = "/sys/class/hwmon/hwmon3/temp1_input";
-const HWMON_GPU_TEMP: &str = "/sys/class/hwmon/hwmon2/temp1_input";
-const AMD_GPU_BUSY: &str = "/sys/class/drm/card1/device/gpu_busy_percent";
+// GPU is now the NVIDIA RTX 5080 (since 2026-04-25). NVIDIA's proprietary
+// driver does NOT expose hwmon or `gpu_busy_percent` sysfs files, so we
+// shell out to `nvidia-smi` once per TARGET_REFRESH for both load and temp
+// in a single fork. The previous AMD card1 paths returned 0 forever.
 const NET_IFACE: &str = "wlan0";
 
 // Ping target and cadence. Runs on a dedicated thread so the 60 Hz publish
@@ -52,6 +54,28 @@ fn read_f64(path: &str) -> Option<f64> {
 
 fn read_hwmon_deg(path: &str) -> Option<f64> {
     read_f64(path).map(|v| v / 1000.0)
+}
+
+/// Single fork to nvidia-smi returning (utilization%, temperature°C) for
+/// the primary NVIDIA GPU. Costs ~30ms wall — called at TARGET_REFRESH
+/// cadence (2 Hz), so total CPU overhead is negligible.
+fn read_nvidia_gpu() -> Option<(f64, f64)> {
+    let output = Command::new("nvidia-smi")
+        .args([
+            "--query-gpu=utilization.gpu,temperature.gpu",
+            "--format=csv,noheader,nounits",
+        ])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let stdout = String::from_utf8(output.stdout).ok()?;
+    let line = stdout.lines().next()?;
+    let mut parts = line.split(',').map(|p| p.trim());
+    let load: f64 = parts.next()?.parse().ok()?;
+    let temp: f64 = parts.next()?.parse().ok()?;
+    Some((load.clamp(0.0, 100.0), temp))
 }
 
 fn read_cpu_stat() -> Option<(u64, u64)> {
@@ -245,13 +269,11 @@ fn main() {
         cpu_temp.target = v;
         cpu_temp.current = v;
     }
-    if let Some(v) = read_hwmon_deg(HWMON_GPU_TEMP) {
-        gpu_temp.target = v;
-        gpu_temp.current = v;
-    }
-    if let Some(v) = read_f64(AMD_GPU_BUSY) {
-        gpu_load.target = v;
-        gpu_load.current = v;
+    if let Some((load, temp)) = read_nvidia_gpu() {
+        gpu_load.target = load;
+        gpu_load.current = load;
+        gpu_temp.target = temp;
+        gpu_temp.current = temp;
     }
 
     let mut last_target = Instant::now()
@@ -280,11 +302,9 @@ fn main() {
             if let Some(v) = read_hwmon_deg(HWMON_CPU_TEMP) {
                 cpu_temp.target = v;
             }
-            if let Some(v) = read_hwmon_deg(HWMON_GPU_TEMP) {
-                gpu_temp.target = v;
-            }
-            if let Some(v) = read_f64(AMD_GPU_BUSY) {
-                gpu_load.target = v.clamp(0.0, 100.0);
+            if let Some((load, temp)) = read_nvidia_gpu() {
+                gpu_load.target = load;
+                gpu_temp.target = temp;
             }
             if let Some((v, p)) = read_mem() {
                 mem_used.target = v;
