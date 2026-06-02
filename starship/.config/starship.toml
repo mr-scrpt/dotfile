@@ -1,0 +1,76 @@
+# Указываем палитру Catppuccin
+palette = "catppuccin_mocha"
+
+# Двухстрочный формат: Инфо -> Перенос строки -> Ввод
+format = """
+$directory\
+$git_branch\
+$git_status\
+$line_break\
+$character"""
+
+[directory]
+style = "bold blue"
+# Убеждаемся, что путь отображается всегда. 
+# truncation_length определяет, сколько папок показывать перед обрезанием.
+truncation_length = 3
+truncation_symbol = "…/"
+format = "[$path]($style)[$read_only]($read_only_style) "
+# Чтобы путь не "прятался" внутри репозиториев
+truncate_to_repo = false 
+
+[git_branch]
+symbol = " "
+style = "bold mauve"
+format = "on [$symbol$branch]($style) "
+
+[git_status]
+# Динамическое отображение: если статуса нет (например, up_to_date), он будет пустым
+style = "bold red"
+format = "([$all_status$ahead_behind]($style) )"
+# Оставляем ПУСТЫМИ те значки, которые не должны светиться просто так
+up_to_date = "" 
+conflicted = "󰞇 "
+ahead = "⇡"
+behind = "⇣"
+diverged = "↕"
+untracked = "[?](yellow) "
+modified = "[!](yellow) "
+staged = "[+](green) "
+renamed = "» "
+deleted = "✘ "
+stashed = "≡ "
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold lavender)"
+
+# Цветовая схема Catppuccin Mocha
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849d"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"
