@@ -4,7 +4,8 @@
         "format": "{}",
         "return-type": "json",
         "exec": "~/.config/waybar/scripts/claude-usage.sh",
-        "interval": 60,
+        // Реже, чем хочется: эндпоинт с общим rate limit'ом (429) на аккаунт
+        "interval": 180,
         "signal": 9,
         // Клик — принудительное обновление модуля
         "on-click": "pkill -RTMIN+9 waybar",

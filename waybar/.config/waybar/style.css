@@ -359,6 +359,11 @@ tooltip {
   color: @overlay0;
 }
 
+/* Данные из кэша при временном 429 от API */
+#custom-claude.stale {
+  opacity: 0.75;
+}
+
 #custom-voxtype {
   min-width: 12px;
   margin: 0 0 0 7.5px;

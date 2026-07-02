@@ -17,10 +17,29 @@ emit() { # $1=text $2=tooltip $3=class
 TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS")
 [ -n "$TOKEN" ] || emit "$ICON ?" "В credentials нет accessToken" "offline"
 
+# Эндпоинт рейт-лимитится (429), причём лимит общий с самим Claude Code.
+# Поэтому последний успешный ответ кэшируется, и при временном отказе
+# показываются данные из кэша (до 30 минут), а не состояние ошибки.
+CACHE="${XDG_RUNTIME_DIR:-/tmp}/waybar-claude-usage.json"
+CACHE_MAX_AGE=1800
+
+stale_min=""
 RESP=$(curl -sf --max-time 8 "https://api.anthropic.com/api/oauth/usage" \
     -H "Authorization: Bearer $TOKEN" \
-    -H "anthropic-beta: oauth-2025-04-20") ||
-    emit "$ICON —" $'API недоступен: нет сети или токен истёк\n(токен обновится при следующем запуске Claude Code)' "offline"
+    -H "anthropic-beta: oauth-2025-04-20")
+
+if [ -n "$RESP" ]; then
+    printf '%s' "$RESP" >"$CACHE"
+elif [ -r "$CACHE" ]; then
+    age=$(($(date +%s) - $(stat -c %Y "$CACHE")))
+    if [ "$age" -lt "$CACHE_MAX_AGE" ]; then
+        RESP=$(cat "$CACHE")
+        stale_min=$(((age + 59) / 60))
+    fi
+fi
+
+[ -n "$RESP" ] ||
+    emit "$ICON —" $'API недоступен: rate limit, нет сети или токен истёк\n(токен обновится при следующем запуске Claude Code)' "offline"
 
 five=$(jq -r '.five_hour.utilization // 0 | round' <<<"$RESP")
 week=$(jq -r '.seven_day.utilization // 0 | round' <<<"$RESP")
@@ -48,6 +67,11 @@ max=$((five > week ? five : week))
 class="normal"
 [ "$max" -ge 70 ] && class="warning"
 [ "$max" -ge 90 ] && class="critical"
+
+if [ -n "$stale_min" ]; then
+    class="stale"
+    tooltip+=$'\n'"⚠ Данные ${stale_min} мин назад — API временно недоступен (429)"
+fi
 
 # Сегментный прогресс-бар (8 сегментов) с pango-цветами, палитра Catppuccin Mocha:
 # базовый цвет свой на каждое окно, от 70% — жёлтый, от 90% — красный
