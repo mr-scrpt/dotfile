@@ -4,8 +4,8 @@
         "format": "{}",
         "return-type": "json",
         "exec": "~/.config/waybar/scripts/claude-usage.sh",
-        // Реже, чем хочется: эндпоинт с общим rate limit'ом (429) на аккаунт
-        "interval": 180,
+        // Эндпоинт с общим rate limit'ом (429) на аккаунт — чаще не стоит
+        "interval": 120,
         "signal": 9,
         // Клик — попап с деталями (уведомление), правый клик — форс-обновление
         "on-click": "~/.config/waybar/scripts/claude-usage.sh --popup",

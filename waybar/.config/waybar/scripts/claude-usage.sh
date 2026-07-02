@@ -40,12 +40,14 @@ RESP=""
 cache_age() { echo $(($(date +%s) - $(stat -c %Y "$CACHE"))); }
 
 # Для попапа кэш моложе интервала опроса бара уже актуален — API не дёргаем
-if [ "$MODE" = popup ] && [ -r "$CACHE" ] && [ "$(cache_age)" -lt 180 ]; then
+if [ "$MODE" = popup ] && [ -r "$CACHE" ] && [ "$(cache_age)" -lt 120 ]; then
     RESP=$(cat "$CACHE")
 fi
 
 if [ -z "$RESP" ]; then
-    RESP=$(curl -sf --max-time 8 "https://api.anthropic.com/api/oauth/usage" \
+    # --retry перекрывает разовые 429/сетевые сбои (curl считает 429 transient)
+    RESP=$(curl -sf --max-time 8 --retry 1 --retry-delay 5 \
+        "https://api.anthropic.com/api/oauth/usage" \
         -H "Authorization: Bearer $TOKEN" \
         -H "anthropic-beta: oauth-2025-04-20")
     if [ -n "$RESP" ]; then
