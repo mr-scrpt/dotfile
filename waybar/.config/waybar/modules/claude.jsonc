@@ -1,0 +1,13 @@
+// Claude Code usage limits: 5-hour and weekly window (same data as /usage in the CLI)
+{
+    "custom/claude": {
+        "format": "{}",
+        "return-type": "json",
+        "exec": "~/.config/waybar/scripts/claude-usage.sh",
+        "interval": 60,
+        "signal": 9,
+        // Клик — принудительное обновление модуля
+        "on-click": "pkill -RTMIN+9 waybar",
+        "tooltip": true
+    }
+}

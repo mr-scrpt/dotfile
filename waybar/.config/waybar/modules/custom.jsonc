@@ -6,25 +6,29 @@
         "format-ru": "<span color='#f38ba8'>RU</span>",
         "on-click": "hyprctl switchxkblayout all next"
     },
+    // Условные индикаторы: waybar прячет модуль только при пустом ИТОГЕ
+    // форматирования, поэтому разделители встроены в text через скрипты,
+    // а не в "format" — иначе пайпы висели бы постоянно
     "custom/update": {
-        "format": "",
-        "exec": "omarchy-update-available",
+        "format": "{}",
+        "exec": "~/.config/waybar/scripts/update-indicator.sh",
+        "return-type": "json",
         "on-click": "omarchy-launch-floating-terminal-with-presentation omarchy-update",
-        "tooltip-format": "Omarchy update available",
         "signal": 7,
         "interval": 21600
     },
     "custom/screenrecording-indicator": {
+        "format": "{}",
         "on-click": "omarchy-cmd-screenrecord",
-        "exec": "$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
+        "exec": "~/.config/waybar/scripts/indicator-sep.sh $OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
         "signal": 8,
         "return-type": "json"
     },
     "custom/tor": {
-        "format": "{}", 
+        "format": "{}",
         "return-type": "json",
         // ВАЖНО: Тут добавляем флаг --check
-        "exec": "~/.config/hypr/custom/scripts/toggler/tor-toggler.sh --check",
+        "exec": "~/.config/waybar/scripts/indicator-sep.sh ~/.config/hypr/custom/scripts/toggler/tor-toggler.sh --check",
         // Тут БЕЗ флага (обычное переключение)
         "on-click": "~/.config/hypr/custom/scripts/toggler/tor-toggler.sh",
         "signal": 10,

@@ -92,6 +92,8 @@ tooltip {
 
 #custom-update {
   font-size: 10px;
+  /* Разделитель встроен в text — межмодульные поля из общей группы не нужны */
+  margin: 0;
 }
 
 #clock {
@@ -329,7 +331,8 @@ tooltip {
 
 #custom-tor {
   font-size: 14px; /* Можно подстроить размер иконки */
-  padding: 0 5px;
+  /* Разделитель встроен в text — боковые отступы не нужны */
+  padding: 0;
 }
 
 #custom-tor.active {
@@ -338,6 +341,22 @@ tooltip {
 
 #custom-tor.inactive {
   color: #6c7086; /* Gray/Overlay */
+}
+
+#custom-claude {
+  margin-left: 5px;
+}
+
+#custom-claude.warning {
+  color: @yellow;
+}
+
+#custom-claude.critical {
+  color: @red;
+}
+
+#custom-claude.offline {
+  color: @overlay0;
 }
 
 #custom-voxtype {

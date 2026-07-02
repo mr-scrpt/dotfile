@@ -5,7 +5,8 @@
     "~/.config/waybar/modules/bars.jsonc",
     "~/.config/waybar/modules/system.jsonc",
     "~/.config/waybar/modules/time.jsonc",
-    "~/.config/waybar/modules/custom.jsonc"
+    "~/.config/waybar/modules/custom.jsonc",
+    "~/.config/waybar/modules/claude.jsonc"
   ],
   "name": "hdmi_1",
   "reload_style_on_change": true,
@@ -23,11 +24,11 @@
     "clock#time",
     "custom/separator",
     "clock#date",
+    "custom/separator",
+    "custom/claude",
     "custom/update",
     "custom/screenrecording-indicator",
-    "custom/separator",
-    "custom/tor",
-
+    "custom/tor"
   ],
   "modules-right": [
     "tray",
