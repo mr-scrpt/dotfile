@@ -2,76 +2,126 @@
 # Лимиты Claude Code для waybar: 5-часовое и недельное окно.
 # Источник — тот же OAuth-эндпоинт, что питает /usage в самом Claude Code.
 # Токен берётся из ~/.claude/.credentials.json и обновляется самим Claude Code.
+# Режимы: без аргументов — JSON для waybar; --popup — уведомление с деталями.
 
 CREDS="$HOME/.claude/.credentials.json"
 ICON="✳"
+CACHE="${XDG_RUNTIME_DIR:-/tmp}/waybar-claude-usage.json"
+CACHE_MAX_AGE=1800
 
-emit() { # $1=text $2=tooltip $3=class
+MODE=bar
+[ "$1" = "--popup" ] && MODE=popup
+
+emit() { # $1=text $2=tooltip $3=class — вывод для waybar
     jq -nc --arg text "$1" --arg tooltip "$2" --arg class "$3" \
         '{text: $text, tooltip: $tooltip, class: $class}'
+}
+
+fail() { # $1=короткий текст для бара $2=сообщение
+    if [ "$MODE" = popup ]; then
+        notify-send -a "Claude Code" -t 8000 "Claude Code — лимиты" "$2"
+    else
+        emit "$ICON $1" "$2" "offline"
+    fi
     exit 0
 }
 
-[ -r "$CREDS" ] || emit "$ICON ?" "Нет файла $CREDS" "offline"
+[ -r "$CREDS" ] || fail "?" "Нет файла $CREDS"
 
 TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS")
-[ -n "$TOKEN" ] || emit "$ICON ?" "В credentials нет accessToken" "offline"
+[ -n "$TOKEN" ] || fail "?" "В credentials нет accessToken"
 
 # Эндпоинт рейт-лимитится (429), причём лимит общий с самим Claude Code.
 # Поэтому последний успешный ответ кэшируется, и при временном отказе
 # показываются данные из кэша (до 30 минут), а не состояние ошибки.
-CACHE="${XDG_RUNTIME_DIR:-/tmp}/waybar-claude-usage.json"
-CACHE_MAX_AGE=1800
-
 stale_min=""
-RESP=$(curl -sf --max-time 8 "https://api.anthropic.com/api/oauth/usage" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "anthropic-beta: oauth-2025-04-20")
+RESP=""
 
-if [ -n "$RESP" ]; then
-    printf '%s' "$RESP" >"$CACHE"
-elif [ -r "$CACHE" ]; then
-    age=$(($(date +%s) - $(stat -c %Y "$CACHE")))
-    if [ "$age" -lt "$CACHE_MAX_AGE" ]; then
+cache_age() { echo $(($(date +%s) - $(stat -c %Y "$CACHE"))); }
+
+# Для попапа кэш моложе интервала опроса бара уже актуален — API не дёргаем
+if [ "$MODE" = popup ] && [ -r "$CACHE" ] && [ "$(cache_age)" -lt 180 ]; then
+    RESP=$(cat "$CACHE")
+fi
+
+if [ -z "$RESP" ]; then
+    RESP=$(curl -sf --max-time 8 "https://api.anthropic.com/api/oauth/usage" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "anthropic-beta: oauth-2025-04-20")
+    if [ -n "$RESP" ]; then
+        printf '%s' "$RESP" >"$CACHE"
+    elif [ -r "$CACHE" ] && [ "$(cache_age)" -lt "$CACHE_MAX_AGE" ]; then
         RESP=$(cat "$CACHE")
-        stale_min=$(((age + 59) / 60))
+        stale_min=$((($(cache_age) + 59) / 60))
     fi
 fi
 
 [ -n "$RESP" ] ||
-    emit "$ICON —" $'API недоступен: rate limit, нет сети или токен истёк\n(токен обновится при следующем запуске Claude Code)' "offline"
+    fail "—" $'API недоступен: rate limit, нет сети или токен истёк\n(токен обновится при следующем запуске Claude Code)'
 
 five=$(jq -r '.five_hour.utilization // 0 | round' <<<"$RESP")
 week=$(jq -r '.seven_day.utilization // 0 | round' <<<"$RESP")
 five_reset_iso=$(jq -r '.five_hour.resets_at // empty' <<<"$RESP")
 week_reset_iso=$(jq -r '.seven_day.resets_at // empty' <<<"$RESP")
 
-five_reset=""
-week_reset=""
-[ -n "$five_reset_iso" ] && five_reset=$(date -d "$five_reset_iso" +'%H:%M')
-[ -n "$week_reset_iso" ] && week_reset=$(date -d "$week_reset_iso" +'%d.%m %H:%M')
+rel_time() { # ISO-дата → «2ч 05м» / «3д 21ч» до наступления
+    local target diff d h m
+    target=$(date -d "$1" +%s 2>/dev/null) || { printf '?'; return; }
+    diff=$(((target - $(date +%s)) / 60))
+    ((diff < 0)) && diff=0
+    d=$((diff / 1440)) h=$(((diff % 1440) / 60)) m=$((diff % 60))
+    if ((d > 0)); then
+        printf '%dд %dч' "$d" "$h"
+    elif ((h > 0)); then
+        printf '%dч %02dм' "$h" "$m"
+    else
+        printf '%dм' "$m"
+    fi
+}
 
-tooltip="Claude Code — лимиты"
-tooltip+=$'\n'"5-часовое окно: ${five}%"
-[ -n "$five_reset" ] && tooltip+=" (сброс в ${five_reset})"
-tooltip+=$'\n'"Неделя, все модели: ${week}%"
-[ -n "$week_reset" ] && tooltip+=" (сброс ${week_reset})"
+# Строки сводки: «метка|процент|когда сброс»
+rows=()
+[ -n "$five_reset_iso" ] &&
+    rows+=("5ч сессия|$five|через $(rel_time "$five_reset_iso") ($(date -d "$five_reset_iso" +'%H:%M'))")
+[ -n "$week_reset_iso" ] &&
+    rows+=("7д все|$week|через $(rel_time "$week_reset_iso") ($(date -d "$week_reset_iso" +'%d.%m %H:%M'))")
 
 # Недельные лимиты по отдельным моделям (weekly_scoped), если сервер их отдаёт
-while IFS=$'\t' read -r model pct; do
-    [ -n "$model" ] && tooltip+=$'\n'"Неделя, ${model}: ${pct}%"
+while IFS=$'\t' read -r model pct reset_iso; do
+    [ -n "$model" ] &&
+        rows+=("7д ${model}|$pct|через $(rel_time "$reset_iso") ($(date -d "$reset_iso" +'%d.%m %H:%M'))")
 done < <(jq -r '.limits[]? | select(.kind == "weekly_scoped")
-    | [(.scope.model.display_name // "модель"), (.percent // 0 | round | tostring)] | @tsv' <<<"$RESP")
+    | [(.scope.model.display_name // "модель"), (.percent // 0 | round | tostring), .resets_at] | @tsv' <<<"$RESP")
+
+# Выравнивание колонок: ${#} считает символы, а не байты, кириллица не ломает
+maxlen=0
+for r in "${rows[@]}"; do
+    l=${r%%|*}
+    ((${#l} > maxlen)) && maxlen=${#l}
+done
+
+body=""
+for r in "${rows[@]}"; do
+    IFS='|' read -r l p reset <<<"$r"
+    body+=$(printf '%s:%*s %3d%%  сброс %s' "$l" $((maxlen - ${#l})) "" "$p" "$reset")$'\n'
+done
+body=${body%$'\n'}
+
+warn=""
+[ -n "$stale_min" ] && warn="⚠ API недоступен (429) — данные ${stale_min} мин назад"$'\n\n'
+
+if [ "$MODE" = popup ]; then
+    notify-send -a "Claude Code" -t 8000 "${ICON} Claude Code — лимиты" "${warn}${body}"
+    exit 0
+fi
+
+tooltip="Claude Code — лимиты"$'\n\n'"${warn}${body}"
 
 max=$((five > week ? five : week))
 class="normal"
 [ "$max" -ge 70 ] && class="warning"
 [ "$max" -ge 90 ] && class="critical"
-
-if [ -n "$stale_min" ]; then
-    class="stale"
-    tooltip+=$'\n'"⚠ Данные ${stale_min} мин назад — API временно недоступен (429)"
-fi
+[ -n "$stale_min" ] && class="stale"
 
 # Сегментный прогресс-бар (8 сегментов) с pango-цветами, палитра Catppuccin Mocha:
 # базовый цвет свой на каждое окно, от 70% — жёлтый, от 90% — красный

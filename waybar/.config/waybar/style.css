@@ -86,8 +86,18 @@
   margin-right: 5px;
 }
 
+/* Глобальный «*» делает фон прозрачным — тултипам возвращаем непрозрачный,
+   иначе календарь и прочие попапы сливаются с тем, что под ними */
 tooltip {
+  background-color: @base;
+  border: 1px solid @surface1;
+  border-radius: 8px;
   padding: 2px;
+}
+
+tooltip label {
+  color: @text;
+  padding: 4px 8px;
 }
 
 #custom-update {

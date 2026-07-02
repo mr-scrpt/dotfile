@@ -7,8 +7,9 @@
         // Реже, чем хочется: эндпоинт с общим rate limit'ом (429) на аккаунт
         "interval": 180,
         "signal": 9,
-        // Клик — принудительное обновление модуля
-        "on-click": "pkill -RTMIN+9 waybar",
+        // Клик — попап с деталями (уведомление), правый клик — форс-обновление
+        "on-click": "~/.config/waybar/scripts/claude-usage.sh --popup",
+        "on-click-right": "pkill -RTMIN+9 waybar",
         "tooltip": true
     }
 }
