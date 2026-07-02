@@ -31,13 +31,26 @@ fail() { # $1=короткий текст для бара $2=сообщение
 TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS")
 [ -n "$TOKEN" ] || fail "?" "В credentials нет accessToken"
 
-# Эндпоинт рейт-лимитится (429), причём лимит общий с самим Claude Code.
-# Поэтому последний успешный ответ кэшируется, и при временном отказе
+# У эндпоинта два бакета лимитов по User-Agent: без "claude-code/<версия>"
+# запрос попадает в жёсткий бакет (~5 запросов на токен, затем залипший 429),
+# с ним — в щедрый, которым пользуется сам Claude Code. Поэтому UA обязателен.
+# На случай остаточных 429 последний успешный ответ кэшируется, и при отказе
 # показываются данные из кэша (до 30 минут), а не состояние ошибки.
 stale_min=""
 RESP=""
 
 cache_age() { echo $(($(date +%s) - $(stat -c %Y "$CACHE"))); }
+
+ua() { # User-Agent с версией Claude Code; версия кэшируется на сутки
+    local vf="${XDG_RUNTIME_DIR:-/tmp}/claude-code-version" v=""
+    if [ ! -r "$vf" ] || [ $(($(date +%s) - $(stat -c %Y "$vf"))) -gt 86400 ]; then
+        local bin
+        bin=$(command -v claude || echo "$HOME/.local/share/mise/shims/claude")
+        "$bin" --version 2>/dev/null | awk '{print $1; exit}' >"$vf"
+    fi
+    v=$(cat "$vf" 2>/dev/null)
+    printf 'claude-code/%s' "${v:-2.1.198}"
+}
 
 # Для попапа кэш моложе интервала опроса бара уже актуален — API не дёргаем
 if [ "$MODE" = popup ] && [ -r "$CACHE" ] && [ "$(cache_age)" -lt 120 ]; then
@@ -45,11 +58,13 @@ if [ "$MODE" = popup ] && [ -r "$CACHE" ] && [ "$(cache_age)" -lt 120 ]; then
 fi
 
 if [ -z "$RESP" ]; then
-    # --retry перекрывает разовые 429/сетевые сбои (curl считает 429 transient)
-    RESP=$(curl -sf --max-time 8 --retry 1 --retry-delay 5 \
+    # Без ретраев: на 429 повтор бессмысленен (retry-after всегда 0),
+    # деградацию закрывает кэш
+    RESP=$(curl -sf --max-time 8 \
         "https://api.anthropic.com/api/oauth/usage" \
         -H "Authorization: Bearer $TOKEN" \
-        -H "anthropic-beta: oauth-2025-04-20")
+        -H "anthropic-beta: oauth-2025-04-20" \
+        -H "User-Agent: $(ua)")
     if [ -n "$RESP" ]; then
         printf '%s' "$RESP" >"$CACHE"
     elif [ -r "$CACHE" ] && [ "$(cache_age)" -lt "$CACHE_MAX_AGE" ]; then
