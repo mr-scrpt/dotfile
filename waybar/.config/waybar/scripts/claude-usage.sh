@@ -85,6 +85,10 @@ refresh_oauth() { # обмен refresh-токена на новый access; ус
             '{grant_type: "refresh_token", client_id: $ci, refresh_token: $rt}')")
     code="${raw##*$'\n'}"
     body="${raw%$'\n'"$code"}"
+    # 400/401/403 = invalid_grant: refresh-токен отозван (ротация ушла на
+    # другой процесс без записи в файл) — лечится только /login, о чём и
+    # говорим в статусе вместо общего «нет сети»
+    case "$code" in 400 | 401 | 403) REFRESH_DENIED=1 ;; esac
     [ "$code" = 200 ] && jq -e '.access_token' <<<"$body" >/dev/null 2>&1 || return 1
     TOKEN=$(jq -r '.access_token' <<<"$body")
     new_rt=$(jq -r '.refresh_token // empty' <<<"$body")
@@ -110,7 +114,13 @@ if [ -z "$RESP" ]; then
         # Перечитать под локом: параллельный инстанс мог уже ротировать токены
         TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS")
         exp_s=$(jq -r '(.claudeAiOauth.expiresAt // 0) / 1000 | floor' "$CREDS")
-        if [ "$exp_s" -lt "$(($(date +%s) + REFRESH_BUFFER))" ]; then
+        # Пока локальный Claude Code запущен, упреждающий refresh делает он —
+        # одновременный обмен одного refresh-токена двумя процессами кончается
+        # invalid_grant и принудительным /login (грабля CodexBar#1161).
+        # Если локальный Claude Code токен так и не продлит (простаивает),
+        # сработает 401-ветка ниже: к тому моменту гонки уже не будет
+        if [ "$exp_s" -lt "$(($(date +%s) + REFRESH_BUFFER))" ] &&
+            ! pgrep -x claude >/dev/null; then
             refresh_oauth || true
             # При неудаче запрос ниже уйдёт со старым токеном: деградацию
             # закрывают кэш и следующий цикл опроса (2 мин)
@@ -145,8 +155,12 @@ if [ -z "$RESP" ]; then
     fi
 fi
 
-[ -n "$RESP" ] ||
+if [ -z "$RESP" ]; then
+    if [ -n "$REFRESH_DENIED" ]; then
+        fail "!" $'Refresh-токен отозван — выполни /login в Claude Code\n(виджет сам не восстановится, нужна повторная авторизация)'
+    fi
     fail "—" $'API недоступен: rate limit или нет сети\n(виджет обновляет токен сам, повтор через 2 мин)'
+fi
 
 five=$(jq -r '.five_hour.utilization // 0 | round' <<<"$RESP")
 week=$(jq -r '.seven_day.utilization // 0 | round' <<<"$RESP")
