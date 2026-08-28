@@ -1,0 +1,37 @@
+#!/usr/bin/env bun
+import { launchSession, type SessionBlueprint } from "./session-launcher";
+
+// 1. Имя — из аргумента или интерактивно
+let sessionName = process.argv[2];
+const host = process.argv[3] || "cs";
+
+if (!sessionName) {
+  process.stdout.write("Имя удалённой сессии: ");
+  for await (const line of console as any) {
+    sessionName = String(line).trim();
+    break;
+  }
+}
+if (!sessionName) {
+  console.error("Имя не задано. Usage: tremote <name> [ssh-host]");
+  process.exit(1);
+}
+
+// 2. Локальная обёрточная сессия с префиксом srv-
+//    В единственном окне сразу ssh на сервер.
+//    Дальше на сервере пользователь сам делает `cd … && tdev <name>` —
+//    создаёт многооконную сессию УДАЛЁННО.
+//    F12 в локальном tmux переключает pass-through, после чего привычные
+//    C-M-* биндинги работают с удалённым tmux.
+const blueprint: SessionBlueprint = {
+  sessionName: `srv-${sessionName}`,
+  windows: [
+    {
+      name: ` ${host}`,
+      cmd: `ssh ${host}`,
+      focus: true,
+    },
+  ],
+};
+
+await launchSession(blueprint);

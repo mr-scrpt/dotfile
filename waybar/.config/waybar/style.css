@@ -353,24 +353,29 @@ tooltip label {
   color: #6c7086; /* Gray/Overlay */
 }
 
-#custom-claude {
+#custom-claude,
+#custom-ai-usage {
   margin-left: 5px;
 }
 
-#custom-claude.warning {
+#custom-claude.warning,
+#custom-ai-usage.warning {
   color: @yellow;
 }
 
-#custom-claude.critical {
+#custom-claude.critical,
+#custom-ai-usage.critical {
   color: @red;
 }
 
-#custom-claude.offline {
+#custom-claude.offline,
+#custom-ai-usage.offline {
   color: @overlay0;
 }
 
 /* Данные из кэша при временном 429 от API */
-#custom-claude.stale {
+#custom-claude.stale,
+#custom-ai-usage.stale {
   opacity: 0.75;
 }
 

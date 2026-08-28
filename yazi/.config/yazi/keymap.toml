@@ -1,8 +1,29 @@
-# --- WINDOW MANAGEMENT / TMUX DUAL PANE ---
+# --- DUAL PANE (split-tabs.yazi) ---
+# Панель = вкладка yazi. Обе рисуются рядом в одном процессе,
+# поэтому yank/paste между ними работает через общий буфер.
+# Превью включается сразу вместе с панелями: плагин стартует с preview = false,
+# поэтому вторым шагом сразу его переключаем. При выключении режима второй вызов
+# безопасно no-op — spl_preview выходит раньше, если дуальный режим не активен.
 [[mgr.prepend_keymap]]
 on   = "<C-s>"
-run  = "plugin dual-pane"
-desc = "Toggle Dual Pane (Tmux + Single Column Mode)"
+run  = [ "plugin split-tabs spl_toggle", "plugin split-tabs spl_preview" ]
+desc = "Dual Pane: вкл/выкл две панели (с превью)"
+
+[[mgr.prepend_keymap]]
+on   = "<Tab>"
+run  = "plugin split-tabs spl_switch_tab"
+desc = "Dual Pane: переключить панель"
+
+[[mgr.prepend_keymap]]
+on   = "<C-p>"
+run  = "plugin split-tabs spl_preview"
+desc = "Dual Pane: превью во всю ширину"
+
+# <Tab> по умолчанию был "spot" — переносим, чтобы не потерять
+[[mgr.prepend_keymap]]
+on   = "<A-s>"
+run  = "spot"
+desc = "Spot hovered file (раньше был <Tab>)"
 
 
 [[mgr.prepend_keymap]]
@@ -50,8 +71,8 @@ desc = "Go to Hellkitchen"
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "h", "w" ]
-run  = "cd ~/Hellkitchen/workspace/"
-desc = "Go to Hellkitchen"
+run  = "cd ~/Hellkitchen/workspace"
+desc = "Go to Workspace"
 
 
 [[mgr.prepend_keymap]]
@@ -59,11 +80,25 @@ on   = [ "g", "h", "p" ]
 run  = "cd ~/Hellkitchen/project"
 desc = "Go to Projects"
 
-# --- Остальное ---
+# --- Группа REMOTE / HOME (g -> r -> ...) ---
+# ВНИМАНИЕ: Home переехал с `g r` на `g r r` — `g r` стал префиксом группы.
 [[mgr.prepend_keymap]]
-on   = [ "g", "r" ]
+on   = [ "g", "r", "r" ]
 run  = "cd ~"
 desc = "Go to Home (~)"
+
+# Go Remote Claude — сервер разработки по SFTP (см. vfs.toml)
+[[mgr.prepend_keymap]]
+on   = [ "g", "r", "c" ]
+run  = "cd sftp://claude//home/arch"
+desc = "Go Remote Claude (сервер разработки)"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "r", "h" ]
+run  = "cd sftp://claude//home/arch/Hellkitchen"
+desc = "Go Remote Claude → Hellkitchen"
+
+# --- Остальное ---
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "c", "c" ]

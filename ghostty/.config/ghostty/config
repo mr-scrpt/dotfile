@@ -4,7 +4,8 @@
 # Font
 font-family = "JetBrainsMono Nerd Font"
 font-style = Regular
-font-size = 12
+font-size = 13
+font-thicken = true
 
 
 
@@ -64,8 +65,10 @@ copy-on-select = true
 link-url = true
 
 
-custom-shader = shaders/1/cursor_tail.glsl
-custom-shader = shaders/1/sonic_boom_cursor.glsl
+# TEMP DISABLED — раскомментировать когда ghostty починят redraw scheduling для анимированных шейдеров
+# https://github.com/ghostty-org/ghostty/discussions/8818
+# custom-shader = shaders/1/cursor_tail.glsl
+# custom-shader = shaders/1/sonic_boom_cursor.glsl
 # custom-shader = shaders/2/cursor_blaze_no_trail.glsl
 # custom-shader = shaders/2/cursor_smear.glsl
 #
@@ -79,3 +82,11 @@ async-backend = epoll
 
 clipboard-read = allow
 clipboard-paste-protection = false
+
+# Полупрозрачный фон (только фон, текст остаётся чётким).
+# Блюр того, что просвечивает, делает Hyprland (decoration:blur в looknfeel.conf).
+background-opacity = 0.85
+
+# Автоматически усиливает контраст текста против реального цвета под ним
+# (учитывает прозрачность + блюр). Полезно при background-opacity < 1.
+minimum-contrast = 1.5

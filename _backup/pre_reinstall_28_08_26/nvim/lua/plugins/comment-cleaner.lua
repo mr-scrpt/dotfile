@@ -1,0 +1,89 @@
+return {
+  -- {
+  --   "folke/snacks.nvim", -- Используем snacks (или можно привязаться к nvim-treesitter), это не принципиально, главное - место для кода
+  --   opts = {},
+  --   config = function(_, opts)
+  --     -- Функция для удаления комментариев
+  --     local function remove_comments()
+  --       -- 1. Получаем парсер Tree-sitter для текущего буфера
+  --       local ok, parser = pcall(vim.treesitter.get_parser, 0)
+  --
+  --       -- Если Tree-sitter не поддерживается для этого типа файла, пробуем простой fallback (опционально)
+  --       if not ok or not parser then
+  --         vim.notify("Tree-sitter парсер не найден для этого файла.", vim.log.levels.WARN)
+  --         return
+  --       end
+  --
+  --       local tree = parser:parse()[1]
+  --       local root = tree:root()
+  --       local lang = parser:lang()
+  --
+  --       -- 2. Формируем запрос (Query) для поиска комментариев.
+  --       -- (comment) - это стандартное имя узла для большинства языков в Tree-sitter.
+  --       -- @comment - это "захват" (capture), чтобы мы могли обратиться к узлу.
+  --       local query_string = "((comment) @comment)"
+  --
+  --       -- Пытаемся распарсить запрос. Некоторые языки могут иметь специфичные узлы,
+  --       -- но (comment) работает для 95% языков (Lua, JS, TS, Rust, Python, C++, и т.д.)
+  --       local query_ok, query = pcall(vim.treesitter.query.parse, lang, query_string)
+  --       if not query_ok then
+  --         vim.notify(
+  --           "Не удалось создать запрос для поиска комментариев.",
+  --           vim.log.levels.ERROR
+  --         )
+  --         return
+  --       end
+  --
+  --       -- 3. Собираем все узлы комментариев в список
+  --       local comments_to_delete = {}
+  --
+  --       for _, node, _ in query:iter_captures(root, 0) do
+  --         local range = { node:range() } -- {start_row, start_col, end_row, end_col}
+  --         table.insert(comments_to_delete, range)
+  --       end
+  --
+  --       -- 4. ВАЖНО: Сортируем комментарии в обратном порядке (снизу вверх, справа налево).
+  --       -- Если удалять сверху вниз, координаты последующих комментариев сместятся, и мы удалим не тот код.
+  --       table.sort(comments_to_delete, function(a, b)
+  --         if a[1] ~= b[1] then
+  --           return a[1] > b[1] -- Сначала нижние строки
+  --         else
+  --           return a[2] > b[2] -- Если на одной строке, то сначала правые
+  --         end
+  --       end)
+  --
+  --       -- 5. Применяем удаление
+  --       for _, r in ipairs(comments_to_delete) do
+  --         local s_row, s_col, e_row, e_col = r[1], r[2], r[3], r[4]
+  --
+  --         -- Проверяем, занимает ли комментарий всю строку (или только с отступами)
+  --         local line = vim.api.nvim_buf_get_lines(0, s_row, s_row + 1, false)[1]
+  --         local is_full_line = false
+  --
+  --         -- Если это однострочный комментарий
+  --         if s_row == e_row then
+  --           local prefix = line:sub(1, s_col)
+  --           -- Если перед комментарием только пробелы -> удаляем всю строку
+  --           if prefix:match("^%s*$") then
+  --             is_full_line = true
+  --           end
+  --         end
+  --
+  --         if is_full_line then
+  --           -- Удаляем строку целиком
+  --           vim.api.nvim_buf_set_lines(0, s_row, s_row + 1, false, {})
+  --         else
+  --           -- Удаляем только текст комментария (например, inline)
+  --           -- Используем nvim_buf_set_text (доступно в Neovim 0.10+)
+  --           vim.api.nvim_buf_set_text(0, s_row, s_col, e_row, e_col, {})
+  --         end
+  --       end
+  --
+  --       vim.notify("Все комментарии удалены 🧹", vim.log.levels.INFO)
+  --     end
+  --
+  --     -- Создаем маппинг клавиш
+  --     vim.keymap.set("n", "cc", remove_comments, { desc = "Удалить все комментарии (Smart)" })
+  --   end,
+  -- },
+}

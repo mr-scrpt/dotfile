@@ -124,19 +124,19 @@
       "curve": [
         [
           40.0,
-          25.0
+          20.0
         ],
         [
           60.0,
-          30.0
+          25.0
         ],
         [
           65.0,
-          40.0
+          35.0
         ],
         [
           70.0,
-          55.0
+          50.0
         ],
         [
           78.0,
@@ -154,17 +154,17 @@
       {
         "device_id": "wireless:1f:51:87:e5:66:e1",
         "speeds": [
-          "cpu_temp",
-          "cpu_temp",
-          "cpu_temp",
+          14,
+          14,
+          14,
           0
         ]
       },
       {
         "device_id": "wireless:9f:f0:76:e5:66:e1",
         "speeds": [
-          "cpu_temp",
-          "cpu_temp",
+          14,
+          14,
           0,
           0
         ]
@@ -195,7 +195,8 @@
               "speed": 2,
               "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "scope": "All",
+              "disabled": false
             },
             "swap_lr": false,
             "swap_tb": false
@@ -220,7 +221,8 @@
               "speed": 2,
               "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "scope": "All",
+              "disabled": false
             },
             "swap_lr": false,
             "swap_tb": false
@@ -239,7 +241,8 @@
               "speed": 2,
               "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "scope": "All",
+              "disabled": false
             },
             "swap_lr": false,
             "swap_tb": false
@@ -258,7 +261,8 @@
               "speed": 2,
               "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "scope": "All",
+              "disabled": false
             },
             "swap_lr": false,
             "swap_tb": false
@@ -283,7 +287,8 @@
               "speed": 2,
               "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "scope": "All",
+              "disabled": false
             },
             "swap_lr": false,
             "swap_tb": false
@@ -302,7 +307,34 @@
               "speed": 2,
               "brightness": 4,
               "direction": "Clockwise",
-              "scope": "All"
+              "scope": "All",
+              "disabled": false
+            },
+            "swap_lr": false,
+            "swap_tb": false
+          }
+        ]
+      },
+      {
+        "device_id": "wireless:8b:06:ef:e5:66:e1",
+        "mb_rgb_sync": false,
+        "zones": [
+          {
+            "zone_index": 0,
+            "effect": {
+              "mode": "Static",
+              "colors": [
+                [
+                  0,
+                  215,
+                  255
+                ]
+              ],
+              "speed": 2,
+              "brightness": 4,
+              "direction": "Clockwise",
+              "scope": "All",
+              "disabled": false
             },
             "swap_lr": false,
             "swap_tb": false
@@ -321,7 +353,7 @@
         128
       ],
       "theme_index": 7,
-      "brightness": 80,
+      "brightness": 90,
       "rotation": 2,
       "loop_interval": 3,
       "cpu_temp_source": null,

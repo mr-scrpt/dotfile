@@ -1,0 +1,216 @@
+#!/bin/bash
+
+# --- Проверка зависимостей ---
+if ! command -v gum &>/dev/null; then echo "Ошибка: 'gum' не найден. Установите: sudo pacman -S gum"; exit 1; fi
+if ! command -v fzf &>/dev/null; then echo "Ошибка: 'fzf' не найден. Установите: sudo pacman -S fzf"; exit 1; fi
+if ! command -v rsync &>/dev/null; then echo "Ошибка: 'rsync' не найден."; exit 1; fi
+
+gum style --foreground 212 --border-foreground 212 --border double --align center --width 50 --margin "1 2" --padding "2 4" 'Умная Синхронизация' 'Резервное копирование данных'
+
+navigate_with_fzf() {
+  local start_dir="$1"
+  local mode="$2"
+  cd "$start_dir" 2>/dev/null || cd "$HOME"
+
+  while true; do
+    clear >&2
+    gum style --foreground 75 "Текущий каталог: $(pwd)" >&2
+    echo "Управление: [Enter] Войти или Выбрать, [Esc] Отмена" >&2
+    
+    local items=()
+    if [[ "$mode" == "src" ]]; then
+      items+=("📂 [СКОПИРОВАТЬ СОДЕРЖИМОЕ ТЕКУЩЕЙ ПАПКИ]")
+      items+=("📦 [СКОПИРОВАТЬ ТЕКУЩУЮ ПАПКУ ЦЕЛИКОМ]")
+    else
+      items+=("✅ [ВЫБРАТЬ ТЕКУЩУЮ ПАПКУ ДЛЯ НАЗНАЧЕНИЯ]")
+    fi
+
+    if [[ "$(pwd)" != "/" ]]; then
+      items+=("📁 .. (подняться выше)")
+    fi
+
+    # ИЗМЕНЕНИЕ: Убрали фильтр скрытых файлов, теперь .config, .local и т.д. видны
+    while IFS= read -r -d '' dir; do
+        local clean_dir=$(basename "$dir")
+        items+=("📁 $clean_dir")
+    done < <(find . -maxdepth 1 -type d ! -name "." -print0 | sort -z)
+
+    local selected=$(printf '%s\n' "${items[@]}" | fzf \
+      --height=20 \
+      --border=rounded \
+      --header="Навигация" \
+      --prompt="📁 " \
+      --pointer="👉")
+
+    if [[ -z "$selected" ]]; then
+      echo "Отменено." >&2
+      exit 1
+    fi
+
+    if [[ "$selected" == "📂 [СКОПИРОВАТЬ СОДЕРЖИМОЕ ТЕКУЩЕЙ ПАПКИ]" ]]; then
+      echo "$(pwd)/"
+      return
+    elif [[ "$selected" == "📦 [СКОПИРОВАТЬ ТЕКУЩУЮ ПАПКУ ЦЕЛИКОМ]" ]]; then
+      echo "$(pwd)"
+      return
+    elif [[ "$selected" == "✅ [ВЫБРАТЬ ТЕКУЩУЮ ПАПКУ ДЛЯ НАЗНАЧЕНИЯ]" ]]; then
+      echo "$(pwd)/"
+      return
+    fi
+
+    local dir_name=$(echo "$selected" | sed 's/^[^ ]* //')
+
+    if [[ "$dir_name" == ".. (подняться выше)" ]]; then
+      cd .. || exit 1
+    elif [[ -n "$dir_name" && -d "$dir_name" ]]; then
+      cd "$dir_name" || exit 1
+    fi
+  done
+}
+
+select_start_point() {
+  local prompt_text="$1"
+  gum style --bold --foreground 220 "$prompt_text" >&2
+  
+  local options=("🏠 Домашний каталог ($HOME)" "🗄️ /mnt (Сетевые диски / NAS)" "💾 /run/media (USB накопители)" "🔄 Ручной ввод пути")
+  local choice=$(printf '%s\n' "${options[@]}" | gum choose --height 6)
+  
+  case "$choice" in
+    *"Домашний"*) echo "$HOME" ;;
+    *"/mnt"*) echo "/mnt" ;;
+    *"/run/media"*) echo "/run/media/$USER" ;;
+    *"Ручной"*) gum input --prompt "Введите путь: " --value "$HOME" ;;
+    *) exit 1 ;;
+  esac
+}
+
+# --- Шаг 1: Выбор исходной папки ---
+SRC="$1"
+if [ -z "$SRC" ]; then
+  START_SRC=$(select_start_point "Шаг 1: Откуда копировать (Исходная папка)? Выберите стартовую точку:")
+  SRC=$(navigate_with_fzf "$START_SRC" "src" | tail -n 1)
+fi
+
+# --- Шаг 2: Выбор конечной папки ---
+DST="$2"
+if [ -z "$DST" ]; then
+  clear
+  START_DST=$(select_start_point "Шаг 2: Куда копировать (Целевая папка)? Выберите стартовую точку:")
+  DST=$(navigate_with_fzf "$START_DST" "dst" | tail -n 1)
+fi
+
+# --- Шаг 2.5: Исключение мусорных файлов ---
+clear
+gum style --bold --foreground 220 "Шаг 2.5: Исключение мусорных и системных файлов"
+echo "При синхронизации мы можем пропустить тяжелые системные файлы, кэши и зависимости."
+echo ""
+
+EXCLUDE_MODE=$(gum choose \
+  "🚫 Исключить популярный мусор (node_modules, .git, кэши, корзины и т.д.)" \
+  "✅ Копировать абсолютно ВСЁ")
+
+RSYNC_EXCLUDES=()
+EXCLUDES_STR=""
+if [[ "$EXCLUDE_MODE" == *"Исключить"* ]]; then
+  # Популярные мусорные папки и файлы
+  JUNK_PATTERNS=(
+    "node_modules"
+    ".git"
+    ".DS_Store"
+    "Thumbs.db"
+    "__pycache__"
+    ".venv"
+    "venv"
+    "target"
+    "dist"
+    "build"
+    ".Trash-*"
+    "\$RECYCLE.BIN"
+    "System Volume Information"
+    ".next"
+    ".nuxt"
+    ".cache"
+    "tmp"
+    ".idea"
+    ".vscode"
+  )
+  for pattern in "${JUNK_PATTERNS[@]}"; do
+    RSYNC_EXCLUDES+=("--exclude" "$pattern")
+    EXCLUDES_STR+=" --exclude '$pattern'"
+  done
+fi
+
+clear
+gum style --foreground 212 --border-foreground 212 --border double --align center --width 50 --margin "1 2" --padding "2 4" 'Умная Синхронизация' 'Резервное копирование данных'
+
+if [[ "$SRC" == */ ]]; then
+  echo "Режим: Копирование $(gum style --bold --foreground 212 "СОДЕРЖИМОГО") (включая скрытые файлы и папки)"
+  echo "Откуда: $(gum style --bold "$SRC")"
+  echo "Куда:   $(gum style --bold "$DST")"
+else
+  echo "Режим: Копирование $(gum style --bold --foreground 212 "САМОЙ ПАПКИ") (включая скрытые файлы и папки)"
+  echo "Откуда: $(gum style --bold "$SRC")"
+  echo "Куда:   $(gum style --bold "${DST}$(basename "$SRC")/")"
+fi
+if [[ "$EXCLUDE_MODE" == *"Исключить"* ]]; then
+  echo "Фильтр: $(gum style --bold --foreground 197 "Исключается системный мусор") (node_modules, .git...)"
+fi
+echo ""
+
+# --- Шаг 3: Анализ дельты ---
+gum style --bold --foreground 220 'Шаг 3: Анализ изменений (это может занять время)...'
+
+LOG_FILE="/tmp/rsync_dry_run_$$.log"
+# rsync -a копирует ВСЁ, включая скрытые файлы (начинающиеся с точки).
+gum spin --spinner dot --title "Считаем дельту..." -- bash -c "eval rsync --dry-run -a --stats --ignore-existing $EXCLUDES_STR '$SRC' '$DST' > '$LOG_FILE'"
+
+FILES_TO_TRANSFER=$(grep "Number of regular files transferred:" "$LOG_FILE" | awk -F': ' '{print $2}' | tr -d ',')
+BYTES_TO_TRANSFER=$(grep "Total transferred file size:" "$LOG_FILE" | awk -F': ' '{print $2}' | awk '{print $1}' | tr -d ',')
+TOTAL_SIZE=$(grep "Total file size:" "$LOG_FILE" | awk -F': ' '{print $2}' | awk '{print $1}' | tr -d ',')
+
+FILES_TO_TRANSFER=${FILES_TO_TRANSFER:-0}
+BYTES_TO_TRANSFER=${BYTES_TO_TRANSFER:-0}
+TOTAL_SIZE=${TOTAL_SIZE:-0}
+
+rm -f "$LOG_FILE"
+
+AVAIL_KB=$(df -P "$DST" | awk 'NR==2 {print $4}')
+if [ -z "$AVAIL_KB" ]; then AVAIL_KB=0; fi
+AVAIL_BYTES=$((AVAIL_KB * 1024))
+
+format_bytes() {
+  numfmt --to=iec-i --suffix=B --format="%.2f" "$1" 2>/dev/null || echo "$1 байт"
+}
+
+echo ""
+gum style --bold --foreground 75 "=== Результаты анализа ==="
+echo "• Новых файлов:             $(gum style --bold --foreground 212 "$FILES_TO_TRANSFER")"
+echo "• Объем новых данных:       $(gum style --bold --foreground 212 "$(format_bytes "$BYTES_TO_TRANSFER")")"
+echo "• Общий объем источника:    $(format_bytes "$TOTAL_SIZE")"
+echo "• Свободно на диске (цель): $(format_bytes "$AVAIL_BYTES")"
+echo "=========================="
+echo ""
+
+if [ "$BYTES_TO_TRANSFER" -eq 0 ]; then
+  gum style --bold --foreground 154 "✅ Данные уже синхронизированы! Новых файлов не найдено."
+  exit 0
+fi
+
+# --- Шаг 4: Проверка свободного места ---
+if [ "$BYTES_TO_TRANSFER" -gt "$AVAIL_BYTES" ]; then
+  gum style --border double --border-foreground 197 --padding "1 2" --margin "1 0" "$(gum style --bold --foreground 197 'КРИТИЧЕСКАЯ ОШИБКА')" "Недостаточно свободного места на целевом диске!" "" "Требуется: $(format_bytes "$BYTES_TO_TRANSFER")" "Свободно:  $(format_bytes "$AVAIL_BYTES")"
+    
+  gum choose --header "Синхронизация невозможна (не хватает места)" "Отмена"
+  exit 1
+fi
+
+# --- Шаг 5: Подтверждение и запуск ---
+if gum confirm "🚀 Места достаточно. Начать синхронизацию?"; then
+  echo ""
+  rsync -ahv --info=progress2 --ignore-existing "${RSYNC_EXCLUDES[@]}" "$SRC" "$DST"
+  
+  echo ""
+  gum style --bold --foreground 154 "✅ Синхронизация успешно завершена!"
+else
+  gum style --foreground 197 "Операция отменена пользователем."
+fi

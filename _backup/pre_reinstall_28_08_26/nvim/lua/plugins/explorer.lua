@@ -1,0 +1,97 @@
+return {
+  -- {
+  --   "folke/snacks.nvim",
+  --   opts = {
+  --     picker = {
+  --       sources = {
+  --         explorer = {
+  --           layout = { preset = "default", preview = true },
+  --           auto_close = true,
+  --           jump = { close = true },
+  --
+  --           matcher = {
+  --             fuzzy = true, -- Разрешает "confilu" -> config/file.lua
+  --             smart_case = true, -- Если пишете с маленькой - не важно, с Большой - важно
+  --           },
+  --
+  --           actions = {
+  --             paste_move = function(picker)
+  --               local function get_valid_files_from_reg(reg_name)
+  --                 local text = vim.fn.getreg(reg_name)
+  --                 if not text or text == "" then
+  --                   return nil
+  --                 end
+  --                 local lines = vim.split(text, "\n", { trimempty = true })
+  --                 local valid = {}
+  --                 for _, line in ipairs(lines) do
+  --                   line = line:gsub("^%s*(.-)%s*$", "%1")
+  --                   if vim.fn.filereadable(line) == 1 or vim.fn.isdirectory(line) == 1 then
+  --                     table.insert(valid, line)
+  --                   end
+  --                 end
+  --                 if #valid > 0 then
+  --                   return valid
+  --                 end
+  --                 return nil
+  --               end
+  --
+  --               local files = get_valid_files_from_reg('"')
+  --               if not files then
+  --                 files = get_valid_files_from_reg("+")
+  --               end
+  --
+  --               if not files then
+  --                 vim.notify("В буфере обмена нет путей к файлам", vim.log.levels.WARN)
+  --                 return
+  --               end
+  --
+  --               local target_dir = picker:dir()
+  --               local moved_count = 0
+  --               local last_moved_dest = nil
+  --
+  --               for _, src in ipairs(files) do
+  --                 local name = vim.fn.fnamemodify(src, ":t")
+  --                 local dest = target_dir .. "/" .. name
+  --
+  --                 if src ~= dest then
+  --                   local success = vim.fn.rename(src, dest)
+  --                   if success == 0 then
+  --                     moved_count = moved_count + 1
+  --                     last_moved_dest = dest
+  --                   else
+  --                     vim.notify("Ошибка перемещения: " .. name, vim.log.levels.ERROR)
+  --                   end
+  --                 end
+  --               end
+  --
+  --               if moved_count > 0 then
+  --                 vim.notify("Перемещено файлов: " .. moved_count, vim.log.levels.INFO)
+  --
+  --                 -- ИСПРАВЛЕНИЕ: Используем официальный метод reveal для фокуса
+  --                 if last_moved_dest then
+  --                   Snacks.explorer.reveal({ file = last_moved_dest })
+  --                 else
+  --                   picker:find() -- Если перемещали, но путь потеряли (вряд ли), просто обновляем
+  --                 end
+  --               else
+  --                 vim.notify("Файлы не перемещены", vim.log.levels.WARN)
+  --               end
+  --             end,
+  --           },
+  --
+  --           win = {
+  --             list = {
+  --               keys = {
+  --                 ["p"] = "explorer_paste",
+  --                 ["P"] = "paste_move",
+  --                 ["y"] = { "explorer_yank", mode = { "n", "x" } },
+  --                 ["d"] = { "explorer_del", mode = { "n", "x" } },
+  --               },
+  --             },
+  --           },
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+}

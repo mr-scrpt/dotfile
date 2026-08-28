@@ -1,0 +1,27 @@
+return {
+  -- {
+  --   "okuuva/auto-save.nvim",
+  --   version = "^1.0.0",
+  --   lazy = false, -- ВАЖНО: Загружать сразу при старте, не ждать событий
+  --   opts = {
+  --     enabled = true, -- Включить сразу
+  --
+  --     trigger_events = {
+  --       -- Сразу сохранять при потере фокуса или переключении буфера
+  --       immediate_save = { "BufLeave", "FocusLost", "QuitPre", "VimSuspend" },
+  --       -- Сохранять с задержкой при наборе текста
+  --       defer_save = { "InsertLeave", "TextChanged" },
+  --     },
+  --
+  --     -- Ждать всего 0.2 сек (вместо 1.0 сек) перед сохранением
+  --     debounce_delay = 200,
+  --
+  --     -- Убрать лишний шум (сообщения о сохранении)
+  --     execution_message = {
+  --       message = function()
+  --         return ""
+  --       end,
+  --     },
+  --   },
+  -- },
+}

@@ -1,0 +1,7 @@
+[user]
+    name = mr
+    email = mr.scrpt@gmail.com
+
+# Если мы находимся внутри папки ~/Projects/Work/, подтянуть рабочий конфиг
+[includeIf "gitdir:~/Hellkitchen/workspace/"]
+    path = ~/Hellkitchen/workspace/.gitconfig-work

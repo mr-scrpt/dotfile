@@ -1,0 +1,37 @@
+# Удалённые файловые системы (нативный VFS yazi, начиная с v25.12.29)
+#
+# ВАЖНО: yazi НЕ читает ~/.ssh/config — алиасы, ProxyJump и IdentityFile
+# оттуда не подхватываются. Каждый хост описывается здесь заново.
+#
+# Заход:  yazi sftp://claude   или  хоткей  g r c
+# Абсолютный путь на сервере пишется через ДВОЙНОЙ слэш: sftp://claude//home/arch
+
+# Сервер разработки (в ~/.ssh/config он же claude-station / cs)
+[services.claude]
+type     = "sftp"
+host     = "192.168.1.63"
+user     = "arch"
+port     = 22
+key_file = "~/.ssh/id_ed25519"
+
+# Задел на будущее — раскомментировать при необходимости.
+# [services.nas]
+# type     = "sftp"
+# host     = "192.168.1.100"
+# user     = "root"
+# port     = 22
+# key_file = "~/.ssh/id_ed25519"
+
+# [services.n100]
+# type     = "sftp"
+# host     = "192.168.1.200"
+# user     = "root"
+# port     = 22
+# key_file = "~/.ssh/id_ed25519"
+
+# [services.ha]
+# type     = "sftp"
+# host     = "192.168.1.150"
+# user     = "root"
+# port     = 22
+# key_file = "~/.ssh/homeassistant"

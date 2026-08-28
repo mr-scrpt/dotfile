@@ -19,17 +19,23 @@ const TARGET_REFRESH: Duration = Duration::from_millis(500); // 2 Hz raw sensor 
 
 // Per-sensor max change per second — governs how fast the displayed value
 // chases the true sensor value. Higher = more responsive, lower = smoother.
-const MAX_CPU_LOAD_PER_SEC: f64 = 80.0;
-const MAX_GPU_LOAD_PER_SEC: f64 = 80.0;
-const MAX_CPU_TEMP_PER_SEC: f64 = 12.0;
-const MAX_GPU_TEMP_PER_SEC: f64 = 12.0;
-const MAX_MEM_USED_PER_SEC: f64 = 2.0;
-const MAX_MEM_PCT_PER_SEC: f64 = 40.0;
-const MAX_NET_RATE_PER_SEC: f64 = 4000.0; // KB/s
-const MAX_NET_RATE_MB_PER_SEC: f64 = 4.0; // MB/s — same slew curve scaled to MB
+// Increased ~5× from defaults (2026-05-01) so overlays catch up to real
+// readings within ~0.5s of an actual change instead of crawling for 2-3s.
+const MAX_CPU_LOAD_PER_SEC: f64 = 400.0;
+const MAX_GPU_LOAD_PER_SEC: f64 = 400.0;
+const MAX_CPU_TEMP_PER_SEC: f64 = 60.0;
+const MAX_GPU_TEMP_PER_SEC: f64 = 60.0;
+const MAX_MEM_USED_PER_SEC: f64 = 10.0;
+const MAX_MEM_PCT_PER_SEC: f64 = 200.0;
+const MAX_NET_RATE_PER_SEC: f64 = 20000.0; // KB/s
+const MAX_NET_RATE_MB_PER_SEC: f64 = 20.0; // MB/s — same slew curve scaled to MB
 
-// Hardware paths (Arch-local). Adjust if hwmon indices change.
-const HWMON_CPU_TEMP: &str = "/sys/class/hwmon/hwmon3/temp1_input";
+// CPU temperature is resolved by hwmon `name` at startup rather than a fixed
+// index — kernel hwmon indices reorder whenever the module-load order changes
+// (e.g. adding a GPU shifted k10temp from hwmon3 to hwmon4 on 2026-04-25).
+// Tried in order; first match wins. AMD k10temp exposes Tctl on temp1_input;
+// Intel coretemp exposes the package temp on temp1_input as well.
+const CPU_HWMON_NAMES: &[&str] = &["k10temp", "coretemp"];
 // GPU is now the NVIDIA RTX 5080 (since 2026-04-25). NVIDIA's proprietary
 // driver does NOT expose hwmon or `gpu_busy_percent` sysfs files, so we
 // shell out to `nvidia-smi` once per TARGET_REFRESH for both load and temp
@@ -52,8 +58,35 @@ fn read_f64(path: &str) -> Option<f64> {
     read_str(path)?.trim().parse().ok()
 }
 
-fn read_hwmon_deg(path: &str) -> Option<f64> {
-    read_f64(path).map(|v| v / 1000.0)
+fn read_hwmon_deg(path: &Path) -> Option<f64> {
+    read_f64(path.to_str()?).map(|v| v / 1000.0)
+}
+
+/// Walks /sys/class/hwmon and returns the temp1_input path for the first
+/// device whose `name` matches one of `wanted` (in priority order). hwmon
+/// indices are not stable across boots/module-load-orders, so resolving by
+/// name is the only correct way.
+fn find_hwmon_temp_input(wanted: &[&str]) -> Option<PathBuf> {
+    let entries = fs::read_dir("/sys/class/hwmon").ok()?;
+    let mut by_name: std::collections::HashMap<String, PathBuf> =
+        std::collections::HashMap::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = match fs::read_to_string(path.join("name")) {
+            Ok(s) => s.trim().to_string(),
+            Err(_) => continue,
+        };
+        let temp_input = path.join("temp1_input");
+        if temp_input.exists() {
+            by_name.entry(name).or_insert(temp_input);
+        }
+    }
+    for n in wanted {
+        if let Some(p) = by_name.get(*n) {
+            return Some(p.clone());
+        }
+    }
+    None
 }
 
 /// Single fork to nvidia-smi returning (utilization%, temperature°C) for
@@ -245,6 +278,14 @@ fn main() {
 
     spawn_ping_thread(out_dir.to_path_buf());
 
+    let cpu_temp_path: Option<PathBuf> = find_hwmon_temp_input(CPU_HWMON_NAMES);
+    if cpu_temp_path.is_none() {
+        eprintln!(
+            "lianli-sensor-service: WARNING — could not locate CPU hwmon (looked for: {:?}). cpu_temp will read as 0.",
+            CPU_HWMON_NAMES
+        );
+    }
+
     let mut cpu_load = Sensor::new("cpu_load", MAX_CPU_LOAD_PER_SEC, 0);
     let mut cpu_temp = Sensor::new("cpu_temp", MAX_CPU_TEMP_PER_SEC, 0);
     let mut gpu_load = Sensor::new("gpu_load", MAX_GPU_LOAD_PER_SEC, 0);
@@ -265,9 +306,11 @@ fn main() {
         mem_pct.target = p;
         mem_pct.current = p;
     }
-    if let Some(v) = read_hwmon_deg(HWMON_CPU_TEMP) {
-        cpu_temp.target = v;
-        cpu_temp.current = v;
+    if let Some(p) = cpu_temp_path.as_deref() {
+        if let Some(v) = read_hwmon_deg(p) {
+            cpu_temp.target = v;
+            cpu_temp.current = v;
+        }
     }
     if let Some((load, temp)) = read_nvidia_gpu() {
         gpu_load.target = load;
@@ -299,8 +342,10 @@ fn main() {
                 prev_cpu = Some((t, b));
             }
 
-            if let Some(v) = read_hwmon_deg(HWMON_CPU_TEMP) {
-                cpu_temp.target = v;
+            if let Some(p) = cpu_temp_path.as_deref() {
+                if let Some(v) = read_hwmon_deg(p) {
+                    cpu_temp.target = v;
+                }
             }
             if let Some((load, temp)) = read_nvidia_gpu() {
                 gpu_load.target = load;
