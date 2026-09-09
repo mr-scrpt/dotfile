@@ -1,0 +1,29 @@
+# devspace — herdr-замена tdev/tconf из tmux-сетапа
+# tdev  -> action/попап "picker": fzf по каталогам, создаёт dev-workspace
+# tconf -> startup-хук "ensure-config": workspace "config" существует всегда
+
+id = "mrscrpt.devspace"
+name = "Dev Space"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "fzf picker that spawns a tdev-style dev workspace; auto-creates the config workspace on startup"
+platforms = ["linux"]
+
+# При старте сервера herdr: создать workspace "config", если его нет
+[[startup]]
+command = ["bash", "ensure-config.sh"]
+
+# Попап с fzf-выбором каталога -> новый dev-workspace
+[[panes]]
+id = "picker"
+title = "New dev space"
+placement = "popup"
+width = "70%"
+height = "60%"
+command = ["bash", "picker.sh"]
+
+# То же самое как action (можно дернуть из CLI/палитры)
+[[actions]]
+id = "ensure-config"
+title = "Ensure config workspace"
+command = ["bash", "ensure-config.sh"]
