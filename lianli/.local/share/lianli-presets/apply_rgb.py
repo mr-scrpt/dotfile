@@ -99,14 +99,16 @@ def cmd_apply():
     # devices (especially wireless) need time to enumerate after daemon start
     time.sleep(5)
     ok, fail = apply_rgb()
-    # second pass for stragglers
-    if fail:
-        time.sleep(5)
-        ok2, fail2 = apply_rgb()
-        ok, fail = ok + ok2, fail2
+    # keep retrying while the daemon is still bringing devices up (cold boot
+    # can take 30-60s before RF/HID writes start succeeding)
+    attempt = 0
+    while fail and attempt < 10:
+        time.sleep(10)
+        ok, fail = apply_rgb()
+        attempt += 1
     subprocess.run(["systemctl", "--user", "restart", "rgb-runway.service"],
                    check=False)
-    print(f"applied: {ok} ok, {fail} fail")
+    print(f"applied: {ok} ok, {fail} fail (retries: {attempt})")
 
 
 def cmd_reset():
