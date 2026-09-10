@@ -120,9 +120,16 @@ def cmd_reset():
         sys.exit(1)
     time.sleep(8)          # let wireless discovery settle
     ok, fail = apply_rgb()
-    if fail:
-        time.sleep(5)
-        apply_rgb()
+    attempt = 0
+    while fail and attempt < 10:
+        time.sleep(10)
+        ok, fail = apply_rgb()
+        attempt += 1
+    # Reboot the pump LCD so firmware re-reads brightness/rotation
+    try:
+        ipc("RebootWirelessLcd", {"device_id": "wireless:8b:06:ef:e5:66:e1"})
+    except Exception:
+        pass
     subprocess.run(["systemctl", "--user", "restart", "rgb-runway.service"],
                    check=False)
     subprocess.run(["systemctl", "--user", "restart", "openrgb-profile.service"],
