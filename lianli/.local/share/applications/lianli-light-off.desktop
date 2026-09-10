@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lian Li Light Off
+Comment=Выключить всю подсветку (экраны работают)
+Exec=/home/mr/.local/share/rgb-runway/venv/bin/python /home/mr/.local/share/lianli-presets/preset.py light-off
+Icon=com.sgtaziz.lianlilinux
+Terminal=false
+Categories=Utility;
+Keywords=lianli;lian li;rgb;light;lcd;preset;

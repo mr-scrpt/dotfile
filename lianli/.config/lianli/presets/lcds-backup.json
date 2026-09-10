@@ -1,0 +1,134 @@
+[
+ {
+  "aio_512_frame": null,
+  "custom_h264": null,
+  "doublegauge": null,
+  "fps": 15.0,
+  "index": null,
+  "orientation": 180.0,
+  "path": null,
+  "rgb": null,
+  "sensor": null,
+  "sensor_source_1": {
+   "type": "cpu_usage"
+  },
+  "sensor_source_2": {
+   "type": "mem_usage"
+  },
+  "serial": "hid:74bac02145160f66",
+  "smooth_edges": null,
+  "template_id": "user-net-usage",
+  "type": "custom",
+  "update_interval_ms": null
+ },
+ {
+  "aio_512_frame": null,
+  "custom_h264": null,
+  "doublegauge": null,
+  "fps": 15.0,
+  "index": null,
+  "orientation": 0.0,
+  "path": null,
+  "rgb": null,
+  "sensor": null,
+  "sensor_source_1": {
+   "type": "cpu_usage"
+  },
+  "sensor_source_2": {
+   "type": "mem_usage"
+  },
+  "serial": "hid:c47bf810781e0ea6",
+  "smooth_edges": null,
+  "template_id": "user-cpu-temp",
+  "type": "custom",
+  "update_interval_ms": null
+ },
+ {
+  "aio_512_frame": null,
+  "custom_h264": null,
+  "doublegauge": null,
+  "fps": 15.0,
+  "index": null,
+  "orientation": 180.0,
+  "path": null,
+  "rgb": null,
+  "sensor": null,
+  "sensor_source_1": {
+   "type": "cpu_usage"
+  },
+  "sensor_source_2": {
+   "type": "mem_usage"
+  },
+  "serial": "hid:d4996409151f15e6",
+  "smooth_edges": null,
+  "template_id": "user-ping",
+  "type": "custom",
+  "update_interval_ms": null
+ },
+ {
+  "aio_512_frame": null,
+  "custom_h264": null,
+  "doublegauge": null,
+  "fps": 15.0,
+  "index": null,
+  "orientation": 0.0,
+  "path": null,
+  "rgb": null,
+  "sensor": null,
+  "sensor_source_1": {
+   "type": "cpu_usage"
+  },
+  "sensor_source_2": {
+   "type": "mem_usage"
+  },
+  "serial": "hid:fb81fbb9531f0e66",
+  "smooth_edges": null,
+  "template_id": "user-ram-usage",
+  "type": "custom",
+  "update_interval_ms": null
+ },
+ {
+  "aio_512_frame": null,
+  "custom_h264": null,
+  "doublegauge": null,
+  "fps": 15.0,
+  "index": null,
+  "orientation": 0.0,
+  "path": null,
+  "rgb": null,
+  "sensor": null,
+  "sensor_source_1": {
+   "type": "cpu_usage"
+  },
+  "sensor_source_2": {
+   "type": "mem_usage"
+  },
+  "serial": "hid:8589903a841e1264",
+  "smooth_edges": null,
+  "template_id": "user-cpu-usage",
+  "type": "custom",
+  "update_interval_ms": null
+ },
+ {
+  "aio_512_frame": null,
+  "custom_h264": true,
+  "doublegauge": null,
+  "fps": 30.0,
+  "index": null,
+  "orientation": 270.0,
+  "path": null,
+  "rgb": null,
+  "sensor": null,
+  "sensor_source_1": {
+   "type": "cpu_usage"
+  },
+  "sensor_source_2": {
+   "type": "mem_usage"
+  },
+  "serial": "hid:382a0bafa4860706",
+  "smooth_edges": null,
+  "template_id": "user-8inch-88003",
+  "type": "custom",
+  "update_interval_ms": null
+ }
+]

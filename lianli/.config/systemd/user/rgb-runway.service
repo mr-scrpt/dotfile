@@ -1,0 +1,11 @@
+[Unit]
+Description=Runway effect for LCD rings, DRAM and wireless re-upload
+After=lianli-daemon.service openrgb-profile.service
+
+[Service]
+ExecStart=/home/mr/.local/share/rgb-runway/venv/bin/python /home/mr/.local/share/rgb-runway/runway_extra.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

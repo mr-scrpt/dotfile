@@ -1,0 +1,17 @@
+#!/bin/bash
+# Reboot straight into Windows: set UEFI BootNext to Windows Boot Manager,
+# then reboot the Omarchy way (closes windows cleanly).
+# Requires the sudoers drop-in /etc/sudoers.d/efibootmgr-bootnext.
+
+WIN_ENTRY="$(efibootmgr | awk -F'*' '/Windows Boot Manager/{gsub(/^Boot/,"",$1); print $1; exit}')"
+if [[ -z "$WIN_ENTRY" ]]; then
+    notify-send -a "Power" "Reboot to Windows" "Windows Boot Manager не найден в UEFI"
+    exit 1
+fi
+
+if ! sudo -n /usr/bin/efibootmgr --bootnext "$WIN_ENTRY" >/dev/null; then
+    notify-send -a "Power" "Reboot to Windows" "Не удалось установить BootNext (sudoers?)"
+    exit 1
+fi
+
+exec omarchy-system-reboot

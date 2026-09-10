@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lian Li LCD On
+Comment=Включить LCD экраны
+Exec=/home/mr/.local/share/rgb-runway/venv/bin/python /home/mr/.local/share/lianli-presets/preset.py lcd-on
+Icon=com.sgtaziz.lianlilinux
+Terminal=false
+Categories=Utility;
+Keywords=lianli;lian li;rgb;light;lcd;preset;

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lian Li Light On
+Comment=Включить подсветку (циан + runway)
+Exec=/home/mr/.local/share/rgb-runway/venv/bin/python /home/mr/.local/share/lianli-presets/preset.py light-on
+Icon=com.sgtaziz.lianlilinux
+Terminal=false
+Categories=Utility;
+Keywords=lianli;lian li;rgb;light;lcd;preset;
