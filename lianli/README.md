@@ -23,6 +23,7 @@
 .local/share/lianli-presets/ # preset.py (light/lcd on/off), apply_rgb.py (apply/reset)
 .local/share/rgb-runway/     # runway_extra.py (стример эффекта)
 .local/share/applications/   # 5 пунктов меню: Light On/Off, LCD On/Off, Reset
+.local/share/fonts/bebas_neue/ # шрифт для шаблонов 8.8"
 sensor-service/              # исходники lianli-sensor-service (Rust)
 ```
 
@@ -34,7 +35,7 @@ cd ~/Hellkitchen/dotfile && stow lianli   # или скопировать вру
 # собрать sensor-service:
 cd lianli/sensor-service && cargo build --release
 install -Dm755 target/release/lianli-sensor-service ~/.local/bin/
-# шрифт для шаблона 8.8" (Bebas Neue -> ~/.local/share/fonts/bebas_neue/)
+# шрифт Bebas Neue для 8.8" ставится stow-ом (.local/share/fonts/bebas_neue/), затем: fc-cache -f
 # venv для скриптов:
 uv venv ~/.local/share/rgb-runway/venv
 uv pip install --python ~/.local/share/rgb-runway/venv/bin/python openrgb-python

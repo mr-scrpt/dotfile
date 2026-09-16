@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Обёртка над omarchy-menu: добавляет пункт «Windows» (перезагрузка в Windows
+# через UEFI BootNext) в системное меню. Все остальные подменю прозрачно
+# передаются оригинальному omarchy-menu.
+#
+# Требует беспарольного sudo для efibootmgr (/etc/sudoers.d/bootnext-windows),
+# иначе покажет уведомление с подсказкой.
+
+export PATH="$HOME/.local/share/omarchy/bin:$PATH"
+
+[[ "$1" == "system" ]] || exec omarchy-menu "$@"
+
+# Повторное нажатие хоткея закрывает открытое меню (как в omarchy-menu)
+if pgrep -f "walker.*--dmenu" >/dev/null; then
+  walker --close >/dev/null 2>&1
+  exit 0
+fi
+
+menu() {
+  echo -e "$2" | omarchy-launch-walker --dmenu --width 295 --minheight 1 --maxheight 630 -p "$1…" 2>/dev/null
+}
+
+reboot_to_windows() {
+  local num
+  num=$(efibootmgr | sed -n 's/^Boot\([0-9A-Fa-f]\{4\}\)\* Windows Boot Manager.*/\1/p' | head -1)
+  if [[ -z $num ]]; then
+    notify-send "Windows не найдена" "В efibootmgr нет записи «Windows Boot Manager»"
+    return 1
+  fi
+  if sudo -n efibootmgr --bootnext "$num" >/dev/null 2>&1; then
+    omarchy-system-reboot
+  else
+    notify-send "Нет прав на efibootmgr" "Нужно правило в /etc/sudoers.d/bootnext-windows: NOPASSWD для «efibootmgr --bootnext $num»"
+    return 1
+  fi
+}
+
+# Копия show_system_menu из omarchy-menu + пункт Windows
+options="󱄄  Screensaver\n  Lock"
+[[ ! -f ~/.local/state/omarchy/toggles/suspend-off ]] && options="$options\n󰒲  Suspend"
+omarchy-hibernation-available 2>/dev/null && options="$options\n󰤁  Hibernate"
+options="$options\n󰍃  Logout\n󰍲  Windows\n󰜉  Restart\n󰐥  Shutdown"
+
+case $(menu "System" "$options") in
+*Screensaver*) omarchy-launch-screensaver force ;;
+*Lock*) omarchy-lock-screen ;;
+*Suspend*) systemctl suspend ;;
+*Hibernate*) systemctl hibernate ;;
+*Logout*) omarchy-system-logout ;;
+*Windows*) reboot_to_windows ;;
+*Restart*) omarchy-system-reboot ;;
+*Shutdown*) omarchy-system-shutdown ;;
+esac
