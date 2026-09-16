@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Проверка текста через локальный LanguageTool (порт 8081).
+# Использование:
+#   check                — проверить текст из буфера обмена (wl-paste)
+#   check файл.txt       — проверить файл
+#   echo "текст" | check — проверить stdin
+set -euo pipefail
+
+LT_URL="http://localhost:8081/v2/check"
+LANG_CODE="${LT_LANG:-ru-RU}"   # export LT_LANG=en-US для английского, auto для автоопределения
+
+if [[ $# -ge 1 && -f "${1:-}" ]]; then
+    TEXT=$(cat "$1")
+elif [[ ! -t 0 ]]; then
+    TEXT=$(cat)
+else
+    TEXT=$(wl-paste --no-newline 2>/dev/null) || { echo "Буфер обмена пуст"; exit 1; }
+fi
+
+[[ -z "$TEXT" ]] && { echo "Нет текста для проверки"; exit 1; }
+
+RESP=$(curl -sf --data-urlencode "text=$TEXT" --data "language=$LANG_CODE" "$LT_URL") || {
+    echo "LanguageTool-сервер недоступен. Запусти: systemctl --user start languagetool"
+    exit 1
+}
+
+COUNT=$(jq '.matches | length' <<<"$RESP")
+if [[ "$COUNT" -eq 0 ]]; then
+    echo "✔ Ошибок не найдено ($LANG_CODE)"
+    exit 0
+fi
+
+echo "Найдено ошибок: $COUNT ($LANG_CODE)"
+echo
+jq -r '.matches[] | "→ \(.message)\n  Контекст: …\(.context.text)…\n  Замена:   \([.replacements[:3][].value] | join(", ") // "-")\n"' <<<"$RESP"
