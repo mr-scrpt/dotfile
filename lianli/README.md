@@ -13,7 +13,7 @@
   media/                     #   фоны (космос) и белые трафареты экранов
   scripts/                   #   сенсорные скрипты (ping, net-rate и др.)
   presets/lcds-backup.json   #   бэкап LCD-настроек для пресета "LCD On"
-.config/OpenRGB/             # профиль cyan + отключённые детекторы Lian Li
+.config/OpenRGB/             # профиль cyan, sizes.ors (размеры зон), отключённые детекторы Lian Li
 .config/systemd/user/
   lianli-sensor-service.service   # публикует датчики в /tmp/lianli-sensors/
   openrgb-profile.service         # OpenRGB SDK-сервер + профиль cyan
@@ -30,7 +30,7 @@ sensor-service/              # исходники lianli-sensor-service (Rust)
 ## Развёртывание на чистой системе
 
 ```bash
-yay -S lianli-linux-git openrgb i2c-tools
+yay -S lianli-linux-git openrgb i2c-tools stow
 cd ~/Hellkitchen/dotfile && stow lianli   # или скопировать вручную
 # собрать sensor-service:
 cd lianli/sensor-service && cargo build --release
