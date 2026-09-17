@@ -150,18 +150,26 @@ sync_workspace() {
   done < <("$tabs_fn")
 
   log "$label: $added new tab(s)"
-  SYNC_SUMMARY="${SYNC_SUMMARY:+$SYNC_SUMMARY, }$label +$added"
+  SYNC_ADDED=$((${SYNC_ADDED:-0} + added))
+  [ "$added" -gt 0 ] && SYNC_DETAIL="${SYNC_DETAIL:+$SYNC_DETAIL\n}$label: +$added"
+  return 0
 }
 
 # Уведомление с итогом синка (только при явном вызове, не по событию).
-# Штатный omarchy notification send (канон рабочего стола); herdr-тост как фолбэк.
+# Оформление как у штатных omarchy-нотификаций: глиф + короткий заголовок + тело.
 notify_sync() {
-  [ -n "${SYNC_SUMMARY:-}" ] || return 0
-  if command -v omarchy-notification-send >/dev/null 2>&1; then
-    omarchy-notification-send --app-name devspace -g "" -t 3000 \
-      "Dev Space sync" "$SYNC_SUMMARY" >/dev/null 2>&1 && return 0
+  local headline body="" n="${SYNC_ADDED:-0}"
+  if [ "$n" -eq 0 ]; then
+    headline="Workspaces are up to date"
+  else
+    headline="Added $n new tab$([ "$n" -ne 1 ] && echo s)"
+    body=$(printf '%b' "${SYNC_DETAIL:-}")
   fi
-  hj notification show "devspace sync" --body "$SYNC_SUMMARY" >/dev/null 2>&1 || true
+  if command -v omarchy-notification-send >/dev/null 2>&1; then
+    omarchy-notification-send --app-name "Dev Space" -g "" -t 3000 \
+      "$headline" "$body" >/dev/null 2>&1 && return 0
+  fi
+  hj notification show "$headline" --body "$body" >/dev/null 2>&1 || true
 }
 
 sync_dotfile() { sync_workspace "dotfile" dotfile_tabs lazygit; }
