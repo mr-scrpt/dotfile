@@ -37,7 +37,8 @@ WIRELESS = {
 }
 
 
-def ipc(method, params=None, timeout=5.0):
+def _ipc_raw(method, params=None, timeout=None):
+    timeout = 5.0 if timeout is None else timeout
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect(SOCK)
@@ -55,6 +56,39 @@ def ipc(method, params=None, timeout=5.0):
     s.close()
     return json.loads(buf.decode())
 
+
+# lianli-linux >= 1.0: write requests must be wrapped in a "Guarded" envelope carrying the
+# daemon's own version/protocol/instance (GetDaemonInfo), otherwise the daemon rejects them
+# with "Changes require a compatible client". Read requests are unaffected.
+_WRITE_METHODS = {"SetConfig", "SetLcdMedia", "SetFanConfig", "SetRgbEffect", "SetRgbDirect",
+                  "SetRgbFrames", "SetLedColor", "SetRgbConfig", "SetMbRgbSync",
+                  "SetFanDirection", "SetLcdBrightness", "SetLcdTemplates", "SaveRgbPreset",
+                  "ApplyRgbPreset", "DeleteRgbPreset", "SwitchDisplayMode", "RebootWirelessLcd"}
+_guard = None
+
+
+def _write_guard():
+    global _guard
+    if _guard is None:
+        info = _ipc_raw("GetDaemonInfo").get("data") or {}
+        if "guarded_writes" in (info.get("capabilities") or []):
+            _guard = {"client_version": info["version"],
+                      "protocol_version": info["protocol_version"],
+                      "instance_id": info["instance_id"]}
+        else:
+            _guard = {}
+    return _guard
+
+
+def ipc(method, params=None, timeout=None):
+    if method in _WRITE_METHODS:
+        g = _write_guard()
+        if g:
+            inner = {"method": method}
+            if params is not None:
+                inner["params"] = params
+            return _ipc_raw("Guarded", {"guard": g, "request": inner}, timeout)
+    return _ipc_raw(method, params, timeout)
 
 def ring_frame(total, ring, pos, runner):
     frame = []

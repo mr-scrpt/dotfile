@@ -1,0 +1,12 @@
+{
+  // User extension of the Omarchy menu (hot-reloads on save).
+  // Lian Li rig controls: Go -> Trigger -> Hardware -> Lian Li  (or: omarchy menu summon lianli)
+  "trigger.hardware.lianli": {"icon":"󰈐","label":"Lian Li","aliases":["lianli","rgb"],"description":"Fans, pump, LCDs, RGB"},
+  "trigger.hardware.lianli.light-on":  {"icon":"󰌵","label":"Light On",  "action":"gtk-launch lianli-light-on",  "checked":"systemctl --user is-active -q rgb-runway.service"},
+  "trigger.hardware.lianli.light-off": {"icon":"󰌶","label":"Light Off", "action":"gtk-launch lianli-light-off", "checked":"! systemctl --user is-active -q rgb-runway.service"},
+  "trigger.hardware.lianli.lcd-on":    {"icon":"󰍹","label":"LCD On",    "action":"gtk-launch lianli-lcd-on"},
+  "trigger.hardware.lianli.lcd-off":   {"icon":"󰶐","label":"LCD Off",   "action":"gtk-launch lianli-lcd-off"},
+  "trigger.hardware.lianli.profile-main":  {"icon":"","label":"Profile Cyan",  "action":"~/.config/lianli/scripts/rgb_profile.sh main",  "checked":"[ \"$(cat ~/.config/lianli/current_rgb_profile 2>/dev/null)\" = main ]"},
+  "trigger.hardware.lianli.profile-white": {"icon":"","label":"Profile White", "action":"~/.config/lianli/scripts/rgb_profile.sh white", "checked":"[ \"$(cat ~/.config/lianli/current_rgb_profile 2>/dev/null)\" = white ]"},
+  "trigger.hardware.lianli.reset":     {"icon":"󰑓","label":"Reset",     "action":"gtk-launch lianli-reset","description":"Restart daemon, re-apply RGB, reboot pump LCD"},
+}
