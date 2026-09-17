@@ -145,10 +145,7 @@ def lcd_off():
     if not all(_is_blank(e) for e in lcds):
         os.makedirs(os.path.dirname(BACKUP), exist_ok=True)
         with open(BACKUP, "w") as f:
-            json.dump({"lcds": lcds,
-                       "aio_brightness": {k: v.get("brightness", 80)
-                                          for k, v in (cfg.get("aio") or {}).items()}},
-                      f, indent=1)
+            json.dump({"lcds": lcds}, f, indent=1)
     cfg["lcds"] = [{
         "serial": e.get("serial"),
         "type": "color",
@@ -175,8 +172,9 @@ def lcd_on():
     lcds = saved["lcds"] if isinstance(saved, dict) else saved
     cfg = ipc("GetConfig").get("data") or {}
     cfg["lcds"] = lcds
-    for k, aio in (cfg.get("aio") or {}).items():
-        aio["brightness"] = (saved.get("aio_brightness", {}) if isinstance(saved, dict) else {}).get(k, 80)
+    # pump LCD: always back to full brightness
+    for aio in (cfg.get("aio") or {}).values():
+        aio["brightness"] = 100
     for e in lcds:
         ipc("SetLcdBrightness", {"device_id": e.get("serial"), "brightness": 100})
     r = ipc("SetConfig", {"config": cfg})
