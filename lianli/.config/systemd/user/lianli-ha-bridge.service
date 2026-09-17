@@ -1,0 +1,13 @@
+[Unit]
+Description=Lian Li rig -> Home Assistant MQTT bridge
+After=lianli-daemon.service network-online.target
+Wants=network-online.target
+ConditionPathExists=%h/.local/share/secrets/mqtt.cred
+
+[Service]
+ExecStart=%h/.local/share/lianli-venv/bin/python %h/.local/share/lianli-presets/ha_bridge.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=default.target
