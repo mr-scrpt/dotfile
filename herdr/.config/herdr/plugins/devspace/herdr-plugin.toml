@@ -1,14 +1,15 @@
 # devspace — herdr-замена tmux-сетапа tconf/tdev/tc
 #   workspace "dotfile" — вкладка на каждый stow-пакет ~/Hellkitchen/dotfile (+ repo с lazygit)
 #   workspace "config"  — вкладка на каждый каталог ~/.config (кроме stow-симлинков и config.ignore)
+#   workspace "work"    — вкладка на каждый проект в ~/Work (+ корень)
 #   picker (popup, fzf) — новый dev workspace вокруг каталога проекта
-# Оба служебных workspace синхронизируются с ФС: на старте, при фокусе на них и по action "sync".
+# Все служебные workspace синхронизируются с ФС: на старте, при фокусе на них и по action "sync".
 
 id = "mrscrpt.devspace"
 name = "Dev Space"
 version = "0.2.0"
 min_herdr_version = "0.7.0"
-description = "dotfile/config workspaces synced from the filesystem; fzf picker for dev workspaces"
+description = "dotfile/config/work workspaces synced from the filesystem; fzf picker for dev workspaces"
 platforms = ["linux"]
 
 [[startup]]
@@ -21,7 +22,7 @@ command = ["bash", "sync.sh"]
 
 [[actions]]
 id = "sync"
-title = "Sync dotfile/config workspaces"
+title = "Sync dotfile/config/work workspaces"
 command = ["bash", "sync.sh", "all"]
 
 [[panes]]

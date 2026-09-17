@@ -6,6 +6,7 @@ set -euo pipefail
 HERDR="${HERDR_BIN_PATH:-herdr}"
 DOTFILE_DIR="${DOTFILE_DIR:-$HOME/Hellkitchen/dotfile}"
 CONFIG_DIR="$HOME/.config"
+WORK_DIR="${WORK_DIR:-$HOME/Work}"
 
 # Каталог пользовательского конфига плагина (ignore-список и т.п.).
 # herdr задаёт HERDR_PLUGIN_CONFIG_DIR; для ручного запуска — fallback.
@@ -120,6 +121,19 @@ config_tabs() {
   return 0
 }
 
+# ~/Work — стандартный каталог Omarchy: вкладка на каждый проект + корень
+work_tabs() {
+  [ -d "$WORK_DIR" ] || return 0
+  printf ' work\t%s\n' "$WORK_DIR"
+  local d
+  for d in "$WORK_DIR"/*/; do
+    d="${d%/}"
+    [ -d "$d" ] || continue
+    case "$(basename "$d")" in .*) continue ;; esac
+    printf '%s\t%s\n' "$(basename "$d")" "$d"
+  done
+}
+
 # ---------------------------------------------------------------- sync
 
 # sync_workspace <label> <tabs-fn> [first-tab-cmd...]
@@ -174,6 +188,7 @@ notify_sync() {
 
 sync_dotfile() { sync_workspace "dotfile" dotfile_tabs lazygit; }
 sync_config()  { sync_workspace "config"  config_tabs; }
+sync_work()    { sync_workspace "work"    work_tabs; }
 
 # ---------------------------------------------------------------- dev workspace (tdev)
 

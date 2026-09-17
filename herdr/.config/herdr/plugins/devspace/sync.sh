@@ -14,8 +14,7 @@ if [ "${HERDR_PLUGIN_EVENT:-}" = "workspace.focused" ] && [ -n "${HERDR_PLUGIN_E
   label=$(hj workspace list | jq -r --arg id "$ws_id" \
     '.result.workspaces[] | select(.workspace_id == $id) | .label')
   case "$label" in
-    dotfile) target=dotfile ;;
-    config)  target=config ;;
+    dotfile|config|work) target=$label ;;
     *) exit 0 ;;
   esac
 fi
@@ -23,8 +22,9 @@ fi
 case "$target" in
   dotfile) sync_dotfile ;;
   config)  sync_config ;;
-  all)     sync_dotfile; sync_config ;;
-  *) echo "usage: sync.sh [dotfile|config|all]" >&2; exit 2 ;;
+  work)    sync_work ;;
+  all)     sync_dotfile; sync_config; sync_work ;;
+  *) echo "usage: sync.sh [dotfile|config|work|all]" >&2; exit 2 ;;
 esac
 
 # Тост показываем только при явном вызове (хоткей/CLI); по событию focus и на старте — молча.
