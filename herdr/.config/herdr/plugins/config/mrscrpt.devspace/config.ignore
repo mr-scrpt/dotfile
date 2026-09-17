@@ -1,0 +1,23 @@
+# devspace: каталоги ~/.config, которым НЕ нужна вкладка в workspace "config".
+# По glob-паттерну на строку. Новые обычные каталоги подхватываются автоматически.
+BraveSoftware
+google-chrome*
+microsoft-edge*
+mozilla
+zen
+chromium
+dconf
+environment.d
+fcitx
+fcitx5
+gtk-3.0
+ibus
+mise
+nautilus
+Omacom
+pulse
+systemd
+user-dirs.dirs
+wireplumber
+yay
+gh
