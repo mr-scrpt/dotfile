@@ -26,3 +26,7 @@ case "$target" in
   all)     sync_dotfile; sync_config ;;
   *) echo "usage: sync.sh [dotfile|config|all]" >&2; exit 2 ;;
 esac
+
+# Тост показываем только при явном вызове (хоткей/CLI); по событию focus и на старте — молча.
+[ "${HERDR_PLUGIN_EVENT:-}" = "" ] && notify_sync
+exit 0

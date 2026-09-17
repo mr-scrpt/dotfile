@@ -150,6 +150,13 @@ sync_workspace() {
   done < <("$tabs_fn")
 
   log "$label: $added new tab(s)"
+  SYNC_SUMMARY="${SYNC_SUMMARY:+$SYNC_SUMMARY, }$label +$added"
+}
+
+# Тост в herdr с итогом синка (только если было что-то вызвано явно, не по событию)
+notify_sync() {
+  [ -n "${SYNC_SUMMARY:-}" ] || return 0
+  hj notification show "devspace sync" --body "$SYNC_SUMMARY" >/dev/null 2>&1 || true
 }
 
 sync_dotfile() { sync_workspace "dotfile" dotfile_tabs lazygit; }

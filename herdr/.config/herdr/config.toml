@@ -113,3 +113,7 @@ window_title = "{hostname}: {workspace}"
 # Like tmux-resurrect: keep recent pane screen content across server restarts
 [experimental]
 pane_history = true
+
+# Sidebar shows only the workspace name (default adds a git branch/status row under it)
+[ui.sidebar.spaces]
+rows = [["state_icon", "workspace"]]
