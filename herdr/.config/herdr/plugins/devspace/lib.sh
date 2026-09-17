@@ -153,9 +153,14 @@ sync_workspace() {
   SYNC_SUMMARY="${SYNC_SUMMARY:+$SYNC_SUMMARY, }$label +$added"
 }
 
-# Тост в herdr с итогом синка (только если было что-то вызвано явно, не по событию)
+# Уведомление с итогом синка (только при явном вызове, не по событию).
+# Штатный omarchy notification send (канон рабочего стола); herdr-тост как фолбэк.
 notify_sync() {
   [ -n "${SYNC_SUMMARY:-}" ] || return 0
+  if command -v omarchy-notification-send >/dev/null 2>&1; then
+    omarchy-notification-send --app-name devspace -g "" -t 3000 \
+      "Dev Space sync" "$SYNC_SUMMARY" >/dev/null 2>&1 && return 0
+  fi
   hj notification show "devspace sync" --body "$SYNC_SUMMARY" >/dev/null 2>&1 || true
 }
 
