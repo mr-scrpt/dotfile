@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Start llama-local (if needed), wait until the model is loaded, then open Hermes on the local profile.
+# Usage: hermes-local-launch [--inline]   (--inline = run in the current terminal)
+set -u
+
+if [[ ${1:-} != --inline ]]; then
+  exec omarchy-launch-tui --app-id=org.omarchy.agent "$0" --inline
+fi
+
+URL=http://127.0.0.1:8080/health
+SPIN='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+
+if ! systemctl --user is-active -q llama-local; then
+  systemctl --user start llama-local
+fi
+
+i=0
+until curl -sf "$URL" >/dev/null 2>&1; do
+  if ! systemctl --user is-active -q llama-local; then
+    echo; echo "llama-local failed to start:"; journalctl --user -u llama-local -n 15 --no-pager | grep -E ' E |error' | tail -5
+    echo; read -rp "Press Enter to close"; exit 1
+  fi
+  printf '\r  %s  Loading Qwen3.8-27B into GPU… %ds' "${SPIN:i%10:1}" "$((i/5))"
+  ((i++)); sleep 0.2
+done
+printf '\r  ✓  Model ready (%ds)%20s\n' "$((i/5))" ""
+
+mkdir -p "$HOME/Work"; cd "$HOME/Work"
+exec hermes -p local --yolo

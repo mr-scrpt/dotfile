@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Measure gen/prompt speed via llama-server /v1/chat/completions. Usage: llama-speed [port] [pad_tokens]
+PORT="${1:-8081}"; PAD="${2:-0}"
+python3 - "$PORT" "$PAD" <<'EOF'
+import json, sys, time, urllib.request
+port, pad = sys.argv[1], int(sys.argv[2])
+filler = ("The quick brown fox jumps over the lazy dog. " * (pad // 10)) if pad else ""
+msgs = []
+if filler: msgs.append({"role":"user","content":"Context document:\n"+filler+"\n(end of document)"}); msgs.append({"role":"assistant","content":"Noted."})
+msgs.append({"role":"user","content":"Write a Python function that parses an /etc/fstab file into a list of dicts, with docstring and a short test. No explanation."})
+body = {"messages": msgs, "max_tokens": 400, "temperature": 0.7, "chat_template_kwargs": {"enable_thinking": False}}
+t0=time.time()
+r = urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{port}/v1/chat/completions", data=json.dumps(body).encode(), headers={"Content-Type":"application/json"}), timeout=1800)
+d = json.load(r); dt=time.time()-t0
+u = d.get("usage", {}); tm = d.get("timings", {})
+print("wall %.1fs" % dt, "| prompt", u.get("prompt_tokens"), "tok | completion", u.get("completion_tokens"), "tok")
+if tm: print("prompt %.0f tok/s | gen %.1f tok/s" % (tm.get("prompt_per_second",0), tm.get("predicted_per_second",0)), "| draft acc", tm.get("draft_n_accepted"), "/", tm.get("draft_n"))
+print(d["choices"][0]["message"]["content"][:300].replace("\n"," ⏎ "))
+EOF

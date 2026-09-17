@@ -1,0 +1,14 @@
+[Unit]
+Description=llama.cpp server (Qwen3.8-27B) for Hermes
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/llama-local
+Restart=on-failure
+RestartSec=5
+# GPU can be shared with games etc. — stop the unit when not needed.
+Nice=5
+
+[Install]
+WantedBy=default.target

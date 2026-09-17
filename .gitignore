@@ -1,10 +1,5 @@
-# never commit secrets
-*token*
-*.cred
-*secret*
-*.pem
-*.key
-id_*
-!id_*.pub
-known_hosts*
-.env
+*.bak.*
+*.bak
+.plugins.lock
+*.log
+*.sock

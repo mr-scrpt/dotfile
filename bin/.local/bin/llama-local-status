@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Local LLM state for the bar widget (~/.config/omarchy/bar/modules/local-llm.qml).
+# Usage: llama-local-status          -> JSON {state: off|loading|ready, tooltip}
+#        llama-local-status toggle   -> start/stop the llama-local service
+case "${1:-}" in
+  toggle)
+    if systemctl --user is-active -q llama-local; then
+      systemctl --user stop llama-local
+      notify-send -a "Local LLM" "Qwen3.8-27B unloaded" "GPU memory freed"
+    else
+      systemctl --user start llama-local
+      notify-send -a "Local LLM" "Loading Qwen3.8-27B…" "~15 s until ready"
+    fi
+    exit 0 ;;
+esac
+
+if curl -sf --max-time 1 http://127.0.0.1:8080/health >/dev/null 2>&1; then
+  vram=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null)
+  printf '{"state":"ready","tooltip":"Local LLM: Qwen3.8-27B ready (VRAM %s MiB)\\nleft: Hermes local · right: unload"}\n' "${vram:-?}"
+elif systemctl --user is-active -q llama-local; then
+  printf '{"state":"loading","tooltip":"Local LLM: loading…"}\n'
+else
+  printf '{"state":"off","tooltip":"Local LLM: off\\nleft: load + Hermes local · right: load only"}\n'
+fi

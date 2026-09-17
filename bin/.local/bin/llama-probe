@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Manual test launch of llama-server. Usage: llama-probe N_CPU_FFN [ctx] [extra args...]
+set -u
+NCFFN="$1"; CTX="${2:-98304}"; shift; shift 2>/dev/null || true
+cd ~/.local/opt/llama.cpp/current || exit 1
+export LD_LIBRARY_PATH=$PWD GGML_CUDA_DISABLE_GRAPHS=1
+pkill -x llama-server 2>/dev/null; sleep 1
+./llama-server -m ~/models/Qwen3.8-27B-UD-Q4_K_XL.gguf --port 8081 -ngl 99 -ncffn "$NCFFN" \
+  -c "$CTX" -fa on -ctk q8_0 -ctv q5_0 --fit off -np 1 -b 1024 -ub 512 --jinja \
+  --spec-type draft-mtp --spec-draft-n-max 2 --load-mode none -lv 4 --mmproj ~/models/Qwen3.8-27B-mmproj-F16.gguf "$@" > /tmp/ls.log 2>&1 &
+PID=$!
+for i in $(seq 1 36); do
+  sleep 5
+  curl -sf localhost:8081/health >/dev/null 2>&1 && { echo "READY ${i}x5s"; break; }
+  kill -0 $PID 2>/dev/null || { echo "DIED"; break; }
+done
+grep -E 'buffer size|KV self|n_ctx |compute buffer|out of memory|failed|draft|error' /tmp/ls.log | grep -v 'print_info' | head -30
+nvidia-smi --query-gpu=memory.used --format=csv,noheader

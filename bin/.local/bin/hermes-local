@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Hermes on the 'local' profile. Starts llama-local if needed and waits until the model is loaded.
+set -u
+URL=http://127.0.0.1:8080/health
+if ! curl -sf --max-time 1 "$URL" >/dev/null 2>&1; then
+  systemctl --user is-active -q llama-local || systemctl --user start llama-local
+  i=0
+  until curl -sf --max-time 1 "$URL" >/dev/null 2>&1; do
+    systemctl --user is-active -q llama-local || { echo "llama-local failed: journalctl --user -u llama-local" >&2; exit 1; }
+    printf '\r  Loading Qwen3.8-27B into GPU… %ds' "$((i/2))"; ((i++)); sleep 0.5
+  done
+  printf '\r  Model ready (%ds)%20s\n' "$((i/2))" ""
+fi
+exec /home/mr/.local/bin/hermes -p local "$@"
