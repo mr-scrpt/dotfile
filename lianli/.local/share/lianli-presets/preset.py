@@ -145,7 +145,10 @@ def lcd_off():
     if not all(_is_blank(e) for e in lcds):
         os.makedirs(os.path.dirname(BACKUP), exist_ok=True)
         with open(BACKUP, "w") as f:
-            json.dump(lcds, f, indent=1)
+            json.dump({"lcds": lcds,
+                       "aio_brightness": {k: v.get("brightness", 80)
+                                          for k, v in (cfg.get("aio") or {}).items()}},
+                      f, indent=1)
     cfg["lcds"] = [{
         "serial": e.get("serial"),
         "type": "color",
@@ -153,7 +156,13 @@ def lcd_off():
         "orientation": e.get("orientation", 0.0),
         "fps": 5.0,
     } for e in lcds]
+    # pump LCD (wireless AIO) has no "media": dim it via theme brightness
+    for aio in (cfg.get("aio") or {}).values():
+        aio["brightness"] = 0
     r = ipc("SetConfig", {"config": cfg})
+    # 8.8" keeps showing the last frame even when black: cut its backlight
+    for e in lcds:
+        ipc("SetLcdBrightness", {"device_id": e.get("serial"), "brightness": 0})
     notify("Экраны погашены" if r.get("status") == "ok" else f"Ошибка: {r.get('data')}")
 
 
@@ -162,9 +171,14 @@ def lcd_on():
         notify("Бэкап настроек LCD не найден")
         return
     with open(BACKUP) as f:
-        lcds = json.load(f)
+        saved = json.load(f)
+    lcds = saved["lcds"] if isinstance(saved, dict) else saved
     cfg = ipc("GetConfig").get("data") or {}
     cfg["lcds"] = lcds
+    for k, aio in (cfg.get("aio") or {}).items():
+        aio["brightness"] = (saved.get("aio_brightness", {}) if isinstance(saved, dict) else {}).get(k, 80)
+    for e in lcds:
+        ipc("SetLcdBrightness", {"device_id": e.get("serial"), "brightness": 100})
     r = ipc("SetConfig", {"config": cfg})
     notify("Экраны включены" if r.get("status") == "ok" else f"Ошибка: {r.get('data')}")
 
