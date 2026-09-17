@@ -1,0 +1,20 @@
+[Unit]
+Description=Lian Li smoothed sensor publisher
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/lianli-sensor-service
+Restart=on-failure
+RestartSec=2
+Nice=5
+# Light sandboxing — service only reads /proc, /sys and writes /tmp
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/tmp
+PrivateTmp=no
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

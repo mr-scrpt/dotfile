@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# lianli-state: the daemon writes config.json / lcd_templates.json atomically and
+# refuses symlinks, so these two files cannot be stowed. Keep the canonical copy in
+# the repo and copy in either direction.
+#   lianli-state install   repo -> ~/.config/lianli   (fresh machine / after git pull)
+#   lianli-state save      ~/.config/lianli -> repo   (after editing in lianli-gui)
+#   lianli-state diff      show what differs
+set -euo pipefail
+REPO="${DOTFILE_DIR:-$HOME/Hellkitchen/dotfile}/lianli-state/.config/lianli"
+LIVE="$HOME/.config/lianli"
+FILES=(config.json lcd_templates.json)
+
+case "${1:-}" in
+  install)
+    mkdir -p "$LIVE"
+    for f in "${FILES[@]}"; do install -m 600 "$REPO/$f" "$LIVE/$f"; done
+    echo "installed ${FILES[*]} -> $LIVE"
+    ;;
+  save)
+    for f in "${FILES[@]}"; do cp "$LIVE/$f" "$REPO/$f"; done
+    (cd "$REPO" && git status --short .)
+    ;;
+  diff)
+    for f in "${FILES[@]}"; do diff -u "$REPO/$f" "$LIVE/$f" && echo "$f: same"; done
+    ;;
+  *) echo "usage: lianli-state install|save|diff" >&2; exit 2 ;;
+esac

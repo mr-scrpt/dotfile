@@ -1,0 +1,11 @@
+[Unit]
+Description=OpenRGB SDK server (motherboard, RAM, GPU) + cyan profile
+
+[Service]
+ExecStartPre=/usr/bin/sleep 5
+ExecStart=/usr/bin/openrgb --noautoconnect --server --server-port 6742 --profile cyan
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

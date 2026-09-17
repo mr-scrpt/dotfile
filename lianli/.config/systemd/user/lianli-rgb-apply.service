@@ -1,0 +1,11 @@
+[Unit]
+Description=Re-apply Lian Li RGB effects after boot
+After=lianli-daemon.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/share/lianli-venv/bin/python %h/.local/share/lianli-presets/apply_rgb.py apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

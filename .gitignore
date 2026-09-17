@@ -3,3 +3,4 @@
 .plugins.lock
 *.log
 *.sock
+lianli-src/target/
