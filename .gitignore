@@ -4,4 +4,5 @@
 *.log
 *.sock
 lianli-src/target/
-/__pycache__/
+__pycache__/
+*.pyc
