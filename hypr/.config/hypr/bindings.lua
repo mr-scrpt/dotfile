@@ -34,15 +34,9 @@ o.bind("CTRL + SPACE", "Switch keyboard layout", "hyprctl switchxkblayout all ne
 -- Local LLM: load Qwen3.8-27B into the GPU (llama.cpp) and open Hermes on the 'local' profile.
 o.bind("SUPER + SHIFT + CTRL + L", "Agent (local LLM)", "hermes-local-launch")
 
--- Scrolling layout controls.
+-- Scrolling layout: column width presets (niri-style Mod+R).
 -- https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
--- Note: SUPER+comma was "Dismiss last notification" and SUPER+SHIFT+comma was
--- "Dismiss all notifications"; unbound here so the keys can scroll columns.
-hl.unbind("SUPER + comma")
-hl.unbind("SUPER + SHIFT + comma")
-o.bind("SUPER + PERIOD", "Scroll to next column", hl.dsp.layout("move +col"))
-o.bind("SUPER + comma", "Scroll to previous column", hl.dsp.layout("move -col"))
-o.bind("SUPER + SHIFT + PERIOD", "Swap column right", hl.dsp.layout("swapcol r"))
-o.bind("SUPER + SHIFT + comma", "Swap column left", hl.dsp.layout("swapcol l"))
-o.bind("SUPER + EQUAL", "Widen current column", hl.dsp.layout("colresize +0.1"))
-o.bind("SUPER + MINUS", "Narrow current column", hl.dsp.layout("colresize -0.1"))
+-- Stock keys already cover the rest: SUPER+←/→ scroll columns,
+-- SUPER+SHIFT+←/→ swap columns, SUPER+= / SUPER+- resize the column.
+o.bind("SUPER + R", "Cycle column width preset", hl.dsp.layout("colresize +conf"))
+o.bind("SUPER + SHIFT + R", "Reset column width", hl.dsp.layout("colresize 0.98"))

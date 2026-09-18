@@ -37,9 +37,10 @@ hl.config({
 -- })
 
 -- https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
--- hl.config({
---   scrolling = {
---     -- See only one column per screen instead of two.
---     column_width = 0.97,
---   },
--- })
+hl.config({
+  scrolling = {
+    -- One column per screen (niri-like); SUPER+R cycles the presets below.
+    column_width = 0.98,
+    explicit_column_widths = "0.33, 0.5, 0.67, 0.98",
+  },
+})
