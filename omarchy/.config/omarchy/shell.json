@@ -45,8 +45,7 @@
           "id": "omarchy.agents"
         },
         {
-          "id": "local-llm",
-          "type": "qml"
+          "id": "mr.local-llm"
         },
         {
           "id": "omarchy.bluetooth"

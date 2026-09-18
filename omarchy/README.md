@@ -1,4 +1,14 @@
-# omarchy — shell.json, bar modules, menu extensions, plugin mr.big-monitor
+# omarchy — shell.json, menu extensions, bar plugins mr.big-monitor / mr.local-llm
+
+Both bar icons are proper plugins (`~/.config/omarchy/plugins/<id>/manifest.json + Widget.qml`)
+built on `BarWidget` + `BarIconButton`, so they get the stock icon slot/canvas/font and
+theme colours for free. Toggle look = stock indicators: `useActiveColor: false` +
+`dimmed: !on` (never `active: true` alone — that paints the icon in `bar.urgent`, red).
+
+## mr.local-llm — llama.cpp model state
+
+`llama-local-status` JSON -> dim (off) / blinking (loading) / green (ready).
+Left click `hermes-local-launch`, right click `llama-local-status toggle`.
 
 ## mr.big-monitor — big monitor (DP-1) on/off from the bar
 

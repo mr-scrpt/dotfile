@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "mr.local-llm",
+  "name": "Local LLM",
+  "version": "1.0.0",
+  "author": "mr",
+  "description": "Local llama.cpp model: green when loaded, dim when off",
+  "kinds": ["bar-widget"],
+  "entryPoints": { "barWidget": "Widget.qml" },
+  "barWidget": {
+    "displayName": "Local LLM",
+    "description": "Local llama.cpp model: green when loaded, dim when off",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

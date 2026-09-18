@@ -28,7 +28,10 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: root.monitorOn ? "󰍹" : "󰶐"
-    active: root.monitorOn
+    // Stock toggle look (night light, stay awake): foreground when on,
+    // dimmed when off. `active` would paint it in bar.urgent (red).
+    useActiveColor: false
+    dimmed: !root.monitorOn
     tooltipText: root.monitorOn
       ? "Big monitor (" + root.output + ") is on — click to turn off"
       : "Big monitor (" + root.output + ") is off — click to turn on"
