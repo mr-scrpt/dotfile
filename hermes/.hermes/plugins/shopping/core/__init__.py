@@ -1,11 +1,12 @@
 """Public API of the shopping core — the only surface adapters (tools, CLI, slash) import.
 
-Layers: fs (io) → model/catalog/http (domain, net) → sessions/findings/fetch/probe (state, services)
+Layers: fs (io) → http/model → sources/<key>/ (declarative site packages) → catalog (config view)
+→ sessions/findings/fetch/probe (state, services)
 → report/menus (presentation; menus are pure data — the UI adapter lives outside core).
 """
 from .catalog import get as get_sources
 from .fetch import catalog as fetch_catalog, fetch as fetch_site, hotline_filters
-from . import menus
+from . import menus, sources
 from .probe import probe as probe_sites_search, sites as probe_sites
 from .findings import add as add_findings, list_ as list_findings, resume_context as get_session
 from .model import GEO, GROUPS, STATUSES
@@ -16,4 +17,4 @@ from .sessions import (create_session, create_topic, list_sessions, list_topics,
 __all__ = ["GEO", "GROUPS", "STATUSES", "get_sources", "add_findings", "list_findings", "get_session",
            "add_followup", "render_report", "create_session", "create_topic", "list_sessions",
            "list_topics", "log_event", "set_summary", "update_params",
-           "fetch_catalog", "fetch_site", "hotline_filters", "probe_sites_search", "probe_sites", "menus"]
+           "fetch_catalog", "fetch_site", "hotline_filters", "probe_sites_search", "probe_sites", "menus", "sources"]

@@ -1,0 +1,6 @@
+key: epicentr
+title: Епіцентр
+order: 90
+group: marketplace
+fetch: script
+search: https://epicentrk.ua/ua/search/?q={q}

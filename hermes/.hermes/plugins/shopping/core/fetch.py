@@ -2,9 +2,9 @@
 findings, return a compact summary. This is what keeps raw HTML/JSON out of the model context."""
 from __future__ import annotations
 
-from . import fetchers, findings, sessions
+from . import findings, sessions, sources
 from .fs import err, now
-from .fetchers.hotline import parse_spec  # noqa: F401  (re-exported for tests)
+from .sources.hotline.fetcher import parse_spec  # noqa: F401  (re-exported for tests)
 
 MAX_REVIEW_CHARS = 350
 
@@ -43,7 +43,7 @@ def catalog(topic: str, session: str, section: str, filter_ids: list[int], want:
     if meta is None:
         return sessions.not_found(topic, session)
     try:
-        res = fetchers.get("hotline").catalog(section, filter_ids, max_pages=max_pages)
+        res = sources.get("hotline").module().catalog(section, filter_ids, max_pages=max_pages)
     except Exception as e:  # noqa: BLE001
         sessions.log_event(topic, session, "source_blocked", f"hotline catalog: {e}")
         return err(f"hotline catalog failed: {e}")
@@ -62,7 +62,7 @@ def catalog(topic: str, session: str, section: str, filter_ids: list[int], want:
 
 def hotline_filters(section: str) -> dict:
     try:
-        return {"success": True, "section": section, "filters": fetchers.get("hotline").filters(section)}
+        return {"success": True, "section": section, "filters": sources.get("hotline").module().filters(section)}
     except Exception as e:  # noqa: BLE001
         return err(f"hotline filters failed: {e}")
 
@@ -81,7 +81,7 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
     if meta is None:
         return sessions.not_found(topic, session)
     try:
-        mod = fetchers.get(site)
+        mod = sources.get(site).module()
     except KeyError as e:
         return err(str(e))
     try:

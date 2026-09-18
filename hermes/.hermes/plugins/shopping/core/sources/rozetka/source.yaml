@@ -1,0 +1,6 @@
+key: rozetka
+title: Rozetka
+order: 10
+group: marketplace
+fetch: script
+search: https://rozetka.com.ua/ua/search/?text={q}

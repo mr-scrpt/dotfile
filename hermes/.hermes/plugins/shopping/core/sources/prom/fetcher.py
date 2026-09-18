@@ -10,7 +10,7 @@ import json
 import re
 from urllib.parse import quote_plus
 
-from ..http import FetchError, get, text, to_int
+from ...http import FetchError, get, text, to_int
 
 SITE, GROUP = "prom", "marketplace"
 BASE = "https://prom.ua"

@@ -1,37 +1,35 @@
-"""Layer 1 — source catalogue (sources.yaml): seed from plugin data, load, fill URL templates."""
+"""Layer 1 — shared search config (geo, reviews) + the read-only source catalogue view.
+
+Sites themselves live in `core/sources/<key>/` (see that package). This module only merges the
+two shared YAML files (bundled `data/*.yaml`, overridable by `~/shopping/.config/<name>.yaml`) and
+presents everything to the model as one `shop_sources` document.
+"""
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 from urllib.parse import quote_plus
 
+from . import sources
 from .fs import err, root
 
-SEED = Path(__file__).resolve().parent.parent / "data" / "sources.yaml"
+DATA = Path(__file__).resolve().parent.parent / "data"
+SHARED = ("geo", "reviews")
 
 
-def path() -> Path:
-    return root() / ".config" / "sources.yaml"
-
-
-def ensure() -> Path:
-    """Copy the seed into ~/shopping/.config once; re-copy when the plugin seed is newer (keeps the user
-    copy in sync with plugin updates). A user who edits the copy keeps the edits until the next seed bump —
-    the previous copy is kept as sources.yaml.bak so nothing is lost."""
-    p = path()
-    p.parent.mkdir(parents=True, exist_ok=True)
-    if not p.exists():
-        shutil.copy2(SEED, p)
-    elif SEED.stat().st_mtime > p.stat().st_mtime:
-        shutil.copy2(p, p.with_suffix(".yaml.bak"))
-        shutil.copy2(SEED, p)
-    return p
+def _yaml(name: str) -> dict:
+    import yaml
+    user = root() / ".config" / f"{name}.yaml"
+    p = user if user.is_file() else DATA / f"{name}.yaml"
+    return (yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get(name) or {}
 
 
 def load() -> dict:
-    import yaml  # PyYAML ships with Hermes
-    return yaml.safe_load(ensure().read_text(encoding="utf-8")) or {}
+    doc = {name: _yaml(name) for name in SHARED}
+    for group, label in (("aggregator", "aggregators"), ("marketplace", "marketplaces"), ("shop", "shops")):
+        doc[label] = {s.key: s.public() for s in sources.all_sources() if s.group == group}
+    doc["hotline_filters"] = sources.get("hotline").filters if "hotline" in {s.key for s in sources.all_sources()} else {}
+    return doc
 
 
 def _fill(node, q: str, raw: str):
@@ -51,4 +49,4 @@ def get(group: str | None = None, query: str | None = None) -> dict:
     data = {group: src[group]} if group else src
     if query:
         data = _fill(json.loads(json.dumps(data)), quote_plus(query), query)
-    return {"success": True, "path": str(path()), "sources": data}
+    return {"success": True, "sources_dir": str(sources.BUNDLED), "user_dir": str(root() / ".config"), "sources": data}

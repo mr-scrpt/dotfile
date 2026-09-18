@@ -77,7 +77,7 @@ def _params_block(p: dict) -> list[str]:
 
 def _collapse_offers(items: list[dict]) -> list[dict]:
     """One row per (model, source, seller): the cheapest in-stock offer wins; duplicates are counted."""
-    from .fetchers.rozetka import seller_from_url
+    from .sources.rozetka.fetcher import seller_from_url
     best: dict[tuple, dict] = {}
     for f in items:
         if f.get("source") == "rozetka" and not f.get("seller"):

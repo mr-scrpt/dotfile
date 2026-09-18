@@ -62,31 +62,31 @@ def probe_selection(values: list[str]) -> dict:
     return {"probe": True, "only": [v for v in values if v not in (PROBE_ALL, PROBE_SKIP)]}
 
 
+STATUS_TAG = {"excluded": "исключён из зонда", "no_script": "нет скрипта — только браузер",
+              "not_probed": "не зондировался", "error": "ошибка зонда", "zero": "0 — не найдено"}
+
+
 def sources_menu(probe_result: dict | None = None, exclude: list[str] | None = None) -> dict:
-    """One flat list. With a probe: sites with hits first (most hits first), then unprobed browser
-    sites; zero-hit sites are dropped and named in the question. Without a probe: catalogue order."""
+    """One flat list, every source visible with an explicit state. With a probe: hits first (most
+    first), then excluded / no-script / errors, then zero-hit sites. Without a probe: catalogue order,
+    browser sites tagged."""
     by = {s["site"]: s for s in (probe_result or {}).get("sites", [])}
-    hit, unprobed, zero = [], [], []
+    rows = []
     for s in probe.sites(exclude):
         r = by.get(s["site"])
         if not probe_result:
-            hit.append((0, s, "" if s["scripted"] else "браузер"))
-        elif r is None or not r.get("probed"):
-            unprobed.append((0, s, "без зонда"))
-        elif r.get("error"):
-            unprobed.append((0, s, "ошибка"))
-        elif r.get("hits"):
+            rows.append((0, 0, s, "" if s["scripted"] else "браузер"))
+            continue
+        status = (r or {}).get("status") or ("no_script" if not s["scripted"] else "not_probed")
+        if status == "hits":
             n = r.get("total_est") or r["hits"]
-            hit.append((n, s, f"{_n(n)}{'+' if r.get('total_est') and r['hits'] < n else ''}"))
+            rows.append((0, -n, s, f"{_n(n)}{'+' if r.get('total_est') and r['hits'] < n else ''}"))
         else:
-            zero.append(s["title"])
-    if probe_result:
-        hit.sort(key=lambda x: -x[0])
+            rows.append((2 if status == "zero" else 1, 0, s, STATUS_TAG[status]))
+    rows.sort(key=lambda x: (x[0], x[1]))
     items = [{"value": s["site"], "label": _label(f"{s['title']} ({tag})" if tag else s["title"]), "group": s["group"]}
-             for _, s, tag in hit + unprobed]
-    q = "Где искать? (в скобках — найдено позиций)" if probe_result else "Где искать?"
-    if zero:
-        q += " · 0 находок: " + ", ".join(zero)
+             for _, _, s, tag in rows]
+    q = "Где искать? (в скобках — позиций по зонду / состояние)" if probe_result else "Где искать?"
     return {"question": q, "items": items, "multi": True}
 
 

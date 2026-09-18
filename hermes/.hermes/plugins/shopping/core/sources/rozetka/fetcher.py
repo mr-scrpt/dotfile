@@ -13,9 +13,10 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
-from ..http import FetchError, get, get_json, ld_json, text, to_int
+from ...http import FetchError, get, get_json, ld_json, text, to_int
 
 SITE, GROUP = "rozetka", "marketplace"
+PROBE_KWARGS = {"limit": 3, "comments_pages": 0}   # cheap mode for core.probe
 SEARCH = "https://search.rozetka.com.ua/ua/search/api/v6/?front-end=true&text={q}&lang=ua"
 DETAILS = "https://xl-catalog-api.rozetka.com.ua/v4/goods/getDetails?front-end=true&product_ids={ids}&lang=ua&with_extra_info=true"
 COMMENTS = ("https://product-api.rozetka.com.ua/v4/comments/get?front-end=true&goods={id}&page={page}"

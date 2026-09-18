@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
-from ..http import FetchError, get, nuxt_state, to_int
+from ...http import FetchError, get, nuxt_state, to_int
 
 SITE, GROUP = "hotline", "aggregator"
 BASE = "https://hotline.ua"

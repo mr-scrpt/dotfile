@@ -1,0 +1,6 @@
+key: citrus
+title: Цитрус
+order: 60
+group: marketplace
+fetch: browser
+search: https://citrus.ua/search/?q={q}

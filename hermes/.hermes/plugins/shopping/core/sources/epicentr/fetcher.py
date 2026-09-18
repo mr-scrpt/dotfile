@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from urllib.parse import quote_plus
 
-from ..http import FetchError, get, nuxt_state
+from ...http import FetchError, get, nuxt_state
 
 SITE, GROUP = "epicentr", "marketplace"
 BASE = "https://epicentrk.ua"

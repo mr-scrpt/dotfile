@@ -1,0 +1,7 @@
+key: prom
+title: Prom.ua
+order: 80
+group: marketplace
+fetch: script
+search: https://prom.ua/ua/search?search_term={q}
+notes: Много мелких продавцов — надёжность продавца (%) важнее рейтинга товара.

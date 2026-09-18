@@ -1,0 +1,6 @@
+key: moyo
+title: MOYO
+order: 30
+group: marketplace
+fetch: script
+search: https://www.moyo.ua/ua/search/new/?q={q}

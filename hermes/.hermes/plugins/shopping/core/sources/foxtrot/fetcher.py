@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
-from ..http import FetchError, get, text, to_int
+from ...http import FetchError, get, text, to_int
 
 SITE, GROUP = "foxtrot", "marketplace"
 BASE = "https://www.foxtrot.com.ua"

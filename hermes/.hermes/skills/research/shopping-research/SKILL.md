@@ -18,7 +18,7 @@ Stateful product research with a FIXED procedure: topic → session → brief (i
 scripted candidate discovery on hotline → scripted offers per model → reviews → report.md →
 follow-ups. State lives in `~/shopping/` and is written only through `shop_*` tools (plugin
 `shopping`). The model does not choose sites, fetch methods or search queries — all of that is
-in `~/shopping/.config/sources.yaml` and in the plugin. The model's job: run the brief, read
+in the plugin's `core/sources/<site>/source.yaml` packages. The model's job: run the brief, read
 what the tools return, extract nuances from reviews, write the verdict in Russian.
 
 Not for price alerts (`product-price-monitor`) or a quick tier guide (`ukraine-hardware-shopping`).
@@ -58,8 +58,9 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
 3b. Sources — the user decides where to search; you never pick sites for them.
    `shop_menu(kind="probe")` shows every probe-able site by name; the result carries
    `probe: bool` and `only: [...]|null`. Then `shop_menu(kind="sources", query=<query>,
-   probe=<probe>, only=<only>)` — the plugin runs the parallel probe first and shows hit counts
-   per site (0-hit sites are named in the question, unprobed browser sites listed last). Store the
+   probe=<probe>, only=<only>)` — the plugin runs the parallel probe first and lists EVERY site
+   with its state: hit count / «исключён из зонда» / «нет скрипта — только браузер» /
+   «0 — не найдено». Sites without a script can still be chosen (searched via browser). Store the
    answer: `shop_update_params(sites=values)`; `free_text` = extra sites the user typed → add
    to `notes`. Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
 4. Candidates — if `hotline` ∈ sites: `shop_sources(group="hotline_filters")` → map the hard spec to filter ids
@@ -112,14 +113,13 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
 ## Plugin layout (maintenance)
 
 `~/.hermes/plugins/shopping/` → stow link into `~/Hellkitchen/dotfile/hermes/`:
-`core/` (fs → http → model/catalog → sessions/findings → fetchers/* → fetch/probe → report/menus),
+`core/` (fs → http/model → sources/<site>/ → catalog → sessions/findings → fetch/probe → report/menus),
 `ui.py` (the only module touching the host choice panel), `schemas.py`, `tools.py`, `cli.py`,
-`data/sources.yaml`, `tests/` (fixtures in
-`tests/fixtures/*.gz`; run `~/.hermes/hermes-agent/venv/bin/python -m unittest discover -s tests`).
-New site: add `core/fetchers/<site>.py` (parse_search + search), a fixture, a test, register in
-`fetchers/__init__.py`, flip `fetch: script` in `data/sources.yaml`, then
-`hermes plugins doctor ~/.hermes/plugins/shopping --ci`. Refresh hotline ids with
-`cli.py hotline-filters computer/monitory`.
+`data/{geo,reviews}.yaml`, `tests/` (fixtures in `tests/fixtures/*.gz`; run
+`~/.hermes/hermes-agent/venv/bin/python -m unittest discover -s tests`).
+New site = new folder `core/sources/<site>/` with `source.yaml` (+ `fetcher.py`, fixture, test when
+curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/shopping --ci`.
+Refresh hotline ids with `cli.py hotline-filters computer/monitory` → `sources/hotline/source.yaml`.
 
 ## Pitfalls
 

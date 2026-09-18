@@ -16,7 +16,10 @@ os.environ["SHOPPING_HOME"] = tempfile.mkdtemp(prefix="shoptest-")
 from shopping import core, ui  # noqa: E402
 from shopping.core import menus  # noqa: E402
 from shopping.core import probe as probe_mod  # noqa: E402
-from shopping.core.fetchers import epicentr, prom, rozetka, telemart  # noqa: E402
+from shopping.core.sources.epicentr import fetcher as epicentr  # noqa: E402
+from shopping.core.sources.prom import fetcher as prom  # noqa: E402
+from shopping.core.sources.rozetka import fetcher as rozetka  # noqa: E402
+from shopping.core.sources.telemart import fetcher as telemart  # noqa: E402
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -82,6 +85,40 @@ class Isolated(unittest.TestCase):
         os.environ.pop("SHOPPING_HOME", None)
 
 
+class Registry(Isolated):
+    def test_every_folder_is_a_source_and_config_is_valid(self):
+        from shopping.core import sources
+        keys = [s.key for s in sources.all_sources()]
+        self.assertEqual(len(keys), 18)
+        self.assertEqual(keys[0], "hotline")                       # aggregators first
+        self.assertEqual(sources.validate(), [])
+        self.assertEqual(sorted(s.key for s in sources.scripted()),
+                         ["allo", "epicentr", "foxtrot", "hotline", "moyo", "prom", "rozetka", "telemart"])
+        self.assertTrue(sources.get("hotline").filters)
+        self.assertIn("{q}", sources.get("comfy").search)
+        with self.assertRaises(KeyError):
+            sources.get("comfy").module()
+        self.assertEqual(sources.get("prom").search_url("a b"), "https://prom.ua/ua/search?search_term=a+b")
+
+    def test_user_dir_source_is_discovered(self):
+        from shopping.core import sources
+        d = Path(os.environ["SHOPPING_HOME"]) / ".config" / "sources" / "olx"
+        d.mkdir(parents=True)
+        (d / "source.yaml").write_text("key: olx\ntitle: OLX\ngroup: marketplace\nfetch: browser\nsearch: https://www.olx.ua/uk/list/q-{q}/\n")
+        sources.reload()
+        try:
+            self.assertIn("olx", [s.key for s in sources.all_sources()])
+            self.assertEqual(sources.get("olx").title, "OLX")
+        finally:
+            sources.reload()
+
+    def test_shop_sources_document(self):
+        doc = core.get_sources()["sources"]
+        self.assertEqual(set(doc), {"geo", "reviews", "aggregators", "marketplaces", "shops", "hotline_filters"})
+        self.assertEqual(doc["marketplaces"]["rozetka"]["fetch"], "script")
+        self.assertIn("web_search_queries", doc["reviews"])
+
+
 class Probe(Isolated):
     def test_sites_follow_catalogue_order_and_flags(self):
         s = probe_mod.sites(exclude=["comfy"])
@@ -105,14 +142,22 @@ class Probe(Isolated):
             def search(query, meta=None, **kw):
                 raise RuntimeError("boom")
 
-        with mock.patch.object(probe_mod.fetchers, "get", side_effect=lambda site: Dead if site == "moyo" else Mod):
+        class Src:
+            def __init__(self, m): self._m = m
+            def module(self): return self._m
+
+        with mock.patch.object(probe_mod.sources, "get", side_effect=lambda site: Src(Dead if site == "moyo" else Mod)):
             r = probe_mod.probe("монитор", only=["hotline", "moyo", "prom"])
         by = {x["site"]: x for x in r["sites"]}
         self.assertEqual(by["hotline"]["hits"], 5)
         self.assertEqual(by["hotline"]["total_est"], 42)
         self.assertEqual(len(by["hotline"]["sample"]), 3)
         self.assertIn("boom", by["moyo"]["error"])
+        self.assertEqual(by["moyo"]["status"], "error")
         self.assertEqual(r["with_hits"], ["hotline", "prom"])
+        self.assertEqual(by["rozetka"]["status"], "excluded")     # not in `only`
+        self.assertEqual(by["comfy"]["status"], "no_script")
+        self.assertEqual(len(r["sites"]), 18)
 
     def test_probe_empty_query(self):
         self.assertFalse(probe_mod.probe("  ")["success"])
@@ -120,17 +165,20 @@ class Probe(Isolated):
 
 class Menus(Isolated):
     def test_sources_menu_order_and_labels(self):
-        pr = {"sites": [{"site": "hotline", "probed": True, "hits": 25, "total_est": None},
-                        {"site": "rozetka", "probed": True, "hits": 3, "total_est": 719},
-                        {"site": "moyo", "probed": True, "hits": 0},
-                        {"site": "allo", "probed": True, "hits": 0, "error": "blocked (403)"}]}
+        pr = {"sites": [{"site": "hotline", "status": "hits", "probed": True, "hits": 25, "total_est": None},
+                        {"site": "rozetka", "status": "hits", "probed": True, "hits": 3, "total_est": 719},
+                        {"site": "moyo", "status": "zero", "probed": True, "hits": 0},
+                        {"site": "allo", "status": "error", "probed": True, "hits": 0, "error": "blocked (403)"},
+                        {"site": "prom", "status": "excluded", "probed": False},
+                        {"site": "comfy", "status": "no_script", "probed": False}]}
         m = menus.sources_menu(pr)
         labels = [i["label"] for i in m["items"]]
         self.assertEqual(labels[:2], ["Rozetka (719+)", "Hotline (25)"])      # most hits first
-        self.assertIn("Алло (ошибка)", labels)
-        self.assertIn("Comfy (без зонда)", labels)
-        self.assertNotIn("MOYO (0)", labels)                                   # zero-hit sites dropped…
-        self.assertIn("0 находок: MOYO", m["question"])                        # …and named
+        self.assertIn("Алло (ошибка зонда)", labels)
+        self.assertIn("Prom.ua (исключён из зонда)", labels)
+        self.assertIn("Comfy (нет скрипта — только браузер)", labels)
+        self.assertEqual(labels[-1], "MOYO (0 — не найдено)")                  # zeros last, still visible
+        self.assertEqual(len(labels), 18)                                      # every source is listed
         self.assertTrue(m["multi"])
         self.assertTrue(all("," not in lab for lab in labels))
 

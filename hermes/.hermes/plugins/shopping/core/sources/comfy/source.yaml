@@ -1,0 +1,6 @@
+key: comfy
+title: Comfy
+order: 50
+group: marketplace
+fetch: browser
+search: https://comfy.ua/ua/search/?q={q}

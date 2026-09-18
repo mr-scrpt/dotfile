@@ -1,0 +1,6 @@
+key: telemart
+title: Telemart
+order: 10
+group: shop
+fetch: script
+search: https://telemart.ua/ua/search/{q}/

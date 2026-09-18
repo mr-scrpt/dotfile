@@ -1,0 +1,31 @@
+reviews:
+  web_search_limit: 5
+  web_search_queries:
+  - '"{model}" review'
+  - '"{model}" відгуки OR отзывы'
+  - '"{model}" reddit'
+  - '"{model}" недоліки OR проблеми OR issues'
+  sites:
+  - title: RTINGS
+    search: https://www.rtings.com/search?q={q}
+  - title: Notebookcheck
+    search: https://www.notebookcheck.net/Search.1.0.html?search={q}
+  - title: TFTCentral
+    search: https://tftcentral.co.uk/?s={q}
+  - title: YouTube
+    search: https://www.youtube.com/results?search_query={q}+review
+    note: transcript via skill youtube-content
+  - title: Hotline відгуки
+    note: shop_fetch('hotline') / product page ?tab=reviews
+  - title: Rozetka відгуки
+    note: shop_fetch('rozetka') returns review texts
+  blocked_for_browser:
+  - reddit.com
+  - bestbuy.com
+  - synccomputers.co.uk
+  - brutreview.com
+  rules:
+  - Отзыв засчитывается только если в нём назван ТОЧНО этот код модели (или он однозначен из заголовка страницы).
+  - Разные ревизии/суффиксы (напр. -B vs -W, 2024 vs 2025) = разные модели, если не доказано обратное.
+  - Фиксируй конкретные нюансы (скрип пластика, засветы, coil whine, шум БП, гарантийные проблемы), не общее 'хороший монитор'.
+  - 'Нюансы взвешиваются под purpose: для текста/кода критичны фринжинг, мерцание, яркость; для игр — VRR, задержка.'

@@ -1,0 +1,6 @@
+key: allo
+title: Алло
+order: 40
+group: marketplace
+fetch: script
+search: https://allo.ua/ua/catalogsearch/result/?q={q}

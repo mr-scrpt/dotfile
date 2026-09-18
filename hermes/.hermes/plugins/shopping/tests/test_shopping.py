@@ -167,9 +167,9 @@ class Report(Base):
 
 
 class Sources(Base):
-    def test_seed_copied_and_templates_filled(self):
+    def test_catalogue_document_and_templates_filled(self):
         r = core.get_sources("marketplaces", "LG 27GS95QE-B")
-        self.assertTrue(Path(r["path"]).exists())
+        self.assertTrue(Path(r["sources_dir"]).is_dir())
         self.assertEqual(r["sources"]["marketplaces"]["rozetka"]["search"],
                          "https://rozetka.com.ua/ua/search/?text=LG+27GS95QE-B")
         self.assertIn('"LG 27GS95QE-B" review', core.get_sources("reviews", "LG 27GS95QE-B")["sources"]["reviews"]["web_search_queries"])

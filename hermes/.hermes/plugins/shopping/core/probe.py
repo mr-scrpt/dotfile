@@ -7,31 +7,24 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from . import catalog, fetchers
+from . import sources
 
 SAMPLE = 3
 TIMEOUT_S = 40
-SEARCHABLE_GROUPS = ("aggregators", "marketplaces", "shops")
 
 
 def sites(exclude: list[str] | None = None) -> list[dict]:
-    """All searchable sites from sources.yaml in catalogue order, with group/title/fetch method."""
-    src = catalog.load()
+    """All sources in catalogue order, with group/title/fetch method."""
     ex = set(exclude or [])
-    out = []
-    for group in SEARCHABLE_GROUPS:
-        for key, cfg in (src.get(group) or {}).items():
-            if key in ex:
-                continue
-            out.append({"site": key, "group": group, "title": cfg.get("title", key),
-                        "fetch": cfg.get("fetch", "browser"), "scripted": key in fetchers.REGISTRY})
-    return out
+    return [{"site": s.key, "group": s.group, "title": s.title, "fetch": s.fetch, "scripted": s.scripted}
+            for s in sources.all_sources() if s.key not in ex]
 
 
 def _probe_one(site: str, query: str) -> dict:
     meta: dict = {}
     try:
-        hits = fetchers.get(site).search(query, meta, limit=SAMPLE, comments_pages=0) if site == "rozetka" else fetchers.get(site).search(query, meta)
+        mod = sources.get(site).module()
+        hits = mod.search(query, meta, **(getattr(mod, "PROBE_KWARGS", {}) or {}))
     except Exception as e:  # noqa: BLE001 — a dead site must not kill the probe
         return {"site": site, "probed": True, "error": f"{type(e).__name__}: {e}"[:120], "hits": 0, "sample": []}
     return {"site": site, "probed": True, "hits": len(hits), "total_est": meta.get("total_est"),
@@ -47,15 +40,25 @@ def probe(query: str, exclude: list[str] | None = None, only: list[str] | None =
         todo = [s for s in todo if s["site"] in set(only)]
     results: dict[str, dict] = {}
     scripted = [s["site"] for s in todo if s["scripted"]]
+    if not scripted:
+        return {"success": False, "error": "no scripted site left to probe", "sites": []}
     with ThreadPoolExecutor(max_workers=min(8, max(1, len(scripted)))) as pool:
         futs = {pool.submit(_probe_one, s, query): s for s in scripted}
         for f in as_completed(futs, timeout=TIMEOUT_S):
             r = f.result()
             results[r["site"]] = r
     rows = []
-    for s in todo:
-        r = results.get(s["site"], {"probed": False, "hits": None, "sample": []})
-        rows.append(s | r)
+    for s in sites():
+        r = results.get(s["site"])
+        if r is not None:
+            status = "error" if r.get("error") else ("hits" if r["hits"] else "zero")
+        elif not s["scripted"]:
+            status = "no_script"         # browser-only site: nothing to probe with
+        elif s["site"] in set(exclude or []) or (only and s["site"] not in set(only)):
+            status = "excluded"          # user chose not to probe it
+        else:
+            status = "not_probed"
+        rows.append(s | (r or {"probed": False, "hits": None, "sample": []}) | {"status": status})
     return {"success": True, "query": query, "sites": rows,
-            "with_hits": [r["site"] for r in rows if r.get("hits")],
-            "unprobed": [r["site"] for r in rows if not r.get("probed")]}
+            "with_hits": [r["site"] for r in rows if r["status"] == "hits"],
+            "unprobed": [r["site"] for r in rows if r["status"] in ("excluded", "no_script", "not_probed")]}

@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote
 
-from ..http import FetchError, get, text, to_int
+from ...http import FetchError, get, text, to_int
 
 SITE, GROUP = "telemart", "shop"
 BASE = "https://telemart.ua"

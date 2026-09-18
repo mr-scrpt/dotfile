@@ -16,7 +16,11 @@ FX = Path(__file__).resolve().parent / "fixtures"
 
 from shopping import core  # noqa: E402
 from shopping.core import fetch as fetch_svc  # noqa: E402
-from shopping.core.fetchers import allo, foxtrot, hotline, moyo, rozetka  # noqa: E402
+from shopping.core.sources.allo import fetcher as allo  # noqa: E402
+from shopping.core.sources.foxtrot import fetcher as foxtrot  # noqa: E402
+from shopping.core.sources.hotline import fetcher as hotline  # noqa: E402
+from shopping.core.sources.moyo import fetcher as moyo  # noqa: E402
+from shopping.core.sources.rozetka import fetcher as rozetka  # noqa: E402
 from shopping.core.http import Response, nuxt_state  # noqa: E402
 
 

@@ -1,0 +1,6 @@
+key: foxtrot
+title: Фокстрот
+order: 20
+group: marketplace
+fetch: script
+search: https://www.foxtrot.com.ua/uk/search?query={q}
