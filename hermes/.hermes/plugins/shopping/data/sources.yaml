@@ -1,0 +1,116 @@
+# Default source catalogue for the shopping plugin.
+# Copied to ~/shopping/.config/sources.yaml on first use — edit THAT file, not this one.
+# {q} = URL-encoded search query. fetch: browser => use browser_exec (plain fetch is blocked/truncated).
+
+geo:
+  default: ua_local
+  options:
+    ua_local: "Только Украина: товар на складе продавца в Украине"
+    ua_delivery: "С доставкой в Украину: включая Rozetka EU / 'Доставка з Європи' / зарубежные продавцы"
+  delivery_markers:            # seeing any of these on a card => delivery_scope: ua_delivery
+    - "Rozetka EU"
+    - "Доставка з Європи"
+    - "Доставка из Европы"
+    - "з ЄС"
+    - "з-за кордону"
+    - "під замовлення з Європи"
+
+marketplaces:                  # table 1 in report.md
+  rozetka:
+    title: Rozetka
+    search: "https://rozetka.com.ua/ua/search/?text={q}"
+    fetch: browser
+    notes: "Продавец 'Rozetka' vs сторонний продавец (marketplace) — фиксируй в seller. Отзывы: /comments/ на карточке. Рассрочка: блок 'Оплата частинами' (Моно/Приват)."
+  comfy:
+    title: Comfy
+    search: "https://comfy.ua/ua/search/?q={q}"
+    fetch: browser
+    notes: "Cloudflare — только browser_exec."
+  citrus:
+    title: Цитрус
+    search: "https://citrus.ua/search/?q={q}"
+    fetch: browser
+  allo:
+    title: Алло
+    search: "https://allo.ua/ua/catalogsearch/result/?q={q}"
+    fetch: browser
+  foxtrot:
+    title: Фокстрот
+    search: "https://www.foxtrot.com.ua/uk/search?query={q}"
+    fetch: browser
+  eldorado:
+    title: Eldorado
+    search: "https://eldorado.ua/uk/search/?q={q}"
+    fetch: browser
+  moyo:
+    title: MOYO
+    search: "https://www.moyo.ua/ua/search/new/?q={q}"
+    fetch: browser
+  prom:
+    title: Prom.ua
+    search: "https://prom.ua/ua/search?search_term={q}"
+    fetch: browser
+    notes: "Много мелких продавцов — рейтинг продавца важнее рейтинга товара."
+
+shops:                         # table 2 in report.md (specialised / smaller retailers)
+  telemart:
+    title: Telemart
+    search: "https://telemart.ua/ua/category/search/?search_que={q}"
+    fetch: browser
+  brain:
+    title: Brain
+    search: "https://brain.com.ua/ukr/search/?search={q}"
+    fetch: browser
+    notes: "Cloudflare — только browser_exec."
+  ktc:
+    title: KTC
+    search: "https://ktc.ua/search/?q={q}"
+    fetch: browser
+  elmir:
+    title: Elmir
+    search: "https://elmir.ua/ua/search/?q={q}"
+    fetch: browser
+  compx:
+    title: CompX
+    search: "https://compx.com.ua/ua/search/?q={q}"
+    fetch: browser
+
+aggregators:                   # price comparison — always include links so the user can pick the cheapest shop
+  hotline:
+    title: Hotline
+    search: "https://hotline.ua/ua/sr/?q={q}"
+    fetch: browser
+    notes: "Карточка: /ua/<cat>/<slug>/ ; цены ?tab=prices ; отзывы ?tab=reviews. Рецепт скрапинга категорий — скилл ukraine-hardware-shopping/references/hotline-ua.md"
+  ekatalog:
+    title: E-Katalog
+    search: "https://ek.ua/ua/ek-list.php?search_={q}"
+    fetch: browser
+  price:
+    title: Price.ua
+    search: "https://price.ua/ua/search?q={q}"
+    fetch: browser
+  pn:
+    title: "Прайс Навигатор (pn.com.ua)"
+    search: "https://pn.com.ua/search/?fn={q}"
+    fetch: browser
+
+reviews:                       # where to look for model-specific reviews; {model} = exact model code
+  web_search_queries:
+    - '"{model}" відгуки'
+    - '"{model}" отзывы'
+    - '"{model}" review'
+    - '"{model}" reddit'
+    - '"{model}" недоліки OR проблеми OR недостатки'
+  sites:
+    - { title: RTINGS, search: "https://www.rtings.com/search?q={q}" }
+    - { title: Notebookcheck, search: "https://www.notebookcheck.net/Search.1.0.html?search={q}" }
+    - { title: TFTCentral, search: "https://tftcentral.co.uk/?s={q}" }
+    - { title: YouTube, search: "https://www.youtube.com/results?search_query={q}+review" }
+    - { title: Reddit, search: "https://www.reddit.com/search/?q={q}" }
+    - { title: "Hotline відгуки", note: "product page ?tab=reviews" }
+    - { title: "Rozetka відгуки", note: "product page /comments/" }
+    - { title: "overclockers.ua forum", search: "https://forum.overclockers.ua/search.php?keywords={q}" }
+  rules:
+    - "Отзыв засчитывается только если в нём назван ТОЧНО этот код модели (или он однозначен из заголовка страницы)."
+    - "Разные ревизии/суффиксы (напр. -B vs -W, 2024 vs 2025) = разные модели, если не доказано обратное."
+    - "Фиксируй конкретные нюансы (скрип пластика, засветы, coil whine, шум БП, гарантийные проблемы), не общее 'хороший монитор'."

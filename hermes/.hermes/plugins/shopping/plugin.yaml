@@ -1,0 +1,19 @@
+name: shopping
+version: 0.1.0
+description: "Deterministic state tools for product-research sessions under ~/shopping: topics, dated sessions, findings (JSONL, URL-deduped), review nuances, report.md rendering, follow-ups. Workflow: skill `shopping-research`."
+author: mr-scrpt, Hermes Agent
+kind: backend
+provides_tools:
+  - shop_list_topics
+  - shop_create_topic
+  - shop_list_sessions
+  - shop_create_session
+  - shop_get_session
+  - shop_update_params
+  - shop_add_findings
+  - shop_list_findings
+  - shop_log
+  - shop_set_summary
+  - shop_render_report
+  - shop_add_followup
+  - shop_sources

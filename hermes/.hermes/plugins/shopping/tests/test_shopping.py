@@ -1,0 +1,182 @@
+"""Tests for the shopping plugin core + adapters. Run:
+    SHOPPING_HOME=/tmp/x  ~/.hermes/hermes-agent/venv/bin/python -m pytest ~/.hermes/plugins/shopping/tests -q
+(HOME override not needed — the suite sets SHOPPING_HOME to a temp dir itself.)
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+PLUGINS_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PLUGINS_DIR))
+
+from shopping import core, cli, tools  # noqa: E402
+from shopping.core import findings as F  # noqa: E402
+
+
+class Base(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        os.environ["SHOPPING_HOME"] = self._tmp.name
+        core.create_topic("monitor", "Мониторы")
+        self.sid = core.create_session("monitor", 'монитор 27" OLED', must=["OLED"], geo="ua_local")["session"]["id"]
+
+    def tearDown(self):
+        self._tmp.cleanup()
+        os.environ.pop("SHOPPING_HOME", None)
+
+    def add(self, *rows):
+        return core.add_findings("monitor", self.sid, list(rows))
+
+
+OFFER = {"group": "marketplace", "source": "rozetka", "title": "LG UltraGear 27GS95QE-B", "model": "LG 27GS95QE-B",
+         "url": "https://rozetka.com.ua/ua/p1/?utm_source=x", "price_uah": "31 999", "rating": 4.8, "rating_count": 12,
+         "seller": "Rozetka", "installment": True, "installment_note": "Моно 10"}
+
+
+class TopicsSessions(Base):
+    def test_topic_validation_and_idempotency(self):
+        self.assertFalse(core.create_topic("Bad Slug")["success"])
+        self.assertFalse(core.create_topic("monitor")["created"])
+        self.assertEqual([t["slug"] for t in core.list_topics()["topics"]], ["monitor"])
+
+    def test_session_id_is_dated_and_unique(self):
+        self.assertTrue(self.sid.startswith("20"))
+        sid2 = core.create_session("monitor", 'монитор 27" OLED')["session"]["id"]
+        self.assertNotEqual(self.sid, sid2)
+        self.assertTrue(sid2.endswith("-2"))
+        self.assertEqual(len(core.list_sessions("monitor")["sessions"]), 2)
+
+    def test_session_requires_topic_and_geo(self):
+        self.assertFalse(core.create_session("nope", "x")["success"])
+        self.assertFalse(core.create_session("monitor", "x", geo="mars")["success"])
+        self.assertFalse(core.create_session("monitor", "  ")["success"])
+
+    def test_update_params_and_status(self):
+        r = core.update_params("monitor", self.sid, status="searching", budget_uah=35000)
+        self.assertEqual(r["session"]["params"]["budget_uah"], 35000)
+        self.assertEqual(r["session"]["status"], "searching")
+        self.assertFalse(core.update_params("monitor", self.sid, bogus=1)["success"])
+        self.assertFalse(core.update_params("monitor", self.sid, status="weird")["success"])
+
+    def test_resume_context(self):
+        self.add(OFFER)
+        core.log_event("monitor", self.sid, "next", "comfy")
+        g = core.get_session("monitor", self.sid)
+        self.assertEqual(g["findings_by_group"], {"marketplace": 1})
+        self.assertEqual(g["models"], ["LG 27GS95QE-B"])
+        self.assertEqual(g["log_tail"][-1]["event"], "next")
+        self.assertIsNone(g["report_path"])
+        self.assertFalse(core.get_session("monitor", "nope")["success"])
+
+
+class Findings(Base):
+    def test_coerce_and_validate(self):
+        r = self.add(OFFER, {"group": "bogus", "url": "http://x"}, {"group": "shop", "title": "t"},
+                     {"group": "shop", "url": "u", "title": "t", "price_uah": "abc"})
+        self.assertEqual((r["added"], r["merged"], len(r["errors"])), (1, 0, 3))
+        f = core.list_findings("monitor", self.sid)["findings"][0]
+        self.assertEqual(f["price_uah"], 31999)
+        self.assertEqual(f["id"], 1)
+        self.assertEqual(core.get_session("monitor", self.sid)["session"]["status"], "searching")
+
+    def test_url_dedup_merges_lists_and_refreshes_price(self):
+        self.add(OFFER)
+        r = self.add({"group": "marketplace", "title": "dup", "url": "https://rozetka.com.ua/ua/p1/",
+                      "price_uah": 29999, "nuances": ["засветы", "Засветы"], "cons": ["дорого"]})
+        self.assertEqual((r["added"], r["merged"], r["total"]), (0, 1, 1))
+        f = core.list_findings("monitor", self.sid)["findings"][0]
+        self.assertEqual(f["title"], "LG UltraGear 27GS95QE-B")  # identity kept
+        self.assertEqual(f["price_uah"], 29999)                   # price refreshed
+        self.assertEqual(f["nuances"], ["засветы"])               # case-insensitive union
+        self.assertEqual(f["cons"], ["дорого"])
+
+    def test_normalizers(self):
+        self.assertEqual(F.normalize_url("HTTPS://Rozetka.com.ua/ua/p1/?utm_source=a&b=1"), "https://rozetka.com.ua/ua/p1?b=1")
+        self.assertEqual(F.normalize_model("lg 27gs95qe-b"), "LG27GS95QEB")
+
+    def test_filters(self):
+        self.add(OFFER, {"group": "review", "model": "lg-27gs95qe-b", "url": "https://r/1", "nuances": ["coil whine"]})
+        self.assertEqual(core.list_findings("monitor", self.sid, group="review")["count"], 1)
+        self.assertEqual(core.list_findings("monitor", self.sid, model="LG 27GS95QE B")["count"], 2)
+        rows = core.list_findings("monitor", self.sid, fields=["url"])["findings"]
+        self.assertEqual(set(rows[0]), {"url"})
+
+
+class Report(Base):
+    def test_render_sections_and_review_nuances_join_offers(self):
+        self.add(OFFER,
+                 {"group": "shop", "source": "telemart", "model": "LG 27GS95QE-B", "url": "https://t/1", "price_uah": 30500},
+                 {"group": "aggregator", "source": "hotline", "model": "LG 27GS95QE-B", "url": "https://h/1",
+                  "price_min_uah": 29999, "price_max_uah": 34500, "offers_count": 17},
+                 {"group": "review", "source": "reddit", "model": "LG 27GS95QE-B", "url": "https://r/1",
+                  "nuances": ["coil whine"], "model_match": "exact"})
+        core.set_summary("monitor", self.sid, "Берём LG.", [{"model": "LG 27GS95QE-B", "why": "дешевле"}], ["цены на 18.09"])
+        md = core.render_report("monitor", self.sid)["markdown"]
+        for h in ("## 1. Маркетплейсы", "## 2. Магазины", "## 3. Агрегаторы", "## 4. Отзывы", "## 5. Итог"):
+            self.assertIn(h, md)
+        self.assertIn("31 999 ₴", md)
+        self.assertIn("29 999 – 34 500 ₴", md)
+        self.assertIn("| да: Моно 10 |", md)
+        self.assertEqual(md.count("coil whine"), 3)  # marketplace row + shop row + reviews block
+        self.assertIn("⚠ coil whine", md)
+        self.assertIn("совпадение модели: exact", md)
+        self.assertTrue(Path(core.get_session("monitor", self.sid)["report_path"]).exists())
+
+    def test_empty_report_and_followup(self):
+        md = core.render_report("monitor", self.sid)["markdown"]
+        self.assertIn("_нет данных_", md)
+        self.assertNotIn("## 6.", md)
+        r = core.add_followup("monitor", self.sid, "Гарантия LG", "что по гарантии?", "3 года.")
+        self.assertTrue(Path(r["path"]).name.startswith("01_"))
+        md = Path(r["report"]).read_text(encoding="utf-8")
+        self.assertIn("## 6. Уточнения", md)
+        self.assertIn("[Гарантия LG](followups/01_", md)
+        self.assertEqual(core.get_session("monitor", self.sid)["followups"], [Path(r["path"]).name])
+
+
+class Sources(Base):
+    def test_seed_copied_and_templates_filled(self):
+        r = core.get_sources("marketplaces", "LG 27GS95QE-B")
+        self.assertTrue(Path(r["path"]).exists())
+        self.assertEqual(r["sources"]["marketplaces"]["rozetka"]["search"],
+                         "https://rozetka.com.ua/ua/search/?text=LG+27GS95QE-B")
+        self.assertIn('"LG 27GS95QE-B" відгуки', core.get_sources("reviews", "LG 27GS95QE-B")["sources"]["reviews"]["web_search_queries"])
+        self.assertFalse(core.get_sources("nope")["success"])
+        self.assertIn("geo", core.get_sources()["sources"])
+
+
+class Adapters(Base):
+    def test_tool_handlers_return_json_and_swallow_errors(self):
+        out = json.loads(tools.HANDLERS["shop_list_topics"]({}))
+        self.assertEqual(out["topics"][0]["slug"], "monitor")
+        out = json.loads(tools.HANDLERS["shop_update_params"]({"topic": "monitor", "session": self.sid, "status": "done"}))
+        self.assertEqual(out["session"]["status"], "done")
+        out = json.loads(tools.HANDLERS["shop_add_findings"]({"topic": "monitor", "session": self.sid, "findings": "not-a-list"}))
+        self.assertFalse(out["success"])
+        self.assertIn("error", out)
+
+    def test_every_schema_has_a_handler(self):
+        from shopping import schemas
+        self.assertEqual({s["name"] for s in schemas.ALL}, set(tools.HANDLERS))
+
+    def test_slash_command(self):
+        self.assertIn("monitor", tools.slash_shop(""))
+        self.assertIn(self.sid, tools.slash_shop("monitor"))
+        self.assertIn("findings_total", tools.slash_shop(f"monitor {self.sid}"))
+        self.assertIn("not found", tools.slash_shop("monitor nope"))
+
+    def test_cli_roundtrip(self):
+        out = cli.run(cli.build_parser().parse_args(["add-findings", "monitor", self.sid, "--json", json.dumps([OFFER])]))
+        self.assertEqual(out["added"], 1)
+        out = cli.run(cli.build_parser().parse_args(["render", "monitor", self.sid]))
+        self.assertNotIn("markdown", out)
+        self.assertTrue(Path(out["path"]).exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,70 @@
+"""Adapter — Hermes tool handlers: (args: dict, **kw) -> JSON string over the core API."""
+from __future__ import annotations
+
+import json
+import logging
+from collections.abc import Callable
+
+from . import core
+
+logger = logging.getLogger(__name__)
+
+
+def _json(fn: Callable, *keys: str):
+    """Pick `keys` from args (or pass all when no keys) and call core.fn(**picked)."""
+    def handler(args: dict, **kw) -> str:
+        del kw
+        try:
+            call = {k: args[k] for k in keys if k in args} if keys else dict(args)
+            return json.dumps(fn(**call), ensure_ascii=False)
+        except Exception as e:  # a plugin bug must surface as a tool error, not kill the turn
+            logger.exception("shopping tool %s failed", getattr(fn, "__name__", fn))
+            return json.dumps({"success": False, "error": f"{type(e).__name__}: {e}"}, ensure_ascii=False)
+    return handler
+
+
+def _update_params(args: dict, **kw) -> str:
+    del kw
+    a = dict(args)
+    topic, session, status = a.pop("topic", None), a.pop("session", None), a.pop("status", None)
+    return json.dumps(core.update_params(topic, session, status=status, **a), ensure_ascii=False)
+
+
+HANDLERS: dict[str, Callable[..., str]] = {
+    "shop_list_topics": _json(core.list_topics),
+    "shop_create_topic": _json(core.create_topic, "slug", "title"),
+    "shop_list_sessions": _json(core.list_sessions, "topic"),
+    "shop_create_session": _json(core.create_session, "topic", "query", "must", "nice", "extra",
+                                 "geo", "budget_uah", "notes", "slug"),
+    "shop_get_session": _json(core.get_session, "topic", "session", "log_tail"),
+    "shop_update_params": _update_params,
+    "shop_add_findings": _json(core.add_findings, "topic", "session", "findings"),
+    "shop_list_findings": _json(core.list_findings, "topic", "session", "group", "model", "fields"),
+    "shop_log": _json(core.log_event, "topic", "session", "event", "detail"),
+    "shop_set_summary": _json(core.set_summary, "topic", "session", "verdict", "picks", "caveats", "status"),
+    "shop_render_report": _json(core.render_report, "topic", "session"),
+    "shop_add_followup": _json(core.add_followup, "topic", "session", "title", "question", "answer_md"),
+    "shop_sources": _json(core.get_sources, "group", "query"),
+}
+
+
+def slash_shop(raw_args: str) -> str:
+    """/shop [topic] [session] — status without spending model turns."""
+    parts = raw_args.split()
+    if not parts:
+        t = core.list_topics()
+        if not t["topics"]:
+            return f"Тем нет. Корень: {t['root']}"
+        return "\n".join(f"{x['slug']:<20} {x['sessions']} сессий, последняя {x['last_session'] or '—'}"
+                         for x in t["topics"])
+    if len(parts) == 1:
+        s = core.list_sessions(parts[0])
+        if not s.get("success"):
+            return s["error"]
+        return "\n".join(f"{x['id']:<32} {x['status']:<9} {x['findings']:>3} находок  {x['query'] or ''}"
+                         for x in s["sessions"]) or "сессий нет"
+    g = core.get_session(parts[0], parts[1])
+    if not g.get("success"):
+        return g["error"]
+    return json.dumps({k: g[k] for k in ("path", "findings_total", "findings_by_group", "models", "report_path")},
+                      ensure_ascii=False, indent=1)

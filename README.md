@@ -8,7 +8,7 @@ system so `omarchy update` / `omarchy refresh` keep working.
 ## Install
 
     cd ~/Hellkitchen/dotfile
-    stow -t ~ hypr ghostty git omarchy bin systemd herdr hass proxmox ssh
+    stow -t ~ hypr ghostty git omarchy bin systemd herdr hass proxmox ssh hermes
     sudo stow -t / system
 
 Stow links individual files, so real directories such as `~/.config/hypr`
@@ -28,6 +28,7 @@ and `~/.local/bin` remain writable by Omarchy and mise.
 | hass    | ~/.config/hass/                     | Home Assistant CLI config                                         |
 | proxmox | ~/.config/proxmox/                  | Proxmox API config                                                |
 | ssh     | ~/.ssh/config                       | hosts for the homelab                                             |
+| hermes  | ~/.hermes/plugins/, ~/.hermes/skills/ | custom Hermes plugins + skills (shopping research); see hermes/README.md |
 | system  | /etc/                               | mnt-station SMB automount, chromium password-manager policy       |
 
 ## Rules

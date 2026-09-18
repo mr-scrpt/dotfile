@@ -1,0 +1,14 @@
+"""Public API of the shopping core — the only surface adapters (tools, CLI, slash) import.
+
+Layers: fs (io) → model/catalog (domain) → sessions/findings (state) → report (presentation).
+"""
+from .catalog import get as get_sources
+from .findings import add as add_findings, list_ as list_findings, resume_context as get_session
+from .model import GEO, GROUPS, STATUSES
+from .report import add_followup, render as render_report
+from .sessions import (create_session, create_topic, list_sessions, list_topics, log_event,
+                       set_summary, update_params)
+
+__all__ = ["GEO", "GROUPS", "STATUSES", "get_sources", "add_findings", "list_findings", "get_session",
+           "add_followup", "render_report", "create_session", "create_topic", "list_sessions",
+           "list_topics", "log_event", "set_summary", "update_params"]
