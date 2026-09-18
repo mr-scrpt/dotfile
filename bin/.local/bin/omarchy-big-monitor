@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Turn the big monitor (DP-1, AORUS FO48U) on or off.
+# State lives in XDG_RUNTIME_DIR, so it resets to "off" on every reboot.
+# ~/.config/hypr/monitors.lua reads the same flag on every Hyprland reload:
+# with the flag set, workspaces 1-5 stay on the small monitor and 6-10 are
+# bound to the big one; without it every workspace lives on the small monitor.
+
+OUTPUT="DP-1"
+FLAG="${XDG_RUNTIME_DIR:-/tmp}/omarchy-big-monitor-enabled"
+
+is_on() { [[ -e $FLAG ]]; }
+
+apply() {
+  hyprctl reload >/dev/null
+}
+
+# Workspace rules only bind *new* workspaces; existing 6-10 must be moved.
+# Dispatchers are Lua expressions since Hyprland 0.56.
+place_workspaces() {
+  local ws
+  for ws in $(hyprctl workspaces -j | jq -r '.[].id | select(. >= 6)'); do
+    hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$ws\", monitor = \"$OUTPUT\" })" >/dev/null 2>&1 || true
+  done
+}
+
+on() {
+  touch "$FLAG"
+  apply
+  hyprctl dispatch "hl.dsp.dpms({ action = \"enable\", monitor = \"$OUTPUT\" })" >/dev/null 2>&1 || true
+  place_workspaces
+  omarchy-notification-send -g 󰍹 "Big monitor enabled" "$OUTPUT"
+}
+
+off() {
+  rm -f "$FLAG"
+  apply
+  omarchy-notification-send -g 󰶐 "Big monitor disabled" "$OUTPUT"
+}
+
+status() {
+  if is_on; then echo on; else echo off; exit 1; fi
+}
+
+case "$1" in
+  on) on ;;
+  off) off ;;
+  toggle) if is_on; then off; else on; fi ;;
+  status) status ;;
+  *)
+    echo "Usage: $(basename "$0") {on|off|toggle|status}" >&2
+    exit 1
+    ;;
+esac
