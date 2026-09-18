@@ -150,6 +150,18 @@ class Menus(Isolated):
         self.assertEqual(menus.parse_answer(single, "Hotline (25)")["values"], ["hotline"])
         self.assertEqual(menus.parse_answer(single, "что-то, с запятой")["free_text"], "что-то, с запятой")
 
+    def test_probe_menu_lists_every_scripted_site_by_name(self):
+        m = menus.probe_menu()
+        labels = [i["label"] for i in m["items"]]
+        self.assertTrue(labels[0].startswith("все 8"))
+        self.assertIn("Епіцентр", labels)
+        self.assertEqual(m["items"][-1]["value"], menus.PROBE_SKIP)
+        self.assertTrue(m["multi"])
+        self.assertEqual(menus.probe_selection([]), {"probe": False, "only": None})
+        self.assertEqual(menus.probe_selection([menus.PROBE_ALL, "hotline"]), {"probe": True, "only": None})
+        self.assertEqual(menus.probe_selection(["hotline", "prom"]), {"probe": True, "only": ["hotline", "prom"]})
+        self.assertEqual(menus.probe_selection(["hotline", menus.PROBE_SKIP])["probe"], False)
+
     def test_topics_and_sessions_menus(self):
         core.create_topic("monitor")
         core.create_session("monitor", "монитор 27", purpose="работа")

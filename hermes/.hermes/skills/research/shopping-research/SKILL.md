@@ -56,10 +56,10 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    (d) extra conditions (рассрочка, гарантия), (e) budget, (f) geo `ua_local` (default) /
    `ua_delivery`. → `shop_create_session`. Done: `search.json` exists.
 3b. Sources — the user decides where to search; you never pick sites for them.
-   `shop_menu(kind="probe")` → `probe` | `probe_exclude` (ask which sites to skip → `exclude`)
-   | `skip`. Then `shop_menu(kind="sources", query=<query>, exclude=…)` — with `probe` the plugin
-   runs the parallel probe first and shows hit counts per site (0-hit sites are named in the
-   question, unprobed browser sites listed last); with `skip` pass `probe=false`. Store the
+   `shop_menu(kind="probe")` shows every probe-able site by name; the result carries
+   `probe: bool` and `only: [...]|null`. Then `shop_menu(kind="sources", query=<query>,
+   probe=<probe>, only=<only>)` — the plugin runs the parallel probe first and shows hit counts
+   per site (0-hit sites are named in the question, unprobed browser sites listed last). Store the
    answer: `shop_update_params(sites=values)`; `free_text` = extra sites the user typed → add
    to `notes`. Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
 4. Candidates — if `hotline` ∈ sites: `shop_sources(group="hotline_filters")` → map the hard spec to filter ids

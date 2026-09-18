@@ -38,11 +38,28 @@ def sessions_menu(topic: str) -> dict:
     return {"question": f"Тема «{topic}»: продолжить сессию или начать новую?", "items": items, "multi": False}
 
 
-def probe_menu(sites_total: int) -> dict:
-    return {"question": f"Сделать зонд по {sites_total} script-источникам (~5 с; без токенов на страницы)?",
-            "items": [{"value": "probe", "label": "да — зонд по всем"},
-                      {"value": "probe_exclude", "label": "зонд — но кое-что исключить"},
-                      {"value": "skip", "label": "нет — сразу выбрать источники"}], "multi": False}
+PROBE_ALL = "__all__"
+PROBE_SKIP = "__skip__"
+
+
+def probe_menu() -> dict:
+    """One screen: every probe-able site listed by name. Tick "все" or individual sites to probe
+    them; "без зонда" (or nothing) skips straight to the source choice."""
+    scripted = [s for s in probe.sites() if s["scripted"]]
+    items = [{"value": PROBE_ALL, "label": f"все {len(scripted)} источников"}]
+    items += [{"value": s["site"], "label": _label(s["title"]), "group": s["group"]} for s in scripted]
+    items.append({"value": PROBE_SKIP, "label": "без зонда — сразу выбрать источники"})
+    return {"question": "Зонд (~5 с; без токенов на страницы): по каким источникам проверить количество позиций? "
+                        "Пробел — отметить; Enter — подтвердить", "items": items, "multi": True}
+
+
+def probe_selection(values: list[str]) -> dict:
+    """Menu answer → {"probe": bool, "only": [...]|None}."""
+    if not values or PROBE_SKIP in values:
+        return {"probe": False, "only": None}
+    if PROBE_ALL in values:
+        return {"probe": True, "only": None}
+    return {"probe": True, "only": [v for v in values if v not in (PROBE_ALL, PROBE_SKIP)]}
 
 
 def sources_menu(probe_result: dict | None = None, exclude: list[str] | None = None) -> dict:

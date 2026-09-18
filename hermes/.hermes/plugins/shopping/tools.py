@@ -63,16 +63,18 @@ def _menu(args: dict, **kw) -> str:
         elif kind == "sessions":
             menu = core.menus.sessions_menu(args["topic"])
         elif kind == "probe":
-            menu = core.menus.probe_menu(sum(1 for s in core.probe_sites() if s["scripted"]))
+            menu = core.menus.probe_menu()
         elif kind == "sources":
             if args.get("query") and args.get("probe", True):
-                pr = core.probe_sites_search(args["query"], exclude=args.get("exclude"))
+                pr = core.probe_sites_search(args["query"], exclude=args.get("exclude"), only=args.get("only"))
             menu = core.menus.sources_menu(pr, exclude=args.get("exclude"))
         elif kind == "candidates":
             menu = core.menus.candidates_menu(args.get("candidates") or [])
         else:
             return json.dumps({"success": False, "error": f"unknown menu kind {kind!r}"})
         res = ui.ask(menu)
+        if kind == "probe":
+            res.update(core.menus.probe_selection(res["values"]))
         if pr:
             res["probe"] = {s["site"]: (s.get("total_est") or s.get("hits")) for s in pr["sites"] if s.get("probed")}
         return json.dumps(res, ensure_ascii=False)
