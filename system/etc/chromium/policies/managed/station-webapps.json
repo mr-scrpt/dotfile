@@ -1,0 +1,8 @@
+{
+  "PasswordManagerEnabled": true,
+  "AutofillCreditCardEnabled": false,
+  "ExtensionInstallBlocklist": ["kfmlopbepahlcjbkfnnklglgibbopkbk"],
+  "ExtensionInstallForcelist": [
+    "nflkcdlimipkgbacnfnhfecjgmojhklo;https://clients2.google.com/service/update2/crx"
+  ]
+}
