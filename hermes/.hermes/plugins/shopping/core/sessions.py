@@ -63,7 +63,7 @@ def list_sessions(topic: str) -> dict:
     return {"success": True, "topic": topic, "sessions": out}
 
 
-def create_session(topic: str, query: str, must=None, nice=None, extra=None, geo: str = "ua_local",
+def create_session(topic: str, query: str, purpose: str = "", must=None, nice=None, extra=None, geo: str = "ua_local",
                    budget_uah=None, notes: str = "", slug: str | None = None) -> dict:
     if not topic_dir(topic).is_dir():
         return err(f"topic {topic!r} does not exist — create it first")
@@ -71,6 +71,8 @@ def create_session(topic: str, query: str, must=None, nice=None, extra=None, geo
         return err(f"geo must be one of {GEO}")
     if not (query or "").strip():
         return err("query must not be empty")
+    if not (purpose or "").strip():
+        return err("purpose must not be empty — ask the user what the item is for (e.g. 'работа: текст, код, YouTube; не игры')")
     base = f"{date.today().isoformat()}_{slug or slugify(query)}"
     sid, n = base, 1
     while SessionPaths(topic, sid).dir.exists():
@@ -78,8 +80,9 @@ def create_session(topic: str, query: str, must=None, nice=None, extra=None, geo
         sid = f"{base}-{n}"
     sp = SessionPaths(topic, sid)
     sp.followups.mkdir(parents=True, exist_ok=True)
-    params = default_params() | {"query": query.strip(), "must": list(must or []), "nice": list(nice or []),
-                                 "extra": list(extra or []), "geo": geo, "budget_uah": budget_uah, "notes": notes}
+    params = default_params() | {"query": query.strip(), "purpose": purpose.strip(), "must": list(must or []),
+                                 "nice": list(nice or []), "extra": list(extra or []), "geo": geo,
+                                 "budget_uah": budget_uah, "notes": notes}
     meta = {"id": sid, "topic": topic, "created": now(), "updated": now(), "status": "draft",
             "params": params, "summary": {}}
     write_json(sp.meta, meta)

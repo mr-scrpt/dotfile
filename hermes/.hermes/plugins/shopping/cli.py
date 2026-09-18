@@ -31,6 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("create-topic"); p.add_argument("slug"); p.add_argument("--title")
     p = sub.add_parser("list-sessions"); p.add_argument("topic")
     p = sub.add_parser("create-session"); p.add_argument("topic"); p.add_argument("--query", required=True)
+    p.add_argument("--purpose", required=True)
     p.add_argument("--must", action="append", default=[]); p.add_argument("--nice", action="append", default=[])
     p.add_argument("--extra", action="append", default=[]); p.add_argument("--geo", default="ua_local", choices=core.GEO)
     p.add_argument("--budget", type=int); p.add_argument("--notes", default=""); p.add_argument("--slug")
@@ -43,6 +44,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("detail", nargs="?")
     p = sub.add_parser("render"); p.add_argument("topic"); p.add_argument("session")
     p = sub.add_parser("sources"); p.add_argument("--group"); p.add_argument("--query")
+    p = sub.add_parser("fetch"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("site"); p.add_argument("model")
+    p.add_argument("--geo", default="ua_local", choices=core.GEO); p.add_argument("--limit", type=int, default=5)
+    p = sub.add_parser("catalog"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("section")
+    p.add_argument("filter_ids", type=int, nargs="+"); p.add_argument("--want", help="JSON: {diagonal_in:[lo,hi],panel_any:[..],resolution:'',refresh_min:N}")
+    p = sub.add_parser("hotline-filters"); p.add_argument("section")
     return ap
 
 
@@ -54,7 +60,7 @@ def run(a: argparse.Namespace) -> dict:
     if a.cmd == "list-sessions":
         return core.list_sessions(a.topic)
     if a.cmd == "create-session":
-        return core.create_session(a.topic, a.query, a.must, a.nice, a.extra, a.geo, a.budget, a.notes, a.slug)
+        return core.create_session(a.topic, a.query, a.purpose, a.must, a.nice, a.extra, a.geo, a.budget, a.notes, a.slug)
     if a.cmd == "get-session":
         return core.get_session(a.topic, a.session)
     if a.cmd == "add-findings":
@@ -68,6 +74,12 @@ def run(a: argparse.Namespace) -> dict:
         out = core.render_report(a.topic, a.session)
         out.pop("markdown", None)
         return out
+    if a.cmd == "fetch":
+        return core.fetch_site(a.topic, a.session, a.site, a.model, a.geo, a.limit)
+    if a.cmd == "catalog":
+        return core.fetch_catalog(a.topic, a.session, a.section, a.filter_ids, json.loads(a.want) if a.want else None)
+    if a.cmd == "hotline-filters":
+        return core.hotline_filters(a.section)
     return core.get_sources(a.group, a.query)
 
 

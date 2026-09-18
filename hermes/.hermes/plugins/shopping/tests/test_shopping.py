@@ -23,7 +23,7 @@ class Base(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         os.environ["SHOPPING_HOME"] = self._tmp.name
         core.create_topic("monitor", "Мониторы")
-        self.sid = core.create_session("monitor", 'монитор 27" OLED', must=["OLED"], geo="ua_local")["session"]["id"]
+        self.sid = core.create_session("monitor", 'монитор 27" OLED', "работа: текст, код", must=["OLED"], geo="ua_local")["session"]["id"]
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -46,15 +46,15 @@ class TopicsSessions(Base):
 
     def test_session_id_is_dated_and_unique(self):
         self.assertTrue(self.sid.startswith("20"))
-        sid2 = core.create_session("monitor", 'монитор 27" OLED')["session"]["id"]
+        sid2 = core.create_session("monitor", 'монитор 27" OLED', "работа")["session"]["id"]
         self.assertNotEqual(self.sid, sid2)
         self.assertTrue(sid2.endswith("-2"))
         self.assertEqual(len(core.list_sessions("monitor")["sessions"]), 2)
 
     def test_session_requires_topic_and_geo(self):
-        self.assertFalse(core.create_session("nope", "x")["success"])
-        self.assertFalse(core.create_session("monitor", "x", geo="mars")["success"])
-        self.assertFalse(core.create_session("monitor", "  ")["success"])
+        self.assertFalse(core.create_session("nope", "x", "p")["success"])
+        self.assertFalse(core.create_session("monitor", "x", "p", geo="mars")["success"])
+        self.assertFalse(core.create_session("monitor", "  ", "p")["success"])
 
     def test_update_params_and_status(self):
         r = core.update_params("monitor", self.sid, status="searching", budget_uah=35000)
@@ -152,7 +152,9 @@ class Sources(Base):
         self.assertTrue(Path(r["path"]).exists())
         self.assertEqual(r["sources"]["marketplaces"]["rozetka"]["search"],
                          "https://rozetka.com.ua/ua/search/?text=LG+27GS95QE-B")
-        self.assertIn('"LG 27GS95QE-B" відгуки', core.get_sources("reviews", "LG 27GS95QE-B")["sources"]["reviews"]["web_search_queries"])
+        self.assertIn('"LG 27GS95QE-B" review', core.get_sources("reviews", "LG 27GS95QE-B")["sources"]["reviews"]["web_search_queries"])
+        self.assertEqual(core.get_sources("hotline_filters")["sources"]["hotline_filters"]["computer/monitory"]["Тип матриці"]["QD-OLED"], 21618415)
+        self.assertEqual(core.get_sources("marketplaces")["sources"]["marketplaces"]["rozetka"]["fetch"], "script")
         self.assertFalse(core.get_sources("nope")["success"])
         self.assertIn("geo", core.get_sources()["sources"])
 

@@ -1,6 +1,10 @@
 # Default source catalogue for the shopping plugin.
 # Copied to ~/shopping/.config/sources.yaml on first use — edit THAT file, not this one.
-# {q} = URL-encoded search query. fetch: browser => use browser_exec (plain fetch is blocked/truncated).
+#
+# fetch (fixed per site, the model never chooses):
+#   script  — shop_fetch / shop_catalog (plugin fetcher: curl + parser; verified on fixtures)
+#   browser — browser_exec (Cloudflare or client-rendered list); no parser yet
+# {q} = URL-encoded search query, {model} = exact model code.
 
 geo:
   default: ua_local
@@ -18,99 +22,110 @@ geo:
 marketplaces:                  # table 1 in report.md
   rozetka:
     title: Rozetka
+    fetch: script              # search API + comments API + card HTML (curl passes; headless browser is Cloudflare-blocked)
     search: "https://rozetka.com.ua/ua/search/?text={q}"
-    fetch: browser
-    notes: "Продавец 'Rozetka' vs сторонний продавец (marketplace) — фиксируй в seller. Отзывы: /comments/ на карточке. Рассрочка: блок 'Оплата частинами' (Моно/Приват)."
-  comfy:
-    title: Comfy
-    search: "https://comfy.ua/ua/search/?q={q}"
-    fetch: browser
-    notes: "Cloudflare — только browser_exec."
-  citrus:
-    title: Цитрус
-    search: "https://citrus.ua/search/?q={q}"
-    fetch: browser
-  allo:
-    title: Алло
-    search: "https://allo.ua/ua/catalogsearch/result/?q={q}"
-    fetch: browser
   foxtrot:
     title: Фокстрот
+    fetch: script
     search: "https://www.foxtrot.com.ua/uk/search?query={q}"
-    fetch: browser
-  eldorado:
-    title: Eldorado
-    search: "https://eldorado.ua/uk/search/?q={q}"
-    fetch: browser
   moyo:
     title: MOYO
+    fetch: script
     search: "https://www.moyo.ua/ua/search/new/?q={q}"
-    fetch: browser
+  allo:
+    title: Алло
+    fetch: script
+    search: "https://allo.ua/ua/catalogsearch/result/?q={q}"
+  comfy:
+    title: Comfy
+    fetch: browser             # Cloudflare
+    search: "https://comfy.ua/ua/search/?q={q}"
+  citrus:
+    title: Цитрус
+    fetch: browser             # list is client-rendered (SSR __NEXT_DATA__ products=[])
+    search: "https://citrus.ua/search/?q={q}"
+  eldorado:
+    title: Eldorado
+    fetch: browser             # client-rendered
+    search: "https://eldorado.ua/uk/search/?q={q}"
   prom:
     title: Prom.ua
+    fetch: browser             # has prom.ua/graphql — candidate for a script fetcher
     search: "https://prom.ua/ua/search?search_term={q}"
-    fetch: browser
     notes: "Много мелких продавцов — рейтинг продавца важнее рейтинга товара."
 
 shops:                         # table 2 in report.md (specialised / smaller retailers)
   telemart:
     title: Telemart
-    search: "https://telemart.ua/ua/category/search/?search_que={q}"
     fetch: browser
+    search: "https://telemart.ua/ua/category/search/?search_que={q}"
   brain:
     title: Brain
+    fetch: browser             # Cloudflare
     search: "https://brain.com.ua/ukr/search/?search={q}"
-    fetch: browser
-    notes: "Cloudflare — только browser_exec."
   ktc:
     title: KTC
+    fetch: browser             # client-rendered
     search: "https://ktc.ua/search/?q={q}"
-    fetch: browser
   elmir:
     title: Elmir
-    search: "https://elmir.ua/ua/search/?q={q}"
     fetch: browser
+    search: "https://elmir.ua/ua/search/?q={q}"
   compx:
     title: CompX
-    search: "https://compx.com.ua/ua/search/?q={q}"
     fetch: browser
+    search: "https://compx.com.ua/ua/search/?q={q}"
 
 aggregators:                   # price comparison — always include links so the user can pick the cheapest shop
   hotline:
     title: Hotline
+    fetch: script              # every page embeds full Nuxt state: catalog (filters+cards), offers per shop, reviews
     search: "https://hotline.ua/ua/sr/?q={q}"
-    fetch: browser
-    notes: "Карточка: /ua/<cat>/<slug>/ ; цены ?tab=prices ; отзывы ?tab=reviews. Рецепт скрапинга категорий — скилл ukraine-hardware-shopping/references/hotline-ua.md"
+    notes: "shop_catalog(section, filter_ids) — ids below; shop_fetch('hotline', model) — min/max + per-shop offers + installment banks."
   ekatalog:
     title: E-Katalog
-    search: "https://ek.ua/ua/ek-list.php?search_={q}"
     fetch: browser
+    search: "https://ek.ua/ua/ek-list.php?search_={q}"
   price:
     title: Price.ua
-    search: "https://price.ua/ua/search?q={q}"
     fetch: browser
+    search: "https://price.ua/ua/search?q={q}"
   pn:
     title: "Прайс Навигатор (pn.com.ua)"
-    search: "https://pn.com.ua/search/?fn={q}"
     fetch: browser
+    search: "https://pn.com.ua/search/?fn={q}"
+
+# hotline category filter ids: join with '-' in the path, e.g. computer/monitory + [24733, 21618415]
+# → https://hotline.ua/ua/computer/monitory/24733-21618415/ . Values not listed here: shop_sources is
+# static — refresh with `cli.py hotline-filters computer/monitory` and paste.
+hotline_filters:
+  computer/monitory:
+    Діагональ екрана: { '24-26"': 348, '27-28"': 24733, '29-30"': 24736, '31-32"': 24734, '34-35"': 576651, '37-41,5"': 576652, '42-44,5"': 20352290 }
+    Тип матриці: { IPS: 358, OLED: 19939994, QD-OLED: 21618415, Nano IPS: 626726, VA: 125602, TN: 355 }
+    Роздільна здатність екрана: { 1920x1080: 9867, 1920x1200: 4145, 2560x1080: 59984, 2560x1440: 17433, 2560x1600: 17431, 3440x1440: 93422, 3840x2160: 64828, 5120x1440: 621253 }
+    Максимальна нативна частота оновлення: { 50-69: 140857, 70-99: 578335, 100-119: 605258, 120-140: 140859, 144: 140860, 150-239: 665044, 240-359: 639732, 360+: 665045 }
+    Тип системи підсвітки: { Mini LED: 20861866, QLED: 20861870, WLED: 20861899 }
+    Особливості конструкції: { Вигнутий екран: 116153, Регулювання по висоті: 14904, Поворотний екран: 5475 }
+    Оснащення: { HDR: 571193, Flicker-Free: 579291, Динаміки: 39 }
+    USB хаб, KVM, Power Delivery: { Power Delivery: 604308, USB Type-C: 21618414, KVM-перемикач: 20609266 }
 
 reviews:                       # where to look for model-specific reviews; {model} = exact model code
-  web_search_queries:
-    - '"{model}" відгуки'
-    - '"{model}" отзывы'
+  web_search_limit: 5
+  web_search_queries:          # exactly these, in this order, one web_search each; no improvised queries
     - '"{model}" review'
+    - '"{model}" відгуки OR отзывы'
     - '"{model}" reddit'
-    - '"{model}" недоліки OR проблеми OR недостатки'
+    - '"{model}" недоліки OR проблеми OR issues'
   sites:
     - { title: RTINGS, search: "https://www.rtings.com/search?q={q}" }
     - { title: Notebookcheck, search: "https://www.notebookcheck.net/Search.1.0.html?search={q}" }
     - { title: TFTCentral, search: "https://tftcentral.co.uk/?s={q}" }
-    - { title: YouTube, search: "https://www.youtube.com/results?search_query={q}+review" }
-    - { title: Reddit, search: "https://www.reddit.com/search/?q={q}" }
-    - { title: "Hotline відгуки", note: "product page ?tab=reviews" }
-    - { title: "Rozetka відгуки", note: "product page /comments/" }
-    - { title: "overclockers.ua forum", search: "https://forum.overclockers.ua/search.php?keywords={q}" }
+    - { title: YouTube, search: "https://www.youtube.com/results?search_query={q}+review", note: "transcript via skill youtube-content" }
+    - { title: "Hotline відгуки", note: "shop_fetch('hotline') / product page ?tab=reviews" }
+    - { title: "Rozetka відгуки", note: "shop_fetch('rozetka') returns review texts" }
+  blocked_for_browser: [reddit.com, bestbuy.com, synccomputers.co.uk, brutreview.com]
   rules:
     - "Отзыв засчитывается только если в нём назван ТОЧНО этот код модели (или он однозначен из заголовка страницы)."
     - "Разные ревизии/суффиксы (напр. -B vs -W, 2024 vs 2025) = разные модели, если не доказано обратное."
     - "Фиксируй конкретные нюансы (скрип пластика, засветы, coil whine, шум БП, гарантийные проблемы), не общее 'хороший монитор'."
+    - "Нюансы взвешиваются под purpose: для текста/кода критичны фринжинг, мерцание, яркость; для игр — VRR, задержка."

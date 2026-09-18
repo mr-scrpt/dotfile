@@ -62,6 +62,8 @@ def _dedupe(items: list[str], limit: int = 6) -> list[str]:
 
 def _params_block(p: dict) -> list[str]:
     lines = [f"- Запрос: {p['query']}"]
+    if p.get("purpose"):
+        lines.append(f"- Назначение: {p['purpose']}")
     for key, label in (("must", "Обязательно"), ("nice", "Желательно"), ("extra", "Доп. условия")):
         if p.get(key):
             lines.append(f"- {label}: " + "; ".join(p[key]))

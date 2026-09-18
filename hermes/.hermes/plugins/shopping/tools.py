@@ -34,7 +34,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_list_topics": _json(core.list_topics),
     "shop_create_topic": _json(core.create_topic, "slug", "title"),
     "shop_list_sessions": _json(core.list_sessions, "topic"),
-    "shop_create_session": _json(core.create_session, "topic", "query", "must", "nice", "extra",
+    "shop_create_session": _json(core.create_session, "topic", "query", "purpose", "must", "nice", "extra",
                                  "geo", "budget_uah", "notes", "slug"),
     "shop_get_session": _json(core.get_session, "topic", "session", "log_tail"),
     "shop_update_params": _update_params,
@@ -45,6 +45,8 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_render_report": _json(core.render_report, "topic", "session"),
     "shop_add_followup": _json(core.add_followup, "topic", "session", "title", "question", "answer_md"),
     "shop_sources": _json(core.get_sources, "group", "query"),
+    "shop_catalog": _json(core.fetch_catalog, "topic", "session", "section", "filter_ids", "want", "max_pages"),
+    "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit"),
 }
 
 
