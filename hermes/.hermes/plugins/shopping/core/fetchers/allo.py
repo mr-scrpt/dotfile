@@ -40,7 +40,8 @@ def parse_search(page: str) -> list[dict]:
     return out
 
 
-def search(query: str) -> list[dict]:
+def search(query: str, meta: dict | None = None) -> list[dict]:
+    del meta  # no site-reported total on this page
     r = get(SEARCH.format(q=quote_plus(query)))
     if r.blocked:
         raise FetchError(f"allo blocked ({r.status})")

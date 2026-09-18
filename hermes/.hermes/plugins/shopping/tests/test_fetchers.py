@@ -65,7 +65,7 @@ class RozetkaParsers(unittest.TestCase):
         ids = rozetka.parse_search(js("rozetka_search.json"))
         self.assertEqual(ids[0], 581847193)
         d = rozetka.parse_details(js("rozetka_details.json"))
-        self.assertEqual(d[511378054], {"rating": 4.4, "rating_count": 79})
+        self.assertEqual(d[511378054], {"rating": 4.4, "rating_count": 79})  # no seller block in this fixture
         cm = rozetka.parse_comments(js("rozetka_comments.json"))
         self.assertEqual(cm["url"], "https://hard.rozetka.com.ua/msi-mag-274qp-qd-oled-x24/p581847193/")
         self.assertEqual((cm["total_comments"], cm["pages"]), (1, 1))

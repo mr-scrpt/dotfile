@@ -35,7 +35,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_create_topic": _json(core.create_topic, "slug", "title"),
     "shop_list_sessions": _json(core.list_sessions, "topic"),
     "shop_create_session": _json(core.create_session, "topic", "query", "purpose", "must", "nice", "extra",
-                                 "geo", "budget_uah", "notes", "slug"),
+                                 "geo", "budget_uah", "notes", "slug", "sites"),
     "shop_get_session": _json(core.get_session, "topic", "session", "log_tail"),
     "shop_update_params": _update_params,
     "shop_add_findings": _json(core.add_findings, "topic", "session", "findings"),
@@ -47,7 +47,44 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_sources": _json(core.get_sources, "group", "query"),
     "shop_catalog": _json(core.fetch_catalog, "topic", "session", "section", "filter_ids", "want", "max_pages"),
     "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit"),
+    "shop_probe": _json(core.probe_sites_search, "query", "exclude", "only"),
 }
+
+
+def _menu(args: dict, **kw) -> str:
+    """shop_menu: build the list in core.menus, render it via ui (host panel), return values."""
+    del kw
+    from . import ui
+    try:
+        kind = args.get("kind")
+        pr = None
+        if kind == "topics":
+            menu = core.menus.topics_menu()
+        elif kind == "sessions":
+            menu = core.menus.sessions_menu(args["topic"])
+        elif kind == "probe":
+            menu = core.menus.probe_menu(sum(1 for s in core.probe_sites() if s["scripted"]))
+        elif kind == "sources":
+            if args.get("query") and args.get("probe", True):
+                pr = core.probe_sites_search(args["query"], exclude=args.get("exclude"))
+            menu = core.menus.sources_menu(pr, exclude=args.get("exclude"))
+        elif kind == "candidates":
+            menu = core.menus.candidates_menu(args.get("candidates") or [])
+        else:
+            return json.dumps({"success": False, "error": f"unknown menu kind {kind!r}"})
+        res = ui.ask(menu)
+        if pr:
+            res["probe"] = {s["site"]: (s.get("total_est") or s.get("hits")) for s in pr["sites"] if s.get("probed")}
+        return json.dumps(res, ensure_ascii=False)
+    except ui.NoUI as e:
+        return json.dumps({"success": False, "error": f"no_ui: {e}",
+                           "fallback": "ask the user in plain text with a numbered list"}, ensure_ascii=False)
+    except Exception as e:  # noqa: BLE001
+        logger.exception("shop_menu failed")
+        return json.dumps({"success": False, "error": f"{type(e).__name__}: {e}"}, ensure_ascii=False)
+
+
+HANDLERS["shop_menu"] = _menu
 
 
 def slash_shop(raw_args: str) -> str:

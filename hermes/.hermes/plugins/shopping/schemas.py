@@ -45,6 +45,7 @@ SHOP_CREATE_SESSION = {
         "purpose": {"type": "string", "description": "e.g. 'работа: текст, код, YouTube; не игры'"},
         "must": _STR_LIST, "nice": _STR_LIST, "extra": {**_STR_LIST, "description": "e.g. оплата частями"},
         "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"}, "slug": {"type": "string"},
+        "sites": {**_STR_LIST, "description": "chosen site keys (from shop_menu sources); may be set later via shop_update_params"},
     }, "required": ["topic", "query", "purpose"]},
 }
 
@@ -56,7 +57,7 @@ SHOP_UPDATE_PARAMS = {
     "parameters": {"type": "object", "properties": {
         **_TS, "status": {"type": "string", "enum": ["draft", "searching", "done"]},
         "query": {"type": "string"}, "purpose": {"type": "string"}, "must": _STR_LIST, "nice": _STR_LIST, "extra": _STR_LIST,
-        "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"},
+        "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"}, "sites": _STR_LIST,
     }, "required": ["topic", "session"]},
 }
 
@@ -100,13 +101,32 @@ SHOP_CATALOG = {
 
 SHOP_FETCH = {
     "name": "shop_fetch",
-    "description": "Scripted site fetch for one model (sites: hotline, rozetka, foxtrot, moyo, allo). Stores matching offers; returns compact offers + rozetka review texts / hotline per-shop prices.",
+    "description": "Scripted site fetch for one model (script sites only, see enum). Stores matching offers; returns compact offers + rozetka review texts / hotline per-shop prices.",
     "parameters": {"type": "object", "properties": {
-        **_TS, "site": {"type": "string", "enum": ["hotline", "rozetka", "foxtrot", "moyo", "allo"]},
+        **_TS, "site": {"type": "string", "enum": ["hotline", "rozetka", "foxtrot", "moyo", "allo", "epicentr", "prom", "telemart"]},
         "model": {"type": "string"}, "geo": _GEO, "limit": {"type": "integer"},
     }, "required": ["topic", "session", "site", "model"]},
 }
 
+SHOP_PROBE = {
+    "name": "shop_probe",
+    "description": "Cheap parallel probe: one search per script site, returns hit counts + 3 sample titles per site (nothing stored, ~5 s). Use before choosing sources.",
+    "parameters": {"type": "object", "properties": {
+        "query": {"type": "string"}, "exclude": {**_STR_LIST, "description": "site keys to skip"}, "only": _STR_LIST,
+    }, "required": ["query"]},
+}
+
+SHOP_MENU = {
+    "name": "shop_menu",
+    "description": "Interactive pick list rendered by the plugin in the host UI (arrows/numbers/checkboxes, one screen). kinds: topics | sessions(topic) | probe | sources(query→probe first) | candidates(candidates). Returns {values:[...], free_text, probe?}. On error no_ui → ask in chat with a numbered list.",
+    "parameters": {"type": "object", "properties": {
+        "kind": {"type": "string", "enum": ["topics", "sessions", "probe", "sources", "candidates"]},
+        "topic": _TOPIC, "query": {"type": "string", "description": "sources: run the probe with this query first"},
+        "exclude": _STR_LIST, "probe": {"type": "boolean", "description": "sources: run shop_probe(query) before listing (default true when query given)"},
+        "candidates": {"type": "array", "items": {"type": "object"}, "description": "candidates: rows from shop_catalog"},
+    }, "required": ["kind"]},
+}
+
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH, SHOP_PROBE, SHOP_MENU]

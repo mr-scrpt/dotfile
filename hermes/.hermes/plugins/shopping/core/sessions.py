@@ -64,7 +64,7 @@ def list_sessions(topic: str) -> dict:
 
 
 def create_session(topic: str, query: str, purpose: str = "", must=None, nice=None, extra=None, geo: str = "ua_local",
-                   budget_uah=None, notes: str = "", slug: str | None = None) -> dict:
+                   budget_uah=None, notes: str = "", slug: str | None = None, sites=None) -> dict:
     if not topic_dir(topic).is_dir():
         return err(f"topic {topic!r} does not exist — create it first")
     if geo not in GEO:
@@ -82,7 +82,7 @@ def create_session(topic: str, query: str, purpose: str = "", must=None, nice=No
     sp.followups.mkdir(parents=True, exist_ok=True)
     params = default_params() | {"query": query.strip(), "purpose": purpose.strip(), "must": list(must or []),
                                  "nice": list(nice or []), "extra": list(extra or []), "geo": geo,
-                                 "budget_uah": budget_uah, "notes": notes}
+                                 "budget_uah": budget_uah, "notes": notes, "sites": list(sites or [])}
     meta = {"id": sid, "topic": topic, "created": now(), "updated": now(), "status": "draft",
             "params": params, "summary": {}}
     write_json(sp.meta, meta)

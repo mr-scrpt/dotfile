@@ -50,15 +50,19 @@ marketplaces:                  # table 1 in report.md
     search: "https://eldorado.ua/uk/search/?q={q}"
   prom:
     title: Prom.ua
-    fetch: browser             # has prom.ua/graphql — candidate for a script fetcher
+    fetch: script              # SSR: product blocks with ld+json + seller reliability %
     search: "https://prom.ua/ua/search?search_term={q}"
-    notes: "Много мелких продавцов — рейтинг продавца важнее рейтинга товара."
+    notes: "Много мелких продавцов — надёжность продавца (%) важнее рейтинга товара."
+  epicentr:
+    title: Епіцентр
+    fetch: script              # Nuxt state: own stock (Епіцентр) + marketplace sellers; строительство, ремонт, сад, электрика
+    search: "https://epicentrk.ua/ua/search/?q={q}"
 
 shops:                         # table 2 in report.md (specialised / smaller retailers)
   telemart:
     title: Telemart
-    fetch: browser
-    search: "https://telemart.ua/ua/category/search/?search_que={q}"
+    fetch: script              # SSR cards; site search is strict AND — use short queries (brand + model)
+    search: "https://telemart.ua/ua/search/{q}/"
   brain:
     title: Brain
     fetch: browser             # Cloudflare

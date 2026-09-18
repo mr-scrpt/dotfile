@@ -124,7 +124,8 @@ def _page(url: str) -> str:
     return r.text
 
 
-def search(query: str) -> list[dict]:
+def search(query: str, meta: dict | None = None) -> list[dict]:
+    del meta  # no site-reported total on this page
     return parse_search(_page(f"{BASE}/ua/sr/?q={quote_plus(query)}"))
 
 

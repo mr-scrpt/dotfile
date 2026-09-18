@@ -61,9 +61,15 @@ def text(fragment: str) -> str:
 
 
 def to_int(s) -> int | None:
+    """'24 999 ₴' → 24999; '11008.01' → 11008 (decimal part dropped, not glued)."""
     if s is None:
         return None
-    digits = _NUM.sub("", str(s))
+    if isinstance(s, (int, float)):
+        return int(s)
+    m = re.search(r"\d[\d\s\u00a0]*", str(s))
+    if not m:
+        return None
+    digits = re.sub(r"\D", "", m.group(0))
     return int(digits) if digits else None
 
 

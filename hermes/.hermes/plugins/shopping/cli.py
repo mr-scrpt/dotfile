@@ -49,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("catalog"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("section")
     p.add_argument("filter_ids", type=int, nargs="+"); p.add_argument("--want", help="JSON: {diagonal_in:[lo,hi],panel_any:[..],resolution:'',refresh_min:N}")
     p = sub.add_parser("hotline-filters"); p.add_argument("section")
+    p = sub.add_parser("probe", help="parallel hit-count probe on scripted sites"); p.add_argument("query")
+    p.add_argument("--exclude", nargs="*", default=None); p.add_argument("--only", nargs="*", default=None)
+    p.add_argument("--table", action="store_true", help="human table instead of JSON")
     return ap
 
 
@@ -80,11 +83,27 @@ def run(a: argparse.Namespace) -> dict:
         return core.fetch_catalog(a.topic, a.session, a.section, a.filter_ids, json.loads(a.want) if a.want else None)
     if a.cmd == "hotline-filters":
         return core.hotline_filters(a.section)
+    if a.cmd == "probe":
+        return core.probe_sites_search(a.query, a.exclude, a.only)
     return core.get_sources(a.group, a.query)
 
 
+def _probe_table(out: dict) -> str:
+    rows = []
+    for s in out["sites"]:
+        n = s.get("total_est") or s.get("hits")
+        tag = "без зонда" if not s.get("probed") else (s.get("error") or (f"{n}" if n else "0"))
+        smp = "; ".join(f"{x['title'][:38]} {x['price_uah'] or ''}".strip() for x in s.get("sample", [])[:2])
+        rows.append(f"{s['site']:<10} {s['group']:<12} {tag:<22} {smp}")
+    return "\n".join(rows)
+
+
 def main(argv=None) -> int:
-    out = run(build_parser().parse_args(argv))
+    a = build_parser().parse_args(argv)
+    out = run(a)
+    if getattr(a, "table", False) and out.get("success"):
+        print(_probe_table(out))
+        return 0
     print(json.dumps(out, ensure_ascii=False, indent=1))
     return 0 if out.get("success", True) else 1
 

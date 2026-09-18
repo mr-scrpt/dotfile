@@ -17,20 +17,30 @@ from ..http import FetchError, get, get_json, ld_json, text, to_int
 
 SITE, GROUP = "rozetka", "marketplace"
 SEARCH = "https://search.rozetka.com.ua/ua/search/api/v6/?front-end=true&text={q}&lang=ua"
-DETAILS = "https://xl-catalog-api.rozetka.com.ua/v4/goods/getDetails?front-end=true&product_ids={ids}&lang=ua"
+DETAILS = "https://xl-catalog-api.rozetka.com.ua/v4/goods/getDetails?front-end=true&product_ids={ids}&lang=ua&with_extra_info=true"
 COMMENTS = ("https://product-api.rozetka.com.ua/v4/comments/get?front-end=true&goods={id}&page={page}"
             "&sort=date&limit=30&lang=ua&type=comment")
 EU_MARKERS = ("Rozetka EU", "Доставка з Європи", "з ЄС", "з-за кордону")
 
 
 # ------------------------------------------------------------------ pure parsers
-def parse_search(raw: dict) -> list[int]:
-    return [g["id"] for g in (raw.get("data") or {}).get("goods") or [] if g.get("id")]
+def parse_search(raw: dict, meta: dict | None = None) -> list[int]:
+    d = raw.get("data") or {}
+    if meta is not None:
+        meta["total_est"] = (d.get("quantities") or {}).get("goods_quantity_total_found")
+    return [g["id"] for g in d.get("goods") or [] if g.get("id")]
 
 
 def parse_details(raw: dict) -> dict[int, dict]:
-    return {d["id"]: {"rating": d.get("comments_mark"), "rating_count": d.get("comments_amount")}
-            for d in raw.get("data") or []}
+    """getDetails(+with_extra_info): rating, count, seller name (marketplace sellers included)."""
+    out = {}
+    for d in raw.get("data") or []:
+        row = {"rating": d.get("comments_mark"), "rating_count": d.get("comments_amount")}
+        seller = (d.get("seller") or {}).get("title")
+        if seller:
+            row["seller"] = seller
+        out[d["id"]] = row
+    return out
 
 
 def parse_comments(raw: dict) -> dict:
@@ -88,29 +98,44 @@ def seller_from_url(url: str) -> str:
     return "продавец маркетплейса" if m.group(1).isdigit() else "Rozetka"
 
 
+def _seller(details_row: dict, url: str) -> str:
+    """Real seller name from getDetails when present; else the URL-shape heuristic."""
+    name = details_row.get("seller")
+    if name and name.lower() != "rozetka":
+        return f"{name} (маркетплейс)"
+    return name or seller_from_url(url)
+
+
 # ------------------------------------------------------------------ network
-def search(query: str, limit: int = 5, with_card: bool = True, comments_pages: int = 1) -> list[dict]:
-    """Findings for the top `limit` search hits. Each: offer fields + `reviews` (list) for the caller."""
-    ids = parse_search(get_json(SEARCH.format(q=quote_plus(query))))[:limit]
+def search(query: str, meta: dict | None = None, limit: int = 5, with_card: bool = True,
+           comments_pages: int = 1) -> list[dict]:
+    """Findings for the top `limit` search hits. Each: offer fields + `reviews` (list) for the caller.
+    `comments_pages=0` = probe mode: titles/ratings from the details API only (2 requests total)."""
+    ids = parse_search(get_json(SEARCH.format(q=quote_plus(query))), meta)[:limit]
     if not ids:
         return []
     details = parse_details(get_json(DETAILS.format(ids=",".join(map(str, ids)))))
     out = []
     for gid in ids:
         cm = parse_comments(get_json(COMMENTS.format(id=gid, page=1)))
+        det = details.get(gid, {})
+        if comments_pages == 0:  # probe mode: title/url/rating only, no card, comments dropped
+            out.append({"group": GROUP, "source": SITE, "title": cm.get("title") or "", "url": cm.get("url") or "",
+                        "rating": det.get("rating") or None, "rating_count": det.get("rating_count") or None,
+                        "seller": _seller(det, cm.get("url") or "")})
+            continue
         for p in range(2, min(cm.get("pages") or 1, comments_pages) + 1):
             cm["comments"] += parse_comments(get_json(COMMENTS.format(id=gid, page=p)))["comments"]
         f = {"group": GROUP, "source": SITE, "title": cm.get("title") or "", "url": cm.get("url") or "",
-             "rating": details.get(gid, {}).get("rating") or None, "rating_count": details.get(gid, {}).get("rating_count") or None,
-             "seller": seller_from_url(cm.get("url") or ""), "reviews": cm["comments"]}
+             "rating": det.get("rating") or None, "rating_count": det.get("rating_count") or None,
+             "seller": _seller(det, cm.get("url") or ""), "reviews": cm["comments"]}
         if with_card and f["url"]:
             r = get(f["url"].replace("rozetka.com.ua/", "rozetka.com.ua/ua/") if "/ua/" not in f["url"] else f["url"])
             if r.blocked:
                 f["notes"] = f"card blocked ({r.status}); price unavailable"
             else:
                 card = parse_card(r.text)
-                if not card.get("seller"):
-                    card.pop("seller", None)
+                card.pop("seller", None)  # getDetails seller is authoritative; card text is unreliable
                 f.update({k: v for k, v in card.items() if v not in (None, "", [])})
         out.append(f)
     return out

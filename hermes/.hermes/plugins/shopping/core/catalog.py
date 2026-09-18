@@ -16,9 +16,15 @@ def path() -> Path:
 
 
 def ensure() -> Path:
+    """Copy the seed into ~/shopping/.config once; re-copy when the plugin seed is newer (keeps the user
+    copy in sync with plugin updates). A user who edits the copy keeps the edits until the next seed bump —
+    the previous copy is kept as sources.yaml.bak so nothing is lost."""
     p = path()
+    p.parent.mkdir(parents=True, exist_ok=True)
     if not p.exists():
-        p.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(SEED, p)
+    elif SEED.stat().st_mtime > p.stat().st_mtime:
+        shutil.copy2(p, p.with_suffix(".yaml.bak"))
         shutil.copy2(SEED, p)
     return p
 

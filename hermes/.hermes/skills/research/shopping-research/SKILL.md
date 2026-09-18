@@ -1,7 +1,7 @@
 ---
 name: shopping-research
 description: "Use when the user wants to find/compare goods to buy in Ukraine."
-version: 0.2.0
+version: 0.3.0
 author: mr-scrpt, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -25,42 +25,56 @@ Not for price alerts (`product-price-monitor`) or a quick tier guide (`ukraine-h
 
 ## Prerequisites
 
-- Plugin `shopping` enabled; its 15 `shop_*` tools are plugin tools → behind progressive
+- Plugin `shopping` enabled; its 17 `shop_*` tools are plugin tools → behind progressive
   disclosure. First action of every session: `tool_describe` for the names you will use
-  (at least `shop_list_topics, shop_list_sessions, shop_create_session, shop_get_session,
-  shop_sources, shop_catalog, shop_fetch, shop_add_findings, shop_log, shop_set_summary,
-  shop_render_report`), then call through `tool_call`. Absence from the direct list ≠ disabled.
+  (at least `shop_menu, shop_create_topic, shop_create_session, shop_get_session, shop_sources,
+  shop_catalog, shop_fetch, shop_add_findings, shop_log, shop_set_summary, shop_render_report`),
+  then call through `tool_call`. Absence from the direct list ≠ disabled.
+- Every choice the user makes goes through `shop_menu` (the plugin renders a native pick list:
+  arrows / numbers / Space checkboxes / "Other" free text). Never rebuild such lists as text.
+  Only if `shop_menu` returns `no_ui` (gateway) ask the same thing as a numbered list in chat.
 - `web_search` backend is `ddgs` (keyless). `browser_exec` only for sites marked `fetch: browser`.
 - Load this skill ONCE per session; do not re-read it.
 - Russian for everything user-facing and for `report.md`.
 
 ## Procedure (fixed order; each step has a done-criterion)
 
-Ask the user one question at a time, plain text, numbered options.
+Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plain question each.
 
-1. Topic — `shop_list_topics` → numbered list + "новая тема". New → `shop_create_topic`.
-   Done: topic slug chosen.
-2. Session — `shop_list_sessions(topic)` → "новый поиск" or an existing id. Resume →
+1. Topic — `shop_menu(kind="topics")` → slug or `__new_topic__` → ask slug/title →
+   `shop_create_topic`. Done: topic slug chosen.
+2. Session — `shop_menu(kind="sessions", topic)` → id or `__new_session__`. Resume →
    `shop_get_session` → say in 2 lines where it stopped (`log_tail`: last `source_done` /
-   `source_blocked` / `next`) and continue from the first unfinished step below.
+   `source_blocked` / `next`) and continue from the first unfinished step below; if
+   `params.sites` is empty the session still needs step 3b.
    Done: session id fixed.
 3. Brief (new session) — collect, one question each:
    (a) что ищем + hard spec (`query`, `must`), (b) **назначение** (`purpose`: для чего —
    работа/текст/код/видео/игры/…; mandatory, the tool rejects an empty one), (c) nice-to-have,
    (d) extra conditions (рассрочка, гарантия), (e) budget, (f) geo `ua_local` (default) /
    `ua_delivery`. → `shop_create_session`. Done: `search.json` exists.
-4. Candidates — `shop_sources(group="hotline_filters")` → map the hard spec to filter ids
+3b. Sources — the user decides where to search; you never pick sites for them.
+   `shop_menu(kind="probe")` → `probe` | `probe_exclude` (ask which sites to skip → `exclude`)
+   | `skip`. Then `shop_menu(kind="sources", query=<query>, exclude=…)` — with `probe` the plugin
+   runs the parallel probe first and shows hit counts per site (0-hit sites are named in the
+   question, unprobed browser sites listed last); with `skip` pass `probe=false`. Store the
+   answer: `shop_update_params(sites=values)`; `free_text` = extra sites the user typed → add
+   to `notes`. Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
+4. Candidates — if `hotline` ∈ sites: `shop_sources(group="hotline_filters")` → map the hard spec to filter ids
    (diagonal, panel, resolution; refresh as a range id when it is a lower bound → use the
    `want.refresh_min` instead of a frequency id). `shop_catalog(section, filter_ids, want)`
    where `want` = the numeric hard spec. Result = every model on the UA market matching the
    spec, with min–max price, offers and reviews count. If `matched` > 12, narrow with the user
    (budget / brand / nice-to-have) and re-run; if 0, relax one `must` and re-run.
-   Done: 3–12 candidate model codes, `source_done` logged by the tool.
-5. Offers — for EVERY candidate and EVERY site with `fetch: script` in `shop_sources`
-   (`marketplaces` + `aggregators`; today: hotline, rozetka, foxtrot, moyo, allo):
-   `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns compact
-   data; you only read it. Sites with `fetch: browser` (comfy, citrus, eldorado, prom, shops
-   table): open the `search` URL in `browser_exec`, take the first exact-model card, store via
+   If `hotline` ∉ sites (e.g. стройка, инверторы): `shop_probe(query, only=sites)` samples are
+   the seed — take the distinct model codes from the titles of the chosen script sites.
+   Then `shop_menu(kind="candidates", candidates=[…])` → the user ticks which models to compare.
+   Done: 1–12 candidate model codes chosen by the user, `source_done` logged.
+5. Offers — for EVERY chosen candidate and EVERY site in `params.sites` with `fetch: script`
+   (`shop_sources` says which; today: hotline, rozetka, foxtrot, moyo, allo, epicentr, prom,
+   telemart): `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns
+   compact data; you only read it. Chosen sites with `fetch: browser` (comfy, citrus, eldorado,
+   brain, ktc, …): open the `search` URL in `browser_exec`, take the first exact-model card, store via
    `shop_add_findings`; on "Just a moment"/empty → `shop_log(source_blocked)` and move on.
    Never retry a blocked site more than once. Done: each candidate has ≥1 marketplace finding
    or a `source_blocked` line per missing site.
@@ -89,14 +103,16 @@ Ask the user one question at a time, plain text, numbered options.
 - Never print raw HTML/JSON from a page; scripted tools already return compact data.
 - `shop_render_report` is called once at the end (and once per follow-up); read the file once.
 - `web_search` limit 5, exactly the template queries; no improvised queries.
+- `shop_probe` costs one compact JSON (~1.5k chars for 8 sites); `browser_exec` costs 10–50× that.
 - Read `shop_list_findings` with `fields` when you only need a subset.
 - Prefer `shop_fetch`/`shop_catalog` over `browser_exec` whenever `fetch: script`.
 
 ## Plugin layout (maintenance)
 
 `~/.hermes/plugins/shopping/` → stow link into `~/Hellkitchen/dotfile/hermes/`:
-`core/` (fs → http → model/catalog → sessions/findings → fetchers/* → fetch → report),
-`schemas.py`, `tools.py`, `cli.py`, `data/sources.yaml`, `tests/` (fixtures in
+`core/` (fs → http → model/catalog → sessions/findings → fetchers/* → fetch/probe → report/menus),
+`ui.py` (the only module touching the host choice panel), `schemas.py`, `tools.py`, `cli.py`,
+`data/sources.yaml`, `tests/` (fixtures in
 `tests/fixtures/*.gz`; run `~/.hermes/hermes-agent/venv/bin/python -m unittest discover -s tests`).
 New site: add `core/fetchers/<site>.py` (parse_search + search), a fixture, a test, register in
 `fetchers/__init__.py`, flip `fetch: script` in `data/sources.yaml`, then
@@ -116,8 +132,8 @@ New site: add `core/fetchers/<site>.py` (parse_search + search), a fixture, a te
 
 ## Verification
 
-- [ ] `search.json` has a non-empty `purpose`.
+- [ ] `search.json` has a non-empty `purpose` and a non-empty `sites` chosen by the user.
 - [ ] `shop_get_session`: status `done`; `findings_by_group` has aggregator, marketplace, review.
-- [ ] Every scripted site was called for every candidate (log has `source_done`/`source_blocked` per site×model).
+- [ ] Every site in `params.sites` was called for every candidate (log has `source_done`/`source_blocked` per site×model).
 - [ ] Verdict references the purpose; every nuance traces to a `review` finding.
 - [ ] Markdown pasted verbatim + absolute `report.md` path given.

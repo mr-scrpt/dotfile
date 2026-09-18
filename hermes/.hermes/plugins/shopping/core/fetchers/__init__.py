@@ -3,7 +3,8 @@
 Contract (every fetcher module):
     SITE: str                                  # key in sources.yaml
     GROUP: "marketplace" | "shop" | "aggregator"
-    def search(query: str) -> list[dict]       # offers/cards matching a free-text query (network)
+    def search(query: str, meta: dict|None=None) -> list[dict]  # offers/cards for a free-text query (network);
+                                               # fetchers may fill meta['total_est'] (site-reported hit count)
     def parse_search(raw: str) -> list[dict]   # pure: same, from saved text (tests)
 Optional:
     def card(url: str) -> dict                 # offer detail + reviews (network)
@@ -19,7 +20,8 @@ from __future__ import annotations
 
 from importlib import import_module
 
-REGISTRY = {"hotline": "hotline", "rozetka": "rozetka", "foxtrot": "foxtrot", "moyo": "moyo", "allo": "allo"}
+REGISTRY = {"hotline": "hotline", "rozetka": "rozetka", "foxtrot": "foxtrot", "moyo": "moyo", "allo": "allo",
+            "epicentr": "epicentr", "prom": "prom", "telemart": "telemart"}
 
 
 def get(site: str):

@@ -18,7 +18,8 @@ SESSION_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(_[a-z0-9-]+)?(-\d+)?$")
 
 
 def default_params() -> dict:
-    return {"query": "", "purpose": "", "must": [], "nice": [], "extra": [], "geo": "ua_local", "budget_uah": None, "notes": ""}
+    return {"query": "", "purpose": "", "must": [], "nice": [], "extra": [], "geo": "ua_local", "budget_uah": None,
+            "notes": "", "sites": []}  # sites: [] = not chosen yet; the skill must ask before searching
 
 
 @dataclass(frozen=True)

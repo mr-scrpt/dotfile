@@ -85,7 +85,7 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
     except KeyError as e:
         return err(str(e))
     try:
-        hits = mod.search(model) if site != "rozetka" else mod.search(model, limit=limit)
+        hits = mod.search(model, limit=limit) if site == "rozetka" else mod.search(model)
     except Exception as e:  # noqa: BLE001
         sessions.log_event(topic, session, "source_blocked", f"{site}: {model}: {e}")
         return err(f"{site} failed: {e}", site=site, model=model)
