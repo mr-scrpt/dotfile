@@ -36,10 +36,13 @@ def fmt_price(f: dict) -> str:
 
 
 def fmt_rating(f: dict) -> str:
-    if f.get("rating") is None and f.get("rating_count") is None:
+    """'4.4 (79)' | '4.4' | '— (1 отз.)' | '—'."""
+    r, n = f.get("rating"), f.get("rating_count")
+    if r is None and n is None:
         return "—"
-    r = f"{f['rating']:g}" if f.get("rating") is not None else "?"
-    return f"{r} ({f['rating_count']})" if f.get("rating_count") is not None else r
+    if r is None:
+        return f"— ({n} отз.)"
+    return f"{r:g} ({n})" if n is not None else f"{r:g}"
 
 
 def fmt_installment(f: dict) -> str:

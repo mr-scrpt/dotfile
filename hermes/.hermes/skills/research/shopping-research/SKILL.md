@@ -131,6 +131,30 @@ test, then `hermes plugins doctor ~/.hermes/plugins/shopping --ci`.
   read it back in `execute_code`.
 - Rozetka: price on the search grid can differ from the card; open the card. "Rozetka EU" in
   the seller block = delivery scope, not local.
+- Rozetka blocks the automated browser with a Cloudflare interstitial (clicking the checkbox
+  does not help), but plain `curl -A <Chrome UA>` gets everything: search IDs via
+  `https://search.rozetka.com.ua/ua/search/api/v6/?front-end=true&text=<q>&lang=ua`
+  (`data.goods[].id`), canonical card URL + rating via
+  `https://product-api.rozetka.com.ua/v4/comments/get?front-end=true&goods=<id>&page=1&sort=date&limit=30&lang=ua&type=comment`
+  (`data.record.href`, `data.total_comments`, `data.comments[]` — parse with
+  `json.loads(raw, strict=False)`), then curl the card HTML (`hard.rozetka.com.ua/...`) and
+  strip tags: price sits before "Оплатити частинами", installment lines look like
+  "Rozetka / від / 8333 / ₴ / x 3 / ПриватБанк …", seller in each review "Продавець: X".
+  `xl-catalog-api…/v4/goods/getDetails` returns only docket/rating, no price.
+- Review pages that bot-wall the browser: reddit (www and old), bestbuy, synccomputers;
+  `brutreview.com` hangs the CDP tab (do not open). YouTube reviews: fetch the transcript via
+  skill `youtube-content` (`uv run --with youtube-transcript-api python …/fetch_transcript.py URL --text-only`).
+- Browser daemon stuck ("timed out after 5s waiting for the daemon" on every call, even `js('1+1')`):
+  a tab is hung. `curl http://127.0.0.1:<port>/json/list` (port = `--remote-debugging-port` of the
+  headless chromium in `ps`), `curl http://127.0.0.1:<port>/json/close/<id>` for the stuck
+  page(s), then `ensure_real_tab()` works again. Killing daemons/chromium alone does not help.
+  Navigate risky sites with `cdp("Page.navigate", url=…)` + `time.sleep` + `cdp("Page.stopLoading")`
+  instead of `goto_url`/`wait_for_load`.
+- This SKILL.md is a stow symlink into `~/Hellkitchen/dotfile/hermes/`; `skill_manage` does not
+  see it — edit with `patch` on `~/.hermes/skills/research/shopping-research/SKILL.md`.
+- Rozetka comments are their own source: store them as a separate `review` finding
+  (`source: rozetka-comments`, url = card `/comments/`), not folded into a YouTube/RTINGS record —
+  the report shows per-source attribution and the reader must see where each nuance came from.
 - Follow-ups live in `followups/`; never edit `report.md` by hand — it is regenerated.
 
 ## Verification

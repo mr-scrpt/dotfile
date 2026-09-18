@@ -99,6 +99,13 @@ class Findings(Base):
         self.assertEqual(F.normalize_url("HTTPS://Rozetka.com.ua/ua/p1/?utm_source=a&b=1"), "https://rozetka.com.ua/ua/p1?b=1")
         self.assertEqual(F.normalize_model("lg 27gs95qe-b"), "LG27GS95QEB")
 
+    def test_fmt_rating_without_score(self):
+        from shopping.core.report import fmt_rating
+        self.assertEqual(fmt_rating({"rating": None, "rating_count": 1}), "— (1 отз.)")
+        self.assertEqual(fmt_rating({"rating": 4.4, "rating_count": 79}), "4.4 (79)")
+        self.assertEqual(fmt_rating({"rating": 5.0}), "5")
+        self.assertEqual(fmt_rating({}), "—")
+
     def test_filters(self):
         self.add(OFFER, {"group": "review", "model": "lg-27gs95qe-b", "url": "https://r/1", "nuances": ["coil whine"]})
         self.assertEqual(core.list_findings("monitor", self.sid, group="review")["count"], 1)
