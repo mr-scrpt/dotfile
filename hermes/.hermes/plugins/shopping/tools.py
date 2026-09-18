@@ -87,9 +87,27 @@ def _menu(args: dict, **kw) -> str:
 HANDLERS["shop_menu"] = _menu
 
 
-def slash_shop(raw_args: str) -> str:
-    """/shop [topic] [session] — status without spending model turns."""
-    parts = raw_args.split()
+START_PROMPT = (
+    "Загрузи скилл shopping-research (skill_view) и веди меня по его процедуре с шага 1: "
+    "тема → сессия → бриф → зонд → источники → кандидаты → поиск → отчёт. "
+    "Все списки — через shop_menu; свободные поля спрашивай по одному. Начинай."
+)
+
+
+def make_slash_shop(inject) -> Callable[[str], str]:
+    """/shop → start the guided flow (injects the start prompt as a user turn);
+    /shop status [topic] [session] → state without spending model turns."""
+    def slash_shop(raw_args: str) -> str:
+        parts = raw_args.split()
+        if not parts or parts[0] in ("start", "new"):
+            return "Запускаю поиск…" if inject(START_PROMPT) else "Не удалось запустить (нет активной сессии чата)."
+        if parts[0] == "status":
+            parts = parts[1:]
+        return _status(parts)
+    return slash_shop
+
+
+def _status(parts: list[str]) -> str:
     if not parts:
         t = core.list_topics()
         if not t["topics"]:

@@ -37,6 +37,8 @@ Not for price alerts (`product-price-monitor`) or a quick tier guide (`ukraine-h
 - Load this skill ONCE per session; do not re-read it.
 - Russian for everything user-facing and for `report.md`.
 
+Entry point for the user: `/shop` (the plugin injects the start prompt) — or any "найди …" message.
+
 ## Procedure (fixed order; each step has a done-criterion)
 
 Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plain question each.

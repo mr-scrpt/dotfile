@@ -13,5 +13,6 @@ def register(ctx):
     for schema in schemas.ALL:
         ctx.register_tool(name=schema["name"], toolset="shopping", schema=schema,
                           handler=tools.HANDLERS[schema["name"]], emoji="🛒")
-    ctx.register_command("shop", tools.slash_shop,
-                         description="Shopping research: topics / sessions / status", args_hint="[topic] [session]")
+    ctx.register_command("shop", tools.make_slash_shop(lambda text: ctx.inject_message(text, role="user")),
+                         description="Shopping research: /shop = start guided search; /shop status [topic] [session]",
+                         args_hint="[status] [topic] [session]")

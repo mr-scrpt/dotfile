@@ -194,10 +194,14 @@ class Adapters(Base):
         self.assertEqual({s["name"] for s in schemas.ALL}, set(tools.HANDLERS))
 
     def test_slash_command(self):
-        self.assertIn("monitor", tools.slash_shop(""))
-        self.assertIn(self.sid, tools.slash_shop("monitor"))
-        self.assertIn("findings_total", tools.slash_shop(f"monitor {self.sid}"))
-        self.assertIn("not found", tools.slash_shop("monitor nope"))
+        self.assertIn("monitor", tools.make_slash_shop(lambda t: True)("status " + ""))
+        self.assertIn(self.sid, tools.make_slash_shop(lambda t: True)("status " + "monitor"))
+        self.assertIn("findings_total", tools.make_slash_shop(lambda t: True)("status " + f"monitor {self.sid}"))
+        sent = []
+        self.assertIn("Запускаю", tools.make_slash_shop(lambda t: sent.append(t) or True)(""))
+        self.assertIn("shopping-research", sent[0])
+        self.assertIn("Не удалось", tools.make_slash_shop(lambda t: False)("start"))
+        self.assertIn("not found", tools.make_slash_shop(lambda t: True)("status " + "monitor nope"))
 
     def test_cli_roundtrip(self):
         out = cli.run(cli.build_parser().parse_args(["add-findings", "monitor", self.sid, "--json", json.dumps([OFFER])]))
