@@ -123,19 +123,39 @@ class Report(Base):
                  {"group": "review", "source": "reddit", "model": "LG 27GS95QE-B", "url": "https://r/1",
                   "nuances": ["coil whine"], "model_match": "exact"})
         core.set_summary("monitor", self.sid, "Берём LG.", [{"model": "LG 27GS95QE-B", "why": "дешевле"}], ["цены на 18.09"])
-        md = core.render_report("monitor", self.sid)["markdown"]
+        md = core.render_report("monitor", self.sid, full=True)["markdown"]
         for h in ("## 1. Маркетплейсы", "## 2. Магазины", "## 3. Агрегаторы", "## 4. Отзывы", "## 5. Итог"):
             self.assertIn(h, md)
         self.assertIn("31 999 ₴", md)
         self.assertIn("29 999 – 34 500 ₴", md)
         self.assertIn("| да: Моно 10 |", md)
-        self.assertEqual(md.count("coil whine"), 3)  # marketplace row + shop row + reviews block
+        self.assertEqual(md.count("coil whine"), 3)  # marketplace table + shop table (separate tables) + reviews block
+        self.assertNotIn("см. выше", md)             # one row per model per table here
+        compact = core.render_report("monitor", self.sid)
+        self.assertNotIn("markdown", compact)
+        self.assertEqual(compact["rows"]["marketplace"], 1)
+        self.assertEqual(compact["picks"], ["LG 27GS95QE-B"])
         self.assertIn("⚠ coil whine", md)
         self.assertIn("совпадение модели: exact", md)
         self.assertTrue(Path(core.get_session("monitor", self.sid)["report_path"]).exists())
 
+    def test_offers_collapse_per_seller_and_hide_zero_rating(self):
+        base = {"group": "marketplace", "source": "rozetka", "model": "LG 27GS95QE-B"}
+        self.add(dict(base, url="https://r/a", title="LG A", price_uah=25000, seller="Rozetka", rating=4.4, rating_count=79),
+                 dict(base, url="https://r/b", title="LG B", price_uah=25100, seller="продавец маркетплейса"),
+                 dict(base, url="https://r/c", title="LG C", price_uah=24900, seller="продавец маркетплейса"),
+                 dict(base, url="https://r/d", title="LG D", price_uah=24000, seller="продавец маркетплейса", availability="немає"))
+        md = core.render_report("monitor", self.sid, full=True)["markdown"]
+        rows = [l for l in md.splitlines() if l.startswith("| ") and "LG " in l]
+        self.assertEqual(len(rows), 2)                      # Rozetka + one marketplace-seller row
+        self.assertIn("24 900 ₴", rows[0])                  # cheapest in-stock third-party wins
+        self.assertIn("(+2 дубл.)", rows[0])
+        self.assertIn("| — |", rows[0])                     # no "0 (0)" rating
+        self.assertIn("4.4 (79)", rows[1])
+        self.assertIn("см. выше", rows[1])                  # nuances printed once per model per table
+
     def test_empty_report_and_followup(self):
-        md = core.render_report("monitor", self.sid)["markdown"]
+        md = core.render_report("monitor", self.sid, full=True)["markdown"]
         self.assertIn("_нет данных_", md)
         self.assertNotIn("## 6.", md)
         r = core.add_followup("monitor", self.sid, "Гарантия LG", "что по гарантии?", "3 года.")

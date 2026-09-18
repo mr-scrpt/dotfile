@@ -78,8 +78,8 @@ SHOP_SET_SUMMARY = {
     }, "required": ["topic", "session"]},
 }
 
-SHOP_RENDER_REPORT = {"name": "shop_render_report", "description": "Render report.md; returns the markdown to show the user verbatim.",
-                      "parameters": {"type": "object", "properties": _TS, "required": ["topic", "session"]}}
+SHOP_RENDER_REPORT = {"name": "shop_render_report", "description": "Render report.md; returns path + row counts (markdown only with full=true). Show the file to the user with read_file.",
+                      "parameters": {"type": "object", "properties": {**_TS, "full": {"type": "boolean"}}, "required": ["topic", "session"]}}
 
 SHOP_ADD_FOLLOWUP = {"name": "shop_add_followup", "description": "Save a follow-up Q&A under the session and relink report.md.",
                      "parameters": {"type": "object", "properties": {**_TS, "title": {"type": "string"}, "question": {"type": "string"}, "answer_md": {"type": "string"}}, "required": ["topic", "session", "title", "question", "answer_md"]}}

@@ -79,13 +79,15 @@ Ask the user one question at a time, plain text, numbered options.
    brightness, matte coating; games: VRR, latency). Done: ≥2 review findings per shortlisted
    model or a `note` that none exist.
 7. Verdict — `shop_set_summary(verdict, picks, caveats, status="done")`: verdict must state
-   how the pick fits the `purpose`. `shop_render_report` → paste the returned markdown
-   verbatim + the `report.md` path. Done: `report_path` set.
+   how the pick fits the `purpose`. `shop_render_report` (returns path + row counts, not the
+   text) → `read_file(path)` → paste the file verbatim to the user + its absolute path.
+   Done: `report_path` set.
 8. Follow-ups — later questions on the session → research → `shop_add_followup` → answer.
 
 ## Token discipline
 
 - Never print raw HTML/JSON from a page; scripted tools already return compact data.
+- `shop_render_report` is called once at the end (and once per follow-up); read the file once.
 - `web_search` limit 5, exactly the template queries; no improvised queries.
 - Read `shop_list_findings` with `fields` when you only need a subset.
 - Prefer `shop_fetch`/`shop_catalog` over `browser_exec` whenever `fetch: script`.

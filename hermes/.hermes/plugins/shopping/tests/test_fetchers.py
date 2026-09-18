@@ -83,6 +83,11 @@ class RozetkaParsers(unittest.TestCase):
         self.assertEqual(c["delivery_scope"], "ua_local")
         self.assertEqual(c["price_note"], "21339 ₴ картою Rozetka")
 
+    def test_seller_from_url(self):
+        self.assertEqual(rozetka.seller_from_url("https://hard.rozetka.com.ua/msi-mag-274qp-qd-oled-x24/p581847193/"), "Rozetka")
+        self.assertEqual(rozetka.seller_from_url("https://hard.rozetka.com.ua/ua/520016654/p520016654/"), "продавец маркетплейса")
+        self.assertEqual(rozetka.seller_from_url(""), "")
+
     def test_card_eu_marker(self):
         page = '<script type="application/ld+json">{"@type":"Product","offers":{"price":100,"availability":"https://schema.org/InStock"}}</script><p>Продавець: Rozetka EU</p>'
         self.assertEqual(rozetka.parse_card(page)["delivery_scope"], "ua_delivery")

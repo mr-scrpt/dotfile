@@ -42,7 +42,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_list_findings": _json(core.list_findings, "topic", "session", "group", "model", "fields"),
     "shop_log": _json(core.log_event, "topic", "session", "event", "detail"),
     "shop_set_summary": _json(core.set_summary, "topic", "session", "verdict", "picks", "caveats", "status"),
-    "shop_render_report": _json(core.render_report, "topic", "session"),
+    "shop_render_report": _json(core.render_report, "topic", "session", "full"),
     "shop_add_followup": _json(core.add_followup, "topic", "session", "title", "question", "answer_md"),
     "shop_sources": _json(core.get_sources, "group", "query"),
     "shop_catalog": _json(core.fetch_catalog, "topic", "session", "section", "filter_ids", "want", "max_pages"),

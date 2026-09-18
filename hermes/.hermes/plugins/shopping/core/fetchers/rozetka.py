@@ -78,6 +78,16 @@ def parse_card(page: str) -> dict:
     return out
 
 
+def seller_from_url(url: str) -> str:
+    """Rozetka's own listings have a slug URL (/msi-mag-274qp-…/p581847193/); third-party marketplace
+    listings get a numeric-only slug (/520016654/p520016654/). Seller names of third parties are
+    rendered client-side only, so the URL shape is the deterministic signal."""
+    m = re.search(r"rozetka\.com\.ua/(?:ua/)?([^/]+)/p(\d+)/?", url or "")
+    if not m:
+        return ""
+    return "продавец маркетплейса" if m.group(1).isdigit() else "Rozetka"
+
+
 # ------------------------------------------------------------------ network
 def search(query: str, limit: int = 5, with_card: bool = True, comments_pages: int = 1) -> list[dict]:
     """Findings for the top `limit` search hits. Each: offer fields + `reviews` (list) for the caller."""
@@ -91,13 +101,16 @@ def search(query: str, limit: int = 5, with_card: bool = True, comments_pages: i
         for p in range(2, min(cm.get("pages") or 1, comments_pages) + 1):
             cm["comments"] += parse_comments(get_json(COMMENTS.format(id=gid, page=p)))["comments"]
         f = {"group": GROUP, "source": SITE, "title": cm.get("title") or "", "url": cm.get("url") or "",
-             "rating": details.get(gid, {}).get("rating"), "rating_count": details.get(gid, {}).get("rating_count"),
-             "reviews": cm["comments"]}
+             "rating": details.get(gid, {}).get("rating") or None, "rating_count": details.get(gid, {}).get("rating_count") or None,
+             "seller": seller_from_url(cm.get("url") or ""), "reviews": cm["comments"]}
         if with_card and f["url"]:
             r = get(f["url"].replace("rozetka.com.ua/", "rozetka.com.ua/ua/") if "/ua/" not in f["url"] else f["url"])
             if r.blocked:
                 f["notes"] = f"card blocked ({r.status}); price unavailable"
             else:
-                f.update({k: v for k, v in parse_card(r.text).items() if v not in (None, "", [])})
+                card = parse_card(r.text)
+                if not card.get("seller"):
+                    card.pop("seller", None)
+                f.update({k: v for k, v in card.items() if v not in (None, "", [])})
         out.append(f)
     return out

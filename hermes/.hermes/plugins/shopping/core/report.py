@@ -8,7 +8,7 @@ from .fs import append_jsonl, now, read_jsonl, slugify
 from .model import GEO_LABEL
 from . import sessions
 
-MD_TABLE_HEAD = ("| # | Модель | Цена | Магазин | Рейтинг | Нюансы по отзывам | Рассрочка | Гео | Продавец / наличие |",
+MD_TABLE_HEAD: tuple[str, ...] = ("| # | Модель | Цена | Магазин | Рейтинг | Нюансы по отзывам | Рассрочка | Гео | Продавец / наличие |",
                  "|---|---|---|---|---|---|---|---|---|")
 
 
@@ -36,9 +36,9 @@ def fmt_price(f: dict) -> str:
 
 
 def fmt_rating(f: dict) -> str:
-    """'4.4 (79)' | '4.4' | '— (1 отз.)' | '—'."""
+    """'4.4 (79)' | '4.4' | '— (1 отз.)' | '—'. A zero count means "no ratings" → '—'."""
     r, n = f.get("rating"), f.get("rating_count")
-    if r is None and n is None:
+    if not n and not r:
         return "—"
     if r is None:
         return f"— ({n} отз.)"
@@ -75,22 +75,49 @@ def _params_block(p: dict) -> list[str]:
     return lines
 
 
+def _collapse_offers(items: list[dict]) -> list[dict]:
+    """One row per (model, source, seller): the cheapest in-stock offer wins; duplicates are counted."""
+    from .fetchers.rozetka import seller_from_url
+    best: dict[tuple, dict] = {}
+    for f in items:
+        if f.get("source") == "rozetka" and not f.get("seller"):
+            f = dict(f, seller=seller_from_url(f.get("url") or ""))
+        key = (model_key(f), f.get("source"), (f.get("seller") or "").lower())
+        cur = best.get(key)
+        rank = (("немає" in (f.get("availability") or "")), f.get("price_uah") is None, f.get("price_uah") or 0)
+        if cur is None or rank < cur["_rank"]:
+            dup = (cur["_dups"] + 1) if cur else 0
+            best[key] = dict(f, _rank=rank, _dups=dup)
+        else:
+            cur["_dups"] += 1
+    return list(best.values())
+
+
 def _offers_table(items: list[dict], reviews: dict[str, list[dict]]) -> list[str]:
     if not items:
         return ["_нет данных_", ""]
-    items = sorted(items, key=lambda f: (f.get("price_uah") is None, f.get("price_uah") or 0))
+    items = sorted(_collapse_offers(items), key=lambda f: (f.get("price_uah") is None, f.get("price_uah") or 0))
     out = list(MD_TABLE_HEAD)
+    shown: set[str] = set()
     for i, f in enumerate(items, 1):
         name = cell(f.get("title") or f.get("model"))
         if f.get("model") and f["model"] not in name:
             name += f" ({cell(f['model'])})"
-        nuances = list(f.get("nuances") or []) + list(f.get("cons") or [])
-        for r in reviews.get(model_key(f), []):
-            nuances += r.get("nuances") or []
+        mk = model_key(f)
+        if mk in shown:
+            nuances_cell = "см. выше"
+        else:
+            shown.add(mk)
+            nuances = list(f.get("nuances") or []) + list(f.get("cons") or [])
+            for r in reviews.get(mk, []):
+                nuances += r.get("nuances") or []
+            nuances_cell = "; ".join(_dedupe(nuances)) or "—"
         geo = "UA" if f.get("delivery_scope") == "ua_local" else "доставка в UA"
         seller = " / ".join(x for x in (cell(f.get("seller")), cell(f.get("availability"))) if x) or "—"
+        if f.get("_dups"):
+            seller += f" (+{f['_dups']} дубл.)"
         out.append(f"| {i} | {name} | {cell(fmt_price(f))} | {link(f)} | {cell(fmt_rating(f))} | "
-                   f"{cell('; '.join(_dedupe(nuances)) or '—')} | {cell(fmt_installment(f))} | {geo} | {seller} |")
+                   f"{cell(nuances_cell)} | {cell(fmt_installment(f))} | {geo} | {seller} |")
     return out + [""]
 
 
@@ -146,7 +173,9 @@ def _followups_block(sp) -> list[str]:
     return out + [""]
 
 
-def render(topic: str, session: str) -> dict:
+def render(topic: str, session: str, full: bool = False) -> dict:
+    """Write report.md. Returns a compact summary (path, sizes, picks) — the markdown itself only
+    when `full=True`; the agent shows the file to the user via read_file, not from the tool result."""
     meta, sp = sessions.load(topic, session)
     if meta is None:
         return sessions.not_found(topic, session)
@@ -168,7 +197,12 @@ def render(topic: str, session: str) -> dict:
     md = "\n".join(lines)
     sp.report.write_text(md, encoding="utf-8")
     append_jsonl(sp.log, {"ts": now(), "event": "report_rendered", "detail": {"findings": len(rows)}})
-    return {"success": True, "path": str(sp.report), "markdown": md, "findings": len(rows)}
+    out = {"success": True, "path": str(sp.report), "findings": len(rows), "lines": len(lines), "chars": len(md),
+           "rows": {g: len(_collapse_offers(by[g])) if g in ("marketplace", "shop") else len(by[g]) for g in by},
+           "picks": [pk.get("model") for pk in (meta.get("summary") or {}).get("picks") or []]}
+    if full:
+        out["markdown"] = md
+    return out
 
 
 def add_followup(topic: str, session: str, title: str, question: str, answer_md: str) -> dict:
