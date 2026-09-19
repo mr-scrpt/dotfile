@@ -47,9 +47,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("fetch"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("site"); p.add_argument("model")
     p.add_argument("--category", default=None)
     p.add_argument("--geo", default="ua_local", choices=core.GEO); p.add_argument("--limit", type=int, default=5)
-    p = sub.add_parser("catalog"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("section")
-    p.add_argument("filter_ids", type=int, nargs="+"); p.add_argument("--want", help="JSON: {diagonal_in:[lo,hi],panel_any:[..],resolution:'',refresh_min:N}")
-    p = sub.add_parser("hotline-filters"); p.add_argument("section")
+    p = sub.add_parser("candidates", help="universal shortlist from hotline + e-katalog"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("query")
+    p.add_argument("--category", default=None); p.add_argument("--pages", type=int, default=2)
     p = sub.add_parser("reviews", help="scripted buyer reviews digest for a model"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("model")
     p = sub.add_parser("resolve", help="reference mode: product URL or name → title/spec"); p.add_argument("reference")
     p.add_argument("--sites", nargs="*", default=None)
@@ -83,10 +82,8 @@ def run(a: argparse.Namespace) -> dict:
         return out
     if a.cmd == "fetch":
         return core.fetch_site(a.topic, a.session, a.site, a.model, a.geo, a.limit, category=a.category)
-    if a.cmd == "catalog":
-        return core.fetch_catalog(a.topic, a.session, a.section, a.filter_ids, json.loads(a.want) if a.want else None)
-    if a.cmd == "hotline-filters":
-        return core.hotline_filters(a.section)
+    if a.cmd == "candidates":
+        return core.find_candidates(a.topic, a.session, a.query, a.category, a.pages)
     if a.cmd == "resolve":
         return core.resolve_reference(a.reference)
     if a.cmd == "reviews":

@@ -21,12 +21,15 @@ Bundled Hermes skills stay in `~/.hermes/skills/` unmanaged; only our own live h
     core/model.py          domain constants (GROUPS/GEO/STATUSES) + SessionPaths layout
     core/sources/<key>/    ONE FOLDER PER SITE (declarative):
         source.yaml          key, title, group, fetch (script|chromium|browser), search URL, order, notes, filters
-        fetcher.py           optional: parse_search(page, meta) + search(query, meta) [+ reviews(url) / catalog / offers]
+        fetcher.py           optional: parse_search(page, meta) + search(query, meta) [+ reviews(url) / card(url) / offers]
     core/sources/__init__  registry: scans the folders (+ ~/shopping/.config/sources/), validate()
     core/catalog.py        shop_sources document = registry + data/{geo,reviews}.yaml
     core/sessions.py       topics, sessions, params (incl. user-chosen `sites`), journal, summary
     core/findings.py       finding schema/coercion, URL dedup + merge, resume context
-    core/fetch.py          shop_fetch / shop_catalog services (scripted sites → compact findings)
+    core/fetch.py          shop_fetch (scripted offers per model; category/condition filters)
+    core/candidates.py     shop_candidates (universal shortlist from hotline + e-katalog)
+    core/resolve.py        shop_resolve (owned device → title/spec, reference mode)
+    core/reviews.py        shop_reviews (parallel buyer reviews → token-cheap digest)
     core/probe.py          parallel hit-count probe over scripted sites (status per site)
     core/reviews.py        buyer-review digest: parallel per-site reviews(url) → stats + signal sentences
     core/menus.py          pure menu builders (topics/sessions/probe/sources/candidates)

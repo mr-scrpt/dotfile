@@ -182,7 +182,6 @@ class Registry(Isolated):
         self.assertEqual(sources.validate(), [])
         self.assertEqual(sorted(s.key for s in sources.scripted()),
                          ["allo", "brain", "citrus", "comfy", "ekatalog", "eldorado", "epicentr", "foxtrot", "hotline", "moyo", "pn", "prom", "rozetka", "telemart"])
-        self.assertTrue(sources.get("hotline").filters)
         self.assertIn("{q}", sources.get("comfy").search)
         self.assertEqual(sources.get("comfy").fetch, "chromium")
         self.assertTrue(all(s.scripted for s in sources.all_sources()))     # policy: only sites that work stay
@@ -202,7 +201,7 @@ class Registry(Isolated):
 
     def test_shop_sources_document(self):
         doc = core.get_sources()["sources"]
-        self.assertEqual(set(doc), {"geo", "reviews", "aggregators", "marketplaces", "hotline_filters"})
+        self.assertEqual(set(doc), {"geo", "reviews", "aggregators", "marketplaces"})
         self.assertEqual(doc["marketplaces"]["rozetka"]["fetch"], "script")
         self.assertIn("web_search_queries", doc["reviews"])
 

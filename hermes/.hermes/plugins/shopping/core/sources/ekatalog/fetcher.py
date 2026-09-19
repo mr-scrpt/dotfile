@@ -30,6 +30,19 @@ def _item_page(page: str) -> list[dict]:
              "rating_count": to_int(cnt.group(1)) if cnt else None, "delivery_scope": "ua_local"}]
 
 
+COLOURS = r"(чорний|білий|сірий|срібляст\w*|синій|червоний|зелений|рожевий|золот\w*|фіолет\w*|blue|black|white|silver|gr[ae]y)"
+
+
+def model_from_title(title: str) -> str:
+    """'Монітор Asus ROG Strix OLED XG27AQDPG 26.5 " чорний' → 'Asus ROG Strix OLED XG27AQDPG'.
+    Drops the leading type word, and everything from a size ('26.5 "', '27 ″') or colour on."""
+    t = re.sub(r"\s+", " ", title).strip()
+    t = re.sub(r"^[А-ЯІЇЄA-Z][а-яіїєa-z]+(?:\s+[а-яіїєa-z]+)?\s+(?=[A-Z0-9])", "", t)       # "Монітор ", "Зарядний пристрій "
+    t = re.split(r"\s\d+(?:[.,]\d+)?\s*(?:\"|″|дюйм)", t)[0]
+    t = re.split(r"\s" + COLOURS + r"\b", t, flags=re.I)[0]
+    return t.strip(" ,")
+
+
 def parse_search(page: str, meta: dict | None = None) -> list[dict]:
     t_all = text(page)
     if meta is not None:
@@ -53,7 +66,8 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
         cnt = re.search(r"Відгуки\s*(\d+)", t)
         spec = re.search(r"(Екран:.*?)(?:Відгуки|Відео|Фото|Ціни|$)", t)
         out.append({
-            "group": GROUP, "source": SITE, "title": text(a.group(2)), "url": BASE + a.group(1),
+            "group": GROUP, "source": SITE, "title": text(a.group(2)), "model": model_from_title(text(a.group(2))),
+            "url": BASE + a.group(1),
             "price_min_uah": to_int(rng.group(2)) if rng else (to_int(one.group(2)) if one else None),
             "price_max_uah": to_int(rng.group(3)) if rng else (to_int(one.group(2)) if one else None),
             "offers_count": to_int(rng.group(1)) if rng else (to_int(one.group(1)) if one else None),

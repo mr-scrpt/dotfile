@@ -5,7 +5,8 @@ Layers: fs (io) → http/model → sources/<key>/ (declarative site packages) �
 → report/menus (presentation; menus are pure data — the UI adapter lives outside core).
 """
 from .catalog import get as get_sources
-from .fetch import catalog as fetch_catalog, fetch as fetch_site, hotline_filters
+from .candidates import discover as find_candidates
+from .fetch import fetch as fetch_site
 from . import menus, sources
 from .probe import probe as probe_sites_search, sites as probe_sites
 from .reviews import collect as collect_reviews
@@ -19,4 +20,4 @@ from .sessions import (create_session, create_topic, list_sessions, list_topics,
 __all__ = ["GEO", "GROUPS", "STATUSES", "get_sources", "add_findings", "list_findings", "get_session",
            "add_followup", "render_report", "create_session", "create_topic", "list_sessions",
            "list_topics", "log_event", "set_summary", "update_params",
-           "fetch_catalog", "fetch_site", "hotline_filters", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]
+           "find_candidates", "fetch_site", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]

@@ -33,22 +33,14 @@ def js(name: str):
 
 
 class HotlineParsers(unittest.TestCase):
-    def test_catalog_cards_filters_and_spec(self):
-        c = hotline.parse_catalog(gz("hotline_catalog.html.gz"))
-        self.assertEqual(len(c["cards"]), 48)
-        self.assertEqual(c["selected"], ['27-28"', "OLED", "QD-OLED"])
-        self.assertEqual(c["filters"]["Тип матриці"]["QD-OLED"], 21618415)
-        self.assertEqual(c["filters"]["Діагональ екрана"]['27-28"'], 24733)
-        card = next(x for x in c["cards"] if "274QP" in x["title"])
-        self.assertEqual(card["title"], "MSI MAG 274QP QD-OLED X24")
-        self.assertEqual(card["spec"], {"diagonal_in": 26.5, "panel": "QD-OLED", "resolution": "2560x1440", "refresh_hz": 240, "brightness_nits": 200})
-        self.assertEqual((card["price_min_uah"], card["price_max_uah"], card["offers_count"]), (20616, 25099, 53))
-        self.assertTrue(card["url"].startswith("https://hotline.ua/ua/computer-monitory/"))
-
     def test_search_page_uses_sr_state(self):
-        cards = hotline.parse_search(gz("hotline_search.html.gz"))
+        meta = {}
+        cards = hotline.parse_search(gz("hotline_search.html.gz"), meta)
         self.assertEqual(len(cards), 48)
         self.assertEqual(cards[0]["title"], "MSI MAG 274QP QD-OLED X24")
+        self.assertIn("240 Гц", cards[0]["notes"])
+        self.assertEqual(cards[0]["category"], "Монітори")        # section id → catalog title
+        self.assertTrue(meta["total_est"] and meta["categories"][0]["name"])
 
     def test_offers_with_installment_banks(self):
         o = hotline.parse_offers(gz("hotline_prices.html.gz"))
@@ -58,10 +50,13 @@ class HotlineParsers(unittest.TestCase):
         self.assertTrue(inst and "мес" in inst[0]["installment_note"])
         self.assertEqual({x["country"] for x in o["offers"]}, {"UA"})
 
-    def test_parse_spec_edge_cases(self):
-        self.assertEqual(hotline.parse_spec(['дисплей: 27"', "IPS", "2560x1440", "16:9", " частота оновлення: 300 (320 - овердрайв) Гц"])["refresh_hz"], 300)
-        self.assertEqual(hotline.parse_spec(["Tandem WOLED"])["panel"], "Tandem WOLED")
-        self.assertIsNone(hotline.parse_spec([])["diagonal_in"])
+class EkatalogModel(unittest.TestCase):
+    def test_model_from_title(self):
+        from shopping.core.sources.ekatalog.fetcher import model_from_title as m
+        self.assertEqual(m('Монітор Asus ROG Strix OLED XG27AQDPG 26.5 " чорний'), "Asus ROG Strix OLED XG27AQDPG")
+        self.assertEqual(m("Монітор Gigabyte MO27Q28G 27 \" чорний"), "Gigabyte MO27Q28G")
+        self.assertEqual(m("Зарядний пристрій LogicPower LP14583"), "LogicPower LP14583")
+        self.assertEqual(m("Apple iPhone 16 Pro 256GB чорний титан"), "Apple iPhone 16 Pro 256GB")
 
 
 class RozetkaParsers(unittest.TestCase):
@@ -239,24 +234,30 @@ class FetchService(unittest.TestCase):
         self.assertEqual(len(r["reviews"]), 1)
         self.assertNotIn("reviews", core.list_findings("monitor", self.sid)["findings"][0])
 
-    def test_catalog_filters_by_want(self):
-        page = gz("hotline_catalog.html.gz")
-        with mock.patch.object(hotline, "get", return_value=Response(200, page, "u")):
-            r = core.fetch_catalog("monitor", self.sid, "computer/monitory", [24733, 19939994, 21618415],
-                                   want={"diagonal_in": [26, 28], "panel_any": ["OLED"], "resolution": "2560x1440", "refresh_min": 100})
-        self.assertTrue(r["success"])
-        self.assertEqual(r["scanned"], 48)
-        self.assertGreater(r["matched"], 5)
-        self.assertTrue(all(c["spec"]["refresh_hz"] >= 100 for c in r["candidates"]))
-        self.assertEqual(core.get_session("monitor", self.sid)["findings_by_group"], {"aggregator": r["matched"]})
-        with mock.patch.object(hotline, "get", return_value=Response(200, page, "u")):
-            r2 = core.fetch_catalog("monitor", self.sid, "computer/monitory", [24733], want={"refresh_min": 540})
-        self.assertEqual(r2["matched"], 2)  # the two 540 Hz ASUS PG27AQWP
+    def test_candidates_universal_shortlist(self):
+        from shopping.core.sources.ekatalog import fetcher as ekatalog
+        page_sr = gz("hotline_search.html.gz")
+        with mock.patch.object(hotline, "get", return_value=Response(200, page_sr, "u")), \
+             mock.patch.object(ekatalog, "get", return_value=Response(200, gz("ekatalog_search.html.gz"), "u")):
+            r = core.find_candidates("monitor", self.sid, "монітор 27 OLED", category="Монітори", pages=1)
+        self.assertTrue(r["success"], r)
+        self.assertGreater(r["models"], 20)
+        self.assertTrue(all(c["category"] in ("", "Монітори") for c in r["candidates"]))     # the MAG Z790 board is out
+        self.assertIn("MSI MAG 274QP QD-OLED X24", [c["model"] for c in r["candidates"]])
+        self.assertEqual(r["candidates"], sorted(r["candidates"], key=lambda c: -(c["offers"] or 0)))
+        self.assertIn("Гц", r["candidates"][0]["spec"])
+        self.assertEqual(core.get_session("monitor", self.sid)["findings_by_group"], {"aggregator": r["models"]})
+        with mock.patch.object(hotline, "get", return_value=Response(200, page_sr, "u")), \
+             mock.patch.object(ekatalog, "get", return_value=Response(200, gz("ekatalog_search.html.gz"), "u")):
+            r2 = core.find_candidates("monitor", self.sid, "монітор", category="Телевізори", pages=1)
+        self.assertTrue(all(c["category"] == "" for c in r2["candidates"]))   # hotline rows (Монітори) all dropped; ekatalog has no category
 
-    def test_fetch_hotline_merges_into_catalog_card(self):
-        page_cat, page_sr, page_pr = gz("hotline_catalog.html.gz"), gz("hotline_search.html.gz"), gz("hotline_prices.html.gz")
-        with mock.patch.object(hotline, "get", return_value=Response(200, page_cat, "u")):
-            core.fetch_catalog("monitor", self.sid, "computer/monitory", [24733], want={"refresh_min": 100})
+    def test_fetch_hotline_merges_into_candidate_row(self):
+        page_sr, page_pr = gz("hotline_search.html.gz"), gz("hotline_prices.html.gz")
+        from shopping.core.sources.ekatalog import fetcher as ekatalog
+        with mock.patch.object(hotline, "get", return_value=Response(200, page_sr, "u")), \
+             mock.patch.object(ekatalog, "get", return_value=Response(200, "<html></html>", "u")):
+            core.find_candidates("monitor", self.sid, "монітор 27 OLED", pages=1)
         with mock.patch.object(hotline, "get", side_effect=lambda url, *a, **k: Response(200, page_pr if "tab=prices" in url else page_sr, url)):
             r = core.fetch_site("monitor", self.sid, "hotline", "MSI MAG 274QP QD-OLED X24")
         self.assertEqual(r["stored"], {"added": 0, "merged": 1})

@@ -97,18 +97,16 @@ SHOP_RENDER_REPORT = {"name": "shop_render_report", "description": "Render repor
 SHOP_ADD_FOLLOWUP = {"name": "shop_add_followup", "description": "Save a follow-up Q&A under the session and relink report.md.",
                      "parameters": {"type": "object", "properties": {**_TS, "title": {"type": "string"}, "question": {"type": "string"}, "answer_md": {"type": "string"}}, "required": ["topic", "session", "title", "question", "answer_md"]}}
 
-SHOP_SOURCES = {"name": "shop_sources", "description": "Source catalogue (sites, fetch method, hotline filter ids, review query templates). query fills {q}/{model}.",
-                "parameters": {"type": "object", "properties": {"group": {"type": "string", "enum": ["geo", "marketplaces", "aggregators", "reviews", "hotline_filters"]}, "query": {"type": "string"}}}}
+SHOP_SOURCES = {"name": "shop_sources", "description": "Source catalogue (sites, fetch method, review query templates). query fills {q}/{model}.",
+                "parameters": {"type": "object", "properties": {"group": {"type": "string", "enum": ["geo", "marketplaces", "aggregators", "reviews"]}, "query": {"type": "string"}}}}
 
-SHOP_CATALOG = {
-    "name": "shop_catalog",
-    "description": "Scripted hotline category walk: filter ids from shop_sources(hotline_filters) → candidate models matching want; stores aggregator findings.",
-    "parameters": {"type": "object", "properties": {
-        **_TS, "section": {"type": "string", "description": "e.g. computer/monitory"},
-        "filter_ids": {"type": "array", "items": {"type": "integer"}},
-        "want": {"type": "object", "description": "hard spec: {diagonal_in:[lo,hi], panel_any:[..], resolution:'2560x1440', refresh_min:100}"},
-        "max_pages": {"type": "integer"},
-    }, "required": ["topic", "session", "section", "filter_ids"]},
+SHOP_CANDIDATES = {
+    "name": "shop_candidates",
+    "description": "Universal shortlist discovery: searches hotline (2 pages) + e-katalog with the query, keeps cards in `category` (from the probe), dedupes by model, ranks by offers/reviews, stores aggregator findings. Returns ≤40 {model, price range, offers, reviews, spec line, url}. Check the user's must-list against `spec`, then shop_menu(candidates).",
+    "parameters": {"type": "object", "properties": {**_TS, "query": {"type": "string", "description": "short product query in Ukrainian, e.g. 'монітор 27 OLED', 'інвертор 24V'"},
+                                                    "category": {"type": "string", "description": "aggregator category name from the probe (default: params.category)"},
+                                                    "pages": {"type": "integer", "description": "hotline pages (default 2, 48 cards each)"}},
+                   "required": ["topic", "session", "query"]},
 }
 
 SHOP_FETCH = {
@@ -137,7 +135,7 @@ SHOP_MENU = {
         "topic": _TOPIC, "query": {"type": "string", "description": "sources: run the probe with this query first"},
         "exclude": _STR_LIST, "only": {**_STR_LIST, "description": "sources: probe only these sites (from the probe menu)"},
         "probe": {"type": "boolean", "description": "sources: run the probe before listing (default true when query given)"},
-        "candidates": {"type": "array", "items": {"type": "object"}, "description": "candidates: rows from shop_catalog"},
+        "candidates": {"type": "array", "items": {"type": "object"}, "description": "candidates: rows from shop_candidates"},
     }, "required": ["kind"]},
 }
 
@@ -156,4 +154,4 @@ SHOP_REVIEWS = {
 
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE]

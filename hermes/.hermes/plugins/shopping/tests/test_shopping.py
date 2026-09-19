@@ -181,7 +181,6 @@ class Sources(Base):
         self.assertEqual(r["sources"]["marketplaces"]["rozetka"]["search"],
                          "https://rozetka.com.ua/ua/search/?text=LG+27GS95QE-B")
         self.assertIn('"LG 27GS95QE-B" review', core.get_sources("reviews", "LG 27GS95QE-B")["sources"]["reviews"]["web_search_queries"])
-        self.assertEqual(core.get_sources("hotline_filters")["sources"]["hotline_filters"]["computer/monitory"]["Тип матриці"]["QD-OLED"], 21618415)
         self.assertEqual(core.get_sources("marketplaces")["sources"]["marketplaces"]["rozetka"]["fetch"], "script")
         self.assertFalse(core.get_sources("nope")["success"])
         self.assertIn("geo", core.get_sources()["sources"])

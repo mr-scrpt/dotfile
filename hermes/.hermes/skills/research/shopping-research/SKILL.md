@@ -29,7 +29,7 @@ Not for price alerts (`product-price-monitor`) or a quick tier guide (`ukraine-h
 - Plugin `shopping` enabled; its 19 `shop_*` tools are plugin tools → behind progressive
   disclosure. First action of every session: `tool_describe` for the names you will use
   (at least `shop_menu, shop_create_topic, shop_create_session, shop_update_params, shop_get_session,
-  shop_resolve, shop_sources, shop_catalog, shop_fetch, shop_reviews, shop_add_findings, shop_log,
+  shop_resolve, shop_sources, shop_candidates, shop_fetch, shop_reviews, shop_add_findings, shop_log,
   shop_set_summary, shop_render_report`),
   then call through `tool_call`. Absence from the direct list ≠ disabled.
 - Every choice the user makes goes through `shop_menu` (the plugin renders a native pick list:
@@ -83,17 +83,18 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
    зонда» / «0 — не найдено». Store the answer: `shop_update_params(sites=values, category=<name
    as the sites call it>)`; `free_text` = extra sites the user typed → add to `notes`.
    Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
-4. Candidates (mode=spec, and each reference item) — if `hotline` ∈ sites:
-   `shop_sources(group="hotline_filters")` → map the hard spec to filter ids (diagonal, panel,
-   resolution; refresh as a range id when it is a lower bound → use `want.refresh_min` instead
-   of a frequency id). `shop_catalog(section, filter_ids, want)` where `want` = the numeric hard
-   spec. Result = every model on the UA market matching the spec, with min–max price, offers
-   and reviews count. If `matched` > 12, narrow with the user (budget / brand / nice-to-have)
-   and re-run; if 0, relax one `must` and re-run. If `hotline` ∉ sites (стройка, инверторы):
-   `shop_probe(query, only=sites)` samples are the seed — distinct model codes from the titles.
-   Then `shop_menu(kind="candidates", candidates=[…])` → the user ticks which models to compare
-   → `shop_update_params(shortlist=values)`. Done: 1–12 models in `params.shortlist`.
-   mode=exact: `shortlist = [query]`, no menu.
+4. Candidates (mode=spec, and each reference item) — ONE call:
+   `shop_candidates(query=<short product query in Ukrainian: type + 1–2 key words, e.g.
+   "монітор 27 OLED", "інвертор 24V", "зарядний пристрій LiFePO4 24V">, category=params.category)`.
+   The plugin searches hotline (2 pages) + e-katalog, keeps the chosen category, dedupes by
+   model and returns ≤40 rows ranked by market presence: model, price range, offers, reviews,
+   `spec` (the aggregator's short characteristics line). Works for any product category — there
+   are no per-category filters. Then YOU check each row's `spec` against `must` and keep only
+   rows that satisfy it (or where `spec` is silent); if <2 remain, relax one `must` or re-run
+   with a broader query; if >15 remain, ask the user to narrow (budget / brand / nice) and
+   filter again. Then `shop_menu(kind="candidates", candidates=[kept rows])` → the user ticks
+   the models to compare → `shop_update_params(shortlist=values)`. Done: 1–12 models in
+   `params.shortlist`. mode=exact: `shortlist = [query]`, no menu.
 5. Offers — for EVERY model in the shortlist and EVERY site in `params.sites`:
    `shop_fetch(site, model, geo)`. The tool keeps only cards whose title carries the model code
    without an extra variant word (Pro ≠ Pro Max) AND whose site category is the product itself
@@ -141,7 +142,7 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
 - `web_search` limit 5, exactly the template queries; no improvised queries.
 - `shop_probe` costs one compact JSON (~1.5k chars for 8 sites); `browser_exec` costs 10–50× that.
 - Read `shop_list_findings` with `fields` when you only need a subset.
-- Prefer `shop_fetch`/`shop_catalog` over `browser_exec` whenever `fetch: script`.
+- Prefer `shop_fetch`/`shop_candidates` over `browser_exec` whenever `fetch: script`.
 
 ## Plugin layout (maintenance)
 
@@ -152,14 +153,13 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
 `~/.hermes/hermes-agent/venv/bin/python -m unittest discover -s tests`).
 New site = new folder `core/sources/<site>/` with `source.yaml` (+ `fetcher.py`, fixture, test when
 curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/shopping --ci`.
-Refresh hotline ids with `cli.py hotline-filters computer/monitory` → `sources/hotline/source.yaml`.
 
 ## Pitfalls
 
 - `shop_add_findings` rejects unknown fields / wrong `group`; resend only the failed items.
 - Rozetka blocks headless browsers (Cloudflare) — `shop_fetch("rozetka")` uses its APIs via curl;
   never open rozetka in `browser_exec`.
-- Hotline "27"" monitors are 26.5" on the card; `want.diagonal_in` must be a range ([26, 28]).
+- Hotline lists 27" monitors as 26,5" in `spec`; treat ±0.5" as equal when checking `must`.
 - Browser daemon hung ("timed out waiting for the daemon"): `curl 127.0.0.1:<port>/json/list`,
   `/json/close/<id>` for the stuck tab, then `ensure_real_tab()`.
 - This SKILL.md is a stow symlink; edit with `patch`, not `skill_manage`.

@@ -6,7 +6,6 @@ import re
 
 from . import findings, sessions, sources
 from .fs import err, now
-from .sources.hotline.fetcher import parse_spec  # noqa: F401  (re-exported for tests)
 
 MAX_REVIEW_CHARS = 350
 
@@ -77,51 +76,6 @@ def category_ok(card_category: str, wanted: str | None) -> tuple[bool, str]:
         if w and w not in cat and cat not in w:
             return False, f"category «{card_category}» ≠ «{wanted}»"
     return True, ""
-
-
-def _spec_ok(spec: dict, want: dict) -> bool:
-    """want: {diagonal_in: [lo, hi], panel_any: [..], resolution: str, refresh_min: int}."""
-    d = want.get("diagonal_in")
-    if d and spec.get("diagonal_in") is not None and not (d[0] <= spec["diagonal_in"] <= d[1]):
-        return False
-    if want.get("panel_any") and not any(p.upper() in (spec.get("panel") or "").upper() for p in want["panel_any"]):
-        return False
-    if want.get("resolution") and spec.get("resolution") != want["resolution"]:
-        return False
-    if want.get("refresh_min") and (spec.get("refresh_hz") or 0) < want["refresh_min"]:
-        return False
-    return True
-
-
-def catalog(topic: str, session: str, section: str, filter_ids: list[int], want: dict | None = None,
-            max_pages: int = 6, store: bool = True) -> dict:
-    """hotline category walk → candidate models. Stores aggregator findings; returns compact list."""
-    meta, sp = sessions.load(topic, session)
-    if meta is None:
-        return sessions.not_found(topic, session)
-    try:
-        res = sources.get("hotline").module().catalog(section, filter_ids, max_pages=max_pages)
-    except Exception as e:  # noqa: BLE001
-        sessions.log_event(topic, session, "source_blocked", f"hotline catalog: {e}")
-        return err(f"hotline catalog failed: {e}")
-    cards = res["cards"]
-    kept = [c for c in cards if _spec_ok(c["spec"], want or {})]
-    rows = [{k: v for k, v in c.items() if k not in ("spec", "date")} | {"notes": c["notes"]} for c in kept]
-    stored = findings.add(topic, session, rows) if store and rows else {"added": 0, "merged": 0}
-    sessions.log_event(topic, session, "source_done",
-                       f"hotline catalog {section}/{'-'.join(map(str, filter_ids))}: {len(cards)} cards, {len(kept)} match spec")
-    return {"success": True, "source": "hotline", "scanned": len(cards), "matched": len(kept),
-            "selected_filters": res["selected"], "stored": {k: stored[k] for k in ("added", "merged")},
-            "candidates": [{"model": c["model"], "price_min_uah": c["price_min_uah"], "price_max_uah": c["price_max_uah"],
-                            "offers": c["offers_count"], "reviews": c["rating_count"], "spec": c["spec"], "url": c["url"]}
-                           for c in kept]}
-
-
-def hotline_filters(section: str) -> dict:
-    try:
-        return {"success": True, "section": section, "filters": sources.get("hotline").module().filters(section)}
-    except Exception as e:  # noqa: BLE001
-        return err(f"hotline filters failed: {e}")
 
 
 def _compact_offer(f: dict) -> dict:
