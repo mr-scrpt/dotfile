@@ -177,16 +177,15 @@ class Registry(Isolated):
     def test_every_folder_is_a_source_and_config_is_valid(self):
         from shopping.core import sources
         keys = [s.key for s in sources.all_sources()]
-        self.assertEqual(len(keys), 18)
+        self.assertEqual(len(keys), 14)
         self.assertEqual(keys[0], "hotline")                       # aggregators first
         self.assertEqual(sources.validate(), [])
         self.assertEqual(sorted(s.key for s in sources.scripted()),
                          ["allo", "brain", "citrus", "comfy", "ekatalog", "eldorado", "epicentr", "foxtrot", "hotline", "moyo", "pn", "prom", "rozetka", "telemart"])
         self.assertTrue(sources.get("hotline").filters)
         self.assertIn("{q}", sources.get("comfy").search)
-        with self.assertRaises(KeyError):
-            sources.get("ktc").module()
         self.assertEqual(sources.get("comfy").fetch, "chromium")
+        self.assertTrue(all(s.scripted for s in sources.all_sources()))     # policy: only sites that work stay
         self.assertEqual(sources.get("prom").search_url("a b"), "https://prom.ua/ua/search?search_term=a+b")
 
     def test_user_dir_source_is_discovered(self):
@@ -203,7 +202,7 @@ class Registry(Isolated):
 
     def test_shop_sources_document(self):
         doc = core.get_sources()["sources"]
-        self.assertEqual(set(doc), {"geo", "reviews", "aggregators", "marketplaces", "shops", "hotline_filters"})
+        self.assertEqual(set(doc), {"geo", "reviews", "aggregators", "marketplaces", "hotline_filters"})
         self.assertEqual(doc["marketplaces"]["rozetka"]["fetch"], "script")
         self.assertIn("web_search_queries", doc["reviews"])
 
@@ -215,7 +214,6 @@ class Probe(Isolated):
         self.assertEqual(keys[0], "hotline")
         self.assertNotIn("comfy", keys)
         self.assertTrue(next(x for x in s if x["site"] == "epicentr")["scripted"])
-        self.assertFalse(next(x for x in s if x["site"] == "ktc")["scripted"])
 
     def test_probe_parallel_and_error_isolated(self):
         def fake_search(query, meta=None, **kw):
@@ -247,8 +245,7 @@ class Probe(Isolated):
         self.assertEqual(by["moyo"]["status"], "error")
         self.assertEqual(r["with_hits"], ["hotline", "prom"])
         self.assertEqual(by["rozetka"]["status"], "excluded")     # not in `only`
-        self.assertEqual(by["ktc"]["status"], "no_script")
-        self.assertEqual(len(r["sites"]), 18)
+        self.assertEqual(len(r["sites"]), 14)
 
     def test_probe_empty_query(self):
         self.assertFalse(probe_mod.probe("  ")["success"])
@@ -264,16 +261,16 @@ class Menus(Isolated):
                         {"site": "moyo", "status": "zero", "probed": True, "hits": 0},
                         {"site": "allo", "status": "error", "probed": True, "hits": 0, "error": "blocked (403)"},
                         {"site": "prom", "status": "excluded", "probed": False},
-                        {"site": "ktc", "status": "no_script", "probed": False}]}
+                        {"site": "epicentr", "status": "no_script", "probed": False}]}
         m = menus.sources_menu(pr)
         labels = [i["label"] for i in m["items"]]
         self.assertEqual(labels[0], "Brain (1 400 чохли для мобільних телефонів · 543 захисне скло · 246 мобільні телефони · +1)")
         self.assertEqual(labels[1:3], ["Rozetka (719+)", "Hotline (25)"])      # most hits first
         self.assertIn("Алло (ошибка зонда)", labels)
         self.assertIn("Prom.ua (исключён из зонда)", labels)
-        self.assertIn("KTC (нет скрипта — только браузер)", labels)
+        self.assertIn("Епіцентр (нет скрипта — только браузер)", labels)
         self.assertEqual(labels[-1], "MOYO (0 — не найдено)")                  # zeros last, still visible
-        self.assertEqual(len(labels), 18)                                      # every source is listed
+        self.assertEqual(len(labels), 14)                                      # every source is listed
         self.assertTrue(m["multi"])
         self.assertTrue(all("," not in lab for lab in labels))
 
@@ -281,7 +278,7 @@ class Menus(Isolated):
         m = menus.sources_menu(None, exclude=["comfy"])
         self.assertEqual(m["items"][0]["value"], "hotline")
         self.assertNotIn("comfy", [i["value"] for i in m["items"]])
-        self.assertIn("KTC (браузер)", [i["label"] for i in m["items"]])
+        self.assertNotIn("(браузер)", " ".join(i["label"] for i in m["items"]))
         self.assertIn("Прайс Навигатор (pn.com.ua)", [i["label"] for i in m["items"]])
 
     def test_parse_answer_multi_string_and_free_text(self):

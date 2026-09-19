@@ -59,8 +59,8 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    `shop_menu(kind="probe")` shows every probe-able site by name; the result carries
    `probe: bool` and `only: [...]|null`. Then `shop_menu(kind="sources", query=<query>,
    probe=<probe>, only=<only>)` — the plugin runs the parallel probe first and lists EVERY site
-   with its state: hit count / «исключён из зонда» / «нет скрипта — только браузер» /
-   «0 — не найдено». Sites without a script can still be chosen (searched via browser). Store the
+   with its state: hit count (by category when the site reports them) / «исключён из зонда» /
+   «0 — не найдено». Store the
    answer: `shop_update_params(sites=values)`; `free_text` = extra sites the user typed → add
    to `notes`. Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
 4. Candidates — if `hotline` ∈ sites: `shop_sources(group="hotline_filters")` → map the hard spec to filter ids
@@ -74,8 +74,9 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    Then `shop_menu(kind="candidates", candidates=[…])` → the user ticks which models to compare.
    Done: 1–12 candidate model codes chosen by the user, `source_done` logged.
 5. Offers — for EVERY chosen candidate and EVERY site in `params.sites` with `fetch: script`
-   (`shop_sources` says which; today 14 of 18: hotline, ekatalog, pn, rozetka, foxtrot, moyo, allo, comfy, citrus,
-   eldorado, prom, epicentr, telemart, brain): `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns
+   (all 14 catalogue sites are scripted: hotline, ekatalog, pn, rozetka, comfy, foxtrot, moyo, allo,
+   citrus, eldorado, prom, epicentr, telemart, brain — policy: a site stays in the catalogue only
+   while its scripted probe works; small shops are covered through the aggregators): `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns
    compact data; you only read it. `fetch: chromium` (comfy) is scripted too — the plugin runs local headless Chromium itself.
    Chosen sites with `fetch: browser` (price, ktc, elmir, compx): open the `search` URL in `browser_exec`, take the first exact-model card, store via
    `shop_add_findings`; on "Just a moment"/empty → `shop_log(source_blocked)` and move on.
@@ -135,7 +136,7 @@ Refresh hotline ids with `cli.py hotline-filters computer/monitory` → `sources
 ## Verification
 
 - [ ] `search.json` has a non-empty `purpose` and a non-empty `sites` chosen by the user.
-- [ ] `shop_get_session`: status `done`; `findings_by_group` has aggregator, marketplace, review.
+- [ ] `shop_get_session`: status `done`; `findings_by_group` has aggregator, marketplace, review (groups: marketplace | aggregator | review — no separate shops table).
 - [ ] Every site in `params.sites` was called for every candidate (log has `source_done`/`source_blocked` per site×model).
 - [ ] Verdict references the purpose; every nuance traces to a `review` finding.
 - [ ] Markdown pasted verbatim + absolute `report.md` path given.

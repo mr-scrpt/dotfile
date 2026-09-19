@@ -1,6 +1,6 @@
 key: brain
 title: Brain
-order: 20
-group: shop
+order: 110
+group: marketplace
 fetch: script
 search: https://brain.com.ua/ukr/search/?search={q}

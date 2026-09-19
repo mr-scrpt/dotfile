@@ -1,6 +1,0 @@
-key: ktc
-title: KTC
-order: 30
-group: shop
-fetch: browser
-search: https://ktc.ua/search/?q={q}

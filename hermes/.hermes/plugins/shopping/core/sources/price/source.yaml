@@ -1,6 +1,0 @@
-key: price
-title: Price.ua
-order: 30
-group: aggregator
-fetch: browser
-search: https://price.ua/ua/search?q={q}

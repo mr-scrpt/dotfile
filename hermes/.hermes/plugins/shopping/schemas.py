@@ -10,7 +10,7 @@ _TS = {"topic": _TOPIC, "session": _SESSION}
 FINDING = {
     "type": "object",
     "properties": {
-        "group": {"type": "string", "enum": ["marketplace", "shop", "aggregator", "review"]},
+        "group": {"type": "string", "enum": ["marketplace", "aggregator", "review"]},
         "source": {"type": "string", "description": "site key: rozetka, hotline, rtings, reddit…"},
         "title": {"type": "string"},
         "model": {"type": "string", "description": "exact model code; links reviews to offers"},
@@ -65,7 +65,7 @@ SHOP_ADD_FINDINGS = {"name": "shop_add_findings", "description": "Store findings
                      "parameters": {"type": "object", "properties": {**_TS, "findings": {"type": "array", "items": FINDING, "minItems": 1}}, "required": ["topic", "session", "findings"]}}
 
 SHOP_LIST_FINDINGS = {"name": "shop_list_findings", "description": "Read findings, filter by group/model, trim with fields.",
-                      "parameters": {"type": "object", "properties": {**_TS, "group": {"type": "string", "enum": ["marketplace", "shop", "aggregator", "review"]}, "model": {"type": "string"}, "fields": _STR_LIST}, "required": ["topic", "session"]}}
+                      "parameters": {"type": "object", "properties": {**_TS, "group": {"type": "string", "enum": ["marketplace", "aggregator", "review"]}, "model": {"type": "string"}, "fields": _STR_LIST}, "required": ["topic", "session"]}}
 
 SHOP_LOG = {"name": "shop_log", "description": "Journal a step (source_done / source_blocked / next / note).",
             "parameters": {"type": "object", "properties": {**_TS, "event": {"type": "string"}, "detail": {}}, "required": ["topic", "session", "event"]}}
@@ -86,7 +86,7 @@ SHOP_ADD_FOLLOWUP = {"name": "shop_add_followup", "description": "Save a follow-
                      "parameters": {"type": "object", "properties": {**_TS, "title": {"type": "string"}, "question": {"type": "string"}, "answer_md": {"type": "string"}}, "required": ["topic", "session", "title", "question", "answer_md"]}}
 
 SHOP_SOURCES = {"name": "shop_sources", "description": "Source catalogue (sites, fetch method, hotline filter ids, review query templates). query fills {q}/{model}.",
-                "parameters": {"type": "object", "properties": {"group": {"type": "string", "enum": ["geo", "marketplaces", "shops", "aggregators", "reviews", "hotline_filters"]}, "query": {"type": "string"}}}}
+                "parameters": {"type": "object", "properties": {"group": {"type": "string", "enum": ["geo", "marketplaces", "aggregators", "reviews", "hotline_filters"]}, "query": {"type": "string"}}}}
 
 SHOP_CATALOG = {
     "name": "shop_catalog",

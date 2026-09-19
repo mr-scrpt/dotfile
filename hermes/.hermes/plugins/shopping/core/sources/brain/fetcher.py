@@ -10,7 +10,7 @@ from urllib.parse import quote_plus
 
 from ...http import FetchError, get, text, to_int
 
-SITE, GROUP = "brain", "shop"
+SITE, GROUP = "brain", "marketplace"
 BASE = "https://brain.com.ua"
 SEARCH = BASE + "/ukr/search/?Search={q}"
 

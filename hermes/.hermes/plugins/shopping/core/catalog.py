@@ -26,7 +26,7 @@ def _yaml(name: str) -> dict:
 
 def load() -> dict:
     doc = {name: _yaml(name) for name in SHARED}
-    for group, label in (("aggregator", "aggregators"), ("marketplace", "marketplaces"), ("shop", "shops")):
+    for group, label in (("aggregator", "aggregators"), ("marketplace", "marketplaces")):
         doc[label] = {s.key: s.public() for s in sources.all_sources() if s.group == group}
     doc["hotline_filters"] = sources.get("hotline").filters if "hotline" in {s.key for s in sources.all_sources()} else {}
     return doc

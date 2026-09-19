@@ -1,6 +1,0 @@
-key: elmir
-title: Elmir
-order: 40
-group: shop
-fetch: browser
-search: https://elmir.ua/ua/search/?q={q}

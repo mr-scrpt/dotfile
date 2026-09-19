@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .fs import root
 
-GROUPS = ("marketplace", "shop", "aggregator", "review")
+GROUPS = ("marketplace", "aggregator", "review")   # "shop" merged into marketplace: small shops come via aggregators
 GEO = ("ua_local", "ua_delivery")
 STATUSES = ("draft", "searching", "done")
 GEO_LABEL = {"ua_local": "только Украина (локальный склад)",

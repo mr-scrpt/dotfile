@@ -76,8 +76,8 @@ class TopicsSessions(Base):
 
 class Findings(Base):
     def test_coerce_and_validate(self):
-        r = self.add(OFFER, {"group": "bogus", "url": "http://x"}, {"group": "shop", "title": "t"},
-                     {"group": "shop", "url": "u", "title": "t", "price_uah": "abc"})
+        r = self.add(OFFER, {"group": "bogus", "url": "http://x"}, {"group": "marketplace", "title": "t"},
+                     {"group": "marketplace", "url": "u", "title": "t", "price_uah": "abc"})
         self.assertEqual((r["added"], r["merged"], len(r["errors"])), (1, 0, 3))
         f = core.list_findings("monitor", self.sid)["findings"][0]
         self.assertEqual(f["price_uah"], 31999)
@@ -117,23 +117,23 @@ class Findings(Base):
 class Report(Base):
     def test_render_sections_and_review_nuances_join_offers(self):
         self.add(OFFER,
-                 {"group": "shop", "source": "telemart", "model": "LG 27GS95QE-B", "url": "https://t/1", "price_uah": 30500},
+                 {"group": "marketplace", "source": "telemart", "model": "LG 27GS95QE-B", "url": "https://t/1", "price_uah": 30500},
                  {"group": "aggregator", "source": "hotline", "model": "LG 27GS95QE-B", "url": "https://h/1",
                   "price_min_uah": 29999, "price_max_uah": 34500, "offers_count": 17},
                  {"group": "review", "source": "reddit", "model": "LG 27GS95QE-B", "url": "https://r/1",
                   "nuances": ["coil whine"], "model_match": "exact"})
         core.set_summary("monitor", self.sid, "Берём LG.", [{"model": "LG 27GS95QE-B", "why": "дешевле"}], ["цены на 18.09"])
         md = core.render_report("monitor", self.sid, full=True)["markdown"]
-        for h in ("## 1. Маркетплейсы", "## 2. Магазины", "## 3. Агрегаторы", "## 4. Отзывы", "## 5. Итог"):
+        for h in ("## 1. Маркетплейсы", "## 2. Агрегаторы", "## 3. Отзывы", "## 4. Итог"):
             self.assertIn(h, md)
         self.assertIn("31 999 ₴", md)
         self.assertIn("29 999 – 34 500 ₴", md)
         self.assertIn("| да: Моно 10 |", md)
-        self.assertEqual(md.count("coil whine"), 3)  # marketplace table + shop table (separate tables) + reviews block
-        self.assertNotIn("см. выше", md)             # one row per model per table here
+        self.assertEqual(md.count("coil whine"), 2)  # once in the (single) offers table + reviews block
+        self.assertIn("см. выше", md)                # second seller row of the same model points up
         compact = core.render_report("monitor", self.sid)
         self.assertNotIn("markdown", compact)
-        self.assertEqual(compact["rows"]["marketplace"], 1)
+        self.assertEqual(compact["rows"]["marketplace"], 2)   # rozetka + telemart rows
         self.assertEqual(compact["picks"], ["LG 27GS95QE-B"])
         self.assertIn("⚠ coil whine", md)
         self.assertIn("совпадение модели: exact", md)
@@ -157,11 +157,11 @@ class Report(Base):
     def test_empty_report_and_followup(self):
         md = core.render_report("monitor", self.sid, full=True)["markdown"]
         self.assertIn("_нет данных_", md)
-        self.assertNotIn("## 6.", md)
+        self.assertNotIn("## 5.", md)
         r = core.add_followup("monitor", self.sid, "Гарантия LG", "что по гарантии?", "3 года.")
         self.assertTrue(Path(r["path"]).name.startswith("01_"))
         md = Path(r["report"]).read_text(encoding="utf-8")
-        self.assertIn("## 6. Уточнения", md)
+        self.assertIn("## 5. Уточнения", md)
         self.assertIn("[Гарантия LG](followups/01_", md)
         self.assertEqual(core.get_session("monitor", self.sid)["followups"], [Path(r["path"]).name])
 

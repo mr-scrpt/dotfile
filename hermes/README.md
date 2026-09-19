@@ -38,10 +38,11 @@ Bundled Hermes skills stay in `~/.hermes/skills/` unmanaged; only our own live h
     data/geo.yaml, data/reviews.yaml   shared config (override: ~/shopping/.config/<name>.yaml)
     tests/                 unittest suite (SHOPPING_HOME → temp dir; fixtures in tests/fixtures/*.gz)
 
-Adding a site: `mkdir core/sources/<key>`, write `source.yaml`; if the site can be fetched with
-curl add `fetcher.py` (+ a gzipped fixture and a parser test) and set `fetch: script`. Nothing
-else changes — the registry, probe, menus and `shop_fetch` pick it up. `sources.validate()`
-(run by the tests) rejects `fetch: script` without a fetcher.
+Adding a site: `mkdir core/sources/<key>`, write `source.yaml` + `fetcher.py` (+ a gzipped fixture
+and a parser test); `fetch: script` = curl, `fetch: chromium` = local headless Chromium (Cloudflare
+sites). Nothing else changes — the registry, probe, menus and `shop_fetch` pick it up. Policy: a
+site stays only while its scripted probe works (tests assert every source is scripted); small
+shops are reached through the aggregators (hotline, ek.ua, pn).
 
 Rules: behaviour changes go into `core/` with a test; adapters stay thin; no state is
 written under the plugin directory (`~/shopping` is the data root, `$SHOPPING_HOME` overrides).

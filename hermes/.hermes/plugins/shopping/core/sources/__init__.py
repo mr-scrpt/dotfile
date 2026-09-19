@@ -20,7 +20,7 @@ from types import ModuleType
 
 from ..fs import root
 
-GROUPS = ("aggregator", "marketplace", "shop")          # rendering order: aggregators first
+GROUPS = ("aggregator", "marketplace")                  # rendering order: aggregators first
 BUNDLED = Path(__file__).resolve().parent
 
 
@@ -78,7 +78,7 @@ def _read(dir_: Path) -> Source | None:
     if not y.is_file():
         return None
     d = yaml.safe_load(y.read_text(encoding="utf-8")) or {}
-    return Source(key=d.get("key") or dir_.name, title=d.get("title") or dir_.name, group=d.get("group", "shop"),
+    return Source(key=d.get("key") or dir_.name, title=d.get("title") or dir_.name, group=d.get("group", "marketplace"),
                   fetch=d.get("fetch", "browser"), search=d.get("search", ""), order=int(d.get("order", 100)),
                   notes=d.get("notes", "") or "", filters=d.get("filters") or {}, dir=dir_)
 
@@ -106,7 +106,7 @@ def reload() -> None:
 
 
 def all_sources() -> list[Source]:
-    """Catalogue order: group (aggregator, marketplace, shop) → `order` → key."""
+    """Catalogue order: group (aggregator, marketplace) → `order` → key."""
     return sorted(_registry().values(), key=lambda s: (GROUPS.index(s.group) if s.group in GROUPS else 9, s.order, s.key))
 
 

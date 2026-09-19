@@ -1,6 +1,0 @@
-key: compx
-title: CompX
-order: 50
-group: shop
-fetch: browser
-search: https://compx.com.ua/ua/search/?q={q}

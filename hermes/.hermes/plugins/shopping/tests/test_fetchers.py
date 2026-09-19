@@ -151,7 +151,7 @@ class FetchService(unittest.TestCase):
             r = core.fetch_site("monitor", self.sid, "foxtrot", "X")
         self.assertFalse(r["success"])
         self.assertEqual(core.get_session("monitor", self.sid)["log_tail"][-1]["event"], "source_blocked")
-        self.assertFalse(core.fetch_site("monitor", self.sid, "ktc", "X")["success"])  # no fetcher
+        self.assertFalse(core.fetch_site("monitor", self.sid, "nosuchsite", "X")["success"])
 
     def test_fetch_rozetka_returns_reviews(self):
         def fake_json(url, timeout=25):

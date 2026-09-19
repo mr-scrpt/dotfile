@@ -152,7 +152,7 @@ def _reviews_block(reviews: dict[str, list[dict]]) -> list[str]:
 def _summary_block(s: dict) -> list[str]:
     if not s:
         return []
-    out = ["## 5. Итог", ""]
+    out = ["## 4. Итог", ""]
     if s.get("verdict"):
         out += [s["verdict"], ""]
     for pk in s.get("picks") or []:
@@ -166,7 +166,7 @@ def _followups_block(sp) -> list[str]:
     files = sorted(sp.followups.glob("*.md")) if sp.followups.exists() else []
     if not files:
         return []
-    out = ["## 6. Уточнения", ""]
+    out = ["## 5. Уточнения", ""]
     for fp in files:
         first = fp.read_text(encoding="utf-8").splitlines()[0].lstrip("# ").strip() if fp.stat().st_size else fp.stem
         out.append(f"- [{cell(first)}](followups/{fp.name})")
@@ -180,7 +180,8 @@ def render(topic: str, session: str, full: bool = False) -> dict:
     if meta is None:
         return sessions.not_found(topic, session)
     rows = read_jsonl(sp.findings)
-    by = {g: [f for f in rows if f["group"] == g] for g in ("marketplace", "shop", "aggregator", "review")}
+    by = {g: [f for f in rows if f["group"] == g] for g in ("marketplace", "aggregator", "review")}
+    by["marketplace"] += [f for f in rows if f["group"] == "shop"]   # legacy sessions
     reviews: dict[str, list[dict]] = {}
     for f in by["review"]:
         reviews.setdefault(model_key(f), []).append(f)
@@ -188,17 +189,16 @@ def render(topic: str, session: str, full: bool = False) -> dict:
     lines = [f"# {meta['topic']}: {p['query']}", "",
              f"Сессия `{meta['id']}` · статус: {meta['status']} · обновлено: {meta['updated'][:16].replace('T', ' ')}", "",
              "## Параметры поиска", "", *_params_block(p), "",
-             "## 1. Маркетплейсы", "", *_offers_table(by["marketplace"], reviews),
-             "## 2. Магазины", "", *_offers_table(by["shop"], reviews),
-             "## 3. Агрегаторы цен (где выгоднее)", "", *_aggregator_table(by["aggregator"]),
-             "## 4. Отзывы и нюансы по моделям", "", *_reviews_block(reviews),
+             "## 1. Маркетплейсы и крупные сети", "", *_offers_table(by["marketplace"], reviews),
+             "## 2. Агрегаторы цен (где выгоднее)", "", *_aggregator_table(by["aggregator"]),
+             "## 3. Отзывы и нюансы по моделям", "", *_reviews_block(reviews),
              *_summary_block(meta.get("summary") or {}),
              *_followups_block(sp)]
     md = "\n".join(lines)
     sp.report.write_text(md, encoding="utf-8")
     append_jsonl(sp.log, {"ts": now(), "event": "report_rendered", "detail": {"findings": len(rows)}})
     out = {"success": True, "path": str(sp.report), "findings": len(rows), "lines": len(lines), "chars": len(md),
-           "rows": {g: len(_collapse_offers(by[g])) if g in ("marketplace", "shop") else len(by[g]) for g in by},
+           "rows": {g: len(_collapse_offers(by[g])) if g == "marketplace" else len(by[g]) for g in by},
            "picks": [pk.get("model") for pk in (meta.get("summary") or {}).get("picks") or []]}
     if full:
         out["markdown"] = md
