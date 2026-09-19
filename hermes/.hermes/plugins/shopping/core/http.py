@@ -1,7 +1,12 @@
 """Layer 1 — HTTP + HTML primitives shared by fetchers. No site knowledge here.
 
-`get()` is the only network call in the plugin: curl with a browser UA (curl is what proved to pass
-the UA sites' checks; urllib gets 403 on some). Tests never call it — fetchers accept raw text.
+Two network primitives, both subprocess-based so the plugin has no Python deps:
+  get()           curl with a browser UA (passes most UA sites; urllib gets 403 on some).
+  chromium_dom()  real headless Chromium `--dump-dom` for Cloudflare-challenged sites (comfy): the
+                  challenge is solved by the browser itself in ~3 s; a persistent profile keeps the
+                  clearance cookie so later hits are cheaper. No CDP/browser_exec — one process per
+                  page, nothing enters the model context.
+Tests never call either — fetchers accept raw text.
 """
 from __future__ import annotations
 
@@ -43,6 +48,39 @@ def get(url: str, timeout: int = 25, accept: str = "text/html,application/json;q
         return Response(int(code), body, tail.strip())
     except ValueError as e:
         raise FetchError(f"curl gave no status for {url}") from e
+
+
+CHROMIUM_BIN = ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome")
+CHROMIUM_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+
+
+def chromium_path() -> str | None:
+    import shutil
+    return next((p for b in CHROMIUM_BIN if (p := shutil.which(b))), None)
+
+
+def chromium_dom(url: str, timeout: int = 40, budget_ms: int = 4000, profile: str | None = None) -> str:
+    """Rendered DOM of `url` via headless Chromium. Raises FetchError when Chromium is missing, times
+    out, or the page is still a Cloudflare challenge."""
+    from pathlib import Path
+    binary = chromium_path()
+    if not binary:
+        raise FetchError("chromium not installed (needed for fetch: chromium sites)")
+    prof = profile or str(Path.home() / ".cache" / "shopping-chromium")
+    cmd = [binary, "--headless=new", "--no-sandbox", "--disable-gpu", "--no-first-run", "--disable-extensions",
+           f"--user-data-dir={prof}", "--window-size=1366,768", f"--user-agent={CHROMIUM_UA}",
+           f"--virtual-time-budget={budget_ms}", "--dump-dom", url]
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=timeout).stdout
+    except subprocess.TimeoutExpired as e:
+        raise FetchError(f"chromium timed out on {url}") from e
+    except OSError as e:
+        raise FetchError(f"chromium failed: {e}") from e
+    if not out.strip():
+        raise FetchError(f"chromium returned empty DOM for {url}")
+    if "Just a moment" in out[:5000] or "challenge-platform" in out[:20000]:
+        raise FetchError(f"cloudflare challenge not passed for {url}")
+    return out
 
 
 def get_json(url: str, timeout: int = 25):

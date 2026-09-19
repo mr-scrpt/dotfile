@@ -1,6 +1,6 @@
 """Layer 1 — source registry: every site is a self-contained package `core/sources/<key>/`.
 
-    <key>/source.yaml   declarative: key, title, group, fetch (script|browser), search URL, notes,
+    <key>/source.yaml   declarative: key, title, group, fetch (script|chromium|browser), search URL, notes,
                         optional filters (structured category ids), optional `order` (int, default 100)
     <key>/fetcher.py    optional: parse_search(page, meta) + search(query, meta) [+ catalog/offers/…]
 
@@ -29,7 +29,7 @@ class Source:
     key: str
     title: str
     group: str
-    fetch: str                     # "script" | "browser"
+    fetch: str                     # "script" (curl) | "chromium" (headless Chromium, still scripted) | "browser" (agent)
     search: str                    # URL template with {q}
     order: int = 100
     notes: str = ""
@@ -38,7 +38,8 @@ class Source:
 
     @property
     def scripted(self) -> bool:
-        return self.fetch == "script" and (self.dir / "fetcher.py").exists()
+        """Has a parser the plugin can run without the agent (curl or local Chromium)."""
+        return self.fetch in ("script", "chromium") and (self.dir / "fetcher.py").exists()
 
     def module(self) -> ModuleType:
         """Import <key>/fetcher.py (cached per process) — only for scripted sources."""
@@ -126,10 +127,10 @@ def validate() -> list[str]:
     for s in _registry().values():
         if s.group not in GROUPS:
             problems.append(f"{s.key}: group {s.group!r} not in {GROUPS}")
-        if s.fetch not in ("script", "browser"):
-            problems.append(f"{s.key}: fetch {s.fetch!r} must be script|browser")
-        if s.fetch == "script" and not (s.dir / "fetcher.py").exists():
-            problems.append(f"{s.key}: fetch: script but no fetcher.py")
+        if s.fetch not in ("script", "chromium", "browser"):
+            problems.append(f"{s.key}: fetch {s.fetch!r} must be script|chromium|browser")
+        if s.fetch in ("script", "chromium") and not (s.dir / "fetcher.py").exists():
+            problems.append(f"{s.key}: fetch: {s.fetch} but no fetcher.py")
         if "{q}" not in s.search:
             problems.append(f"{s.key}: search URL has no {{q}}")
         if s.scripted:

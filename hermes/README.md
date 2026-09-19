@@ -17,10 +17,10 @@ Bundled Hermes skills stay in `~/.hermes/skills/` unmanaged; only our own live h
 ## Plugin layering (plugins/shopping)
 
     core/fs.py             io primitives: root(), atomic json/jsonl, slugify, err()
-    core/http.py           curl GET + HTML/JSON/Nuxt helpers (no site knowledge)
+    core/http.py           curl GET, headless-Chromium DOM (Cloudflare sites), HTML/JSON/Nuxt helpers
     core/model.py          domain constants (GROUPS/GEO/STATUSES) + SessionPaths layout
     core/sources/<key>/    ONE FOLDER PER SITE (declarative):
-        source.yaml          key, title, group, fetch (script|browser), search URL, order, notes, filters
+        source.yaml          key, title, group, fetch (script|chromium|browser), search URL, order, notes, filters
         fetcher.py           optional: parse_search(page, meta) + search(query, meta) [+ catalog/offers]
     core/sources/__init__  registry: scans the folders (+ ~/shopping/.config/sources/), validate()
     core/catalog.py        shop_sources document = registry + data/{geo,reviews}.yaml

@@ -2,5 +2,5 @@ key: comfy
 title: Comfy
 order: 50
 group: marketplace
-fetch: browser
+fetch: chromium           # Cloudflare challenge; solved by local headless Chromium (core.http.chromium_dom)
 search: https://comfy.ua/ua/search/?q={q}

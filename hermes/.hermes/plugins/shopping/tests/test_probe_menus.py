@@ -25,6 +25,7 @@ from shopping.core.sources.eldorado import fetcher as eldorado  # noqa: E402
 from shopping.core.sources.brain import fetcher as brain  # noqa: E402
 from shopping.core.sources.pn import fetcher as pn  # noqa: E402
 from shopping.core.sources.ekatalog import fetcher as ekatalog  # noqa: E402
+from shopping.core.sources.comfy import fetcher as comfy  # noqa: E402
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -127,6 +128,28 @@ class NewParsers(unittest.TestCase):
         self.assertEqual(rows[0]["url"], "https://ek.ua/ua/ek-item.php?idg_=2760965")
         self.assertEqual(rows[0]["price_min_uah"], 40999)
 
+    def test_comfy_initial_state(self):
+        meta = {}
+        rows = comfy.parse_search(gz("comfy_search_iphone.html.gz"), meta)
+        self.assertEqual(len(rows), 50)
+        self.assertEqual(meta["total_est"], 400)
+        self.assertEqual(meta["categories"][0], {"name": "Смартфони", "count": 92})
+        self.assertEqual(rows[0]["price_uah"], 699)
+        self.assertEqual(rows[0]["price_note"], "было 1499 ₴")
+        self.assertEqual((rows[0]["rating"], rows[0]["rating_count"]), (4.7, 17))
+        self.assertEqual(rows[0]["seller"], "Comfy")
+        self.assertTrue(rows[0]["url"].startswith("https://comfy.ua/ua/"))
+        self.assertEqual(comfy.parse_search("<html>no state</html>", {}), [])
+
+    def test_chromium_dom_errors(self):
+        from shopping.core import http
+        with mock.patch.object(http, "chromium_path", return_value=None):
+            with self.assertRaises(http.FetchError):
+                http.chromium_dom("https://example.com")
+        with mock.patch.object(http, "chromium_path", return_value="/bin/true"):
+            with self.assertRaises(http.FetchError):        # empty DOM
+                http.chromium_dom("https://example.com", timeout=5)
+
     def test_rozetka_search_total_and_seller(self):
         meta = {}
         ids = rozetka.parse_search(json.loads(gz("rozetka_search_api.json.gz")), meta)
@@ -158,11 +181,12 @@ class Registry(Isolated):
         self.assertEqual(keys[0], "hotline")                       # aggregators first
         self.assertEqual(sources.validate(), [])
         self.assertEqual(sorted(s.key for s in sources.scripted()),
-                         ["allo", "brain", "citrus", "ekatalog", "eldorado", "epicentr", "foxtrot", "hotline", "moyo", "pn", "prom", "rozetka", "telemart"])
+                         ["allo", "brain", "citrus", "comfy", "ekatalog", "eldorado", "epicentr", "foxtrot", "hotline", "moyo", "pn", "prom", "rozetka", "telemart"])
         self.assertTrue(sources.get("hotline").filters)
         self.assertIn("{q}", sources.get("comfy").search)
         with self.assertRaises(KeyError):
-            sources.get("comfy").module()
+            sources.get("ktc").module()
+        self.assertEqual(sources.get("comfy").fetch, "chromium")
         self.assertEqual(sources.get("prom").search_url("a b"), "https://prom.ua/ua/search?search_term=a+b")
 
     def test_user_dir_source_is_discovered(self):
@@ -223,7 +247,7 @@ class Probe(Isolated):
         self.assertEqual(by["moyo"]["status"], "error")
         self.assertEqual(r["with_hits"], ["hotline", "prom"])
         self.assertEqual(by["rozetka"]["status"], "excluded")     # not in `only`
-        self.assertEqual(by["comfy"]["status"], "no_script")
+        self.assertEqual(by["ktc"]["status"], "no_script")
         self.assertEqual(len(r["sites"]), 18)
 
     def test_probe_empty_query(self):
@@ -240,14 +264,14 @@ class Menus(Isolated):
                         {"site": "moyo", "status": "zero", "probed": True, "hits": 0},
                         {"site": "allo", "status": "error", "probed": True, "hits": 0, "error": "blocked (403)"},
                         {"site": "prom", "status": "excluded", "probed": False},
-                        {"site": "comfy", "status": "no_script", "probed": False}]}
+                        {"site": "ktc", "status": "no_script", "probed": False}]}
         m = menus.sources_menu(pr)
         labels = [i["label"] for i in m["items"]]
         self.assertEqual(labels[0], "Brain (1 400 чохли для мобільних телефонів · 543 захисне скло · 246 мобільні телефони · +1)")
         self.assertEqual(labels[1:3], ["Rozetka (719+)", "Hotline (25)"])      # most hits first
         self.assertIn("Алло (ошибка зонда)", labels)
         self.assertIn("Prom.ua (исключён из зонда)", labels)
-        self.assertIn("Comfy (нет скрипта — только браузер)", labels)
+        self.assertIn("KTC (нет скрипта — только браузер)", labels)
         self.assertEqual(labels[-1], "MOYO (0 — не найдено)")                  # zeros last, still visible
         self.assertEqual(len(labels), 18)                                      # every source is listed
         self.assertTrue(m["multi"])
@@ -273,7 +297,7 @@ class Menus(Isolated):
     def test_probe_menu_lists_every_scripted_site_by_name(self):
         m = menus.probe_menu()
         labels = [i["label"] for i in m["items"]]
-        self.assertTrue(labels[0].startswith("все 13"))
+        self.assertTrue(labels[0].startswith("все 14"))
         self.assertIn("Епіцентр", labels)
         self.assertEqual(m["items"][-1]["value"], menus.PROBE_SKIP)
         self.assertTrue(m["multi"])
