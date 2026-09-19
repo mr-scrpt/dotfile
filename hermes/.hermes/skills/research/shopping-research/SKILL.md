@@ -33,7 +33,7 @@ Not for price alerts (`product-price-monitor`) or a quick tier guide (`ukraine-h
 - Every choice the user makes goes through `shop_menu` (the plugin renders a native pick list:
   arrows / numbers / Space checkboxes / "Other" free text). Never rebuild such lists as text.
   Only if `shop_menu` returns `no_ui` (gateway) ask the same thing as a numbered list in chat.
-- `web_search` backend is `ddgs` (keyless). `browser_exec` only for sites marked `fetch: browser`.
+- `web_search` backend is `ddgs` (keyless). `browser_exec` only for review pages and user-added sites.
 - Load this skill ONCE per session; do not re-read it.
 - Russian for everything user-facing and for `report.md`.
 
@@ -73,15 +73,16 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    the seed — take the distinct model codes from the titles of the chosen script sites.
    Then `shop_menu(kind="candidates", candidates=[…])` → the user ticks which models to compare.
    Done: 1–12 candidate model codes chosen by the user, `source_done` logged.
-5. Offers — for EVERY chosen candidate and EVERY site in `params.sites` with `fetch: script`
-   (all 14 catalogue sites are scripted: hotline, ekatalog, pn, rozetka, comfy, foxtrot, moyo, allo,
-   citrus, eldorado, prom, epicentr, telemart, brain — policy: a site stays in the catalogue only
-   while its scripted probe works; small shops are covered through the aggregators): `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns
-   compact data; you only read it. `fetch: chromium` (comfy) is scripted too — the plugin runs local headless Chromium itself.
-   Chosen sites with `fetch: browser` (price, ktc, elmir, compx): open the `search` URL in `browser_exec`, take the first exact-model card, store via
-   `shop_add_findings`; on "Just a moment"/empty → `shop_log(source_blocked)` and move on.
-   Never retry a blocked site more than once. Done: each candidate has ≥1 marketplace finding
-   or a `source_blocked` line per missing site.
+5. Offers — for EVERY chosen candidate and EVERY site in `params.sites`: `shop_fetch(site, model,
+   geo)`. All 14 catalogue sites are scripted (hotline, ekatalog, pn, rozetka, comfy, foxtrot,
+   moyo, allo, citrus, eldorado, prom, epicentr, telemart, brain; comfy runs through local
+   headless Chromium inside the plugin). The tool stores matching offers itself and returns
+   compact data; you only read it. Policy: a site stays in the catalogue only while its scripted
+   probe works — small shops are covered through the aggregators. A site the user typed as free
+   text (not in the catalogue): open its search in `browser_exec`, take the first exact-model
+   card, store via `shop_add_findings`; on "Just a moment"/empty → `shop_log(source_blocked)`
+   and move on. Never retry a blocked site more than once. Done: each candidate has ≥1
+   marketplace finding or a `source_blocked` line per missing site.
    Parallel option for ≥6 candidates: `delegate_task`, one child per site group, each child
    uses the CLI (`python3 ~/.hermes/plugins/shopping/cli.py fetch <topic> <session> <site>
    "<model>"`). Verify with `shop_get_session` counts after they return.
