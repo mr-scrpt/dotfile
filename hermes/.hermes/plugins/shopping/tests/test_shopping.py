@@ -115,48 +115,56 @@ class Findings(Base):
 
 
 class Report(Base):
-    def test_render_sections_and_review_nuances_join_offers(self):
+    def test_render_picks_per_pick_blocks_and_comparison(self):
         self.add(OFFER,
                  {"group": "marketplace", "source": "telemart", "model": "LG 27GS95QE-B", "url": "https://t/1", "price_uah": 30500},
                  {"group": "aggregator", "source": "hotline", "model": "LG 27GS95QE-B", "url": "https://h/1",
                   "price_min_uah": 29999, "price_max_uah": 34500, "offers_count": 17},
                  {"group": "review", "source": "reddit", "model": "LG 27GS95QE-B", "url": "https://r/1",
-                  "nuances": ["coil whine"], "model_match": "exact"})
-        core.set_summary("monitor", self.sid, "Берём LG.", [{"model": "LG 27GS95QE-B", "why": "дешевле"}], ["цены на 18.09"])
+                  "nuances": ["coil whine"], "pros": ["чёрный OLED"], "model_match": "exact"},
+                 {"group": "marketplace", "source": "moyo", "model": "MSI MAG 271QPX", "url": "https://m/9", "price_uah": 28000, "rating": 4.5, "rating_count": 3})
+        core.set_summary("monitor", self.sid, "LG лучше по тексту; MSI дешевле, но глянец.",
+                         [{"model": "LG 27GS95QE-B", "why": "под текст и код", "cons": ["нет KVM"]}], ["цены на 18.09"])
         md = core.render_report("monitor", self.sid, full=True)["markdown"]
-        for h in ("## 1. Маркетплейсы", "## 2. Агрегаторы", "## 3. Отзывы", "## 4. Итог"):
+        for h in ("## 1. Лучшие позиции", "## 2. По каждой позиции", "## 3. Сравнение и вывод", "## 4. Остальные кандидаты"):
             self.assertIn(h, md)
-        self.assertIn("31 999 ₴", md)
-        self.assertIn("29 999 – 34 500 ₴", md)
-        self.assertIn("| да: Моно 10 |", md)
-        self.assertEqual(md.count("coil whine"), 2)  # once in the (single) offers table + reviews block
-        self.assertIn("см. выше", md)                # second seller row of the same model points up
+        self.assertIn("1. **LG 27GS95QE-B** — от 30 500 ₴ · [telemart](https://t/1) — под текст и код", md)   # ranked list with the cheapest link
+        self.assertIn("### LG 27GS95QE-B — от 30 500 ₴", md)
+        self.assertIn("| [rozetka](https://rozetka.com.ua/ua/p1/?utm_source=x) | 31 999 ₴ | 4.8 (12) | да: Моно 10 | Rozetka |", md)
+        self.assertIn("Агрегаторы: [hotline](https://h/1) 29 999 – 34 500 ₴, 17 предл.", md)
+        self.assertIn("- ＋ чёрный OLED", md)
+        self.assertIn("- ⚠ coil whine", md)
+        self.assertIn("- ⚠ нет KVM", md)                    # pick-level cons from the summary
+        self.assertIn("Отзывы: [reddit](https://r/1)", md)
+        self.assertIn("LG лучше по тексту", md)
+        self.assertIn("| MSI MAG 271QPX | 28 000 ₴ | [moyo](https://m/9) | 4.5 (3) |", md)   # non-pick → "others" table
+        self.assertLess(md.index("## 1."), md.index("## 2."))
         compact = core.render_report("monitor", self.sid)
         self.assertNotIn("markdown", compact)
-        self.assertEqual(compact["rows"]["marketplace"], 2)   # rozetka + telemart rows
-        self.assertEqual(compact["picks"], ["LG 27GS95QE-B"])
-        self.assertIn("⚠ coil whine", md)
-        self.assertIn("совпадение модели: exact", md)
+        self.assertEqual(compact["rows"]["marketplace"], 3)
+        self.assertEqual((compact["picks"], compact["others"]), (["LG 27GS95QE-B"], 1))
         self.assertTrue(Path(core.get_session("monitor", self.sid)["report_path"]).exists())
 
-    def test_offers_collapse_per_seller_and_hide_zero_rating(self):
+    def test_pick_offers_collapse_per_seller_and_hide_zero_rating(self):
         base = {"group": "marketplace", "source": "rozetka", "model": "LG 27GS95QE-B"}
         self.add(dict(base, url="https://r/a", title="LG A", price_uah=25000, seller="Rozetka", rating=4.4, rating_count=79),
                  dict(base, url="https://r/b", title="LG B", price_uah=25100, seller="продавец маркетплейса"),
                  dict(base, url="https://r/c", title="LG C", price_uah=24900, seller="продавец маркетплейса"),
                  dict(base, url="https://r/d", title="LG D", price_uah=24000, seller="продавец маркетплейса", availability="немає"))
+        core.set_summary("monitor", self.sid, "ok", [{"model": "LG 27GS95QE-B", "why": "x"}])
         md = core.render_report("monitor", self.sid, full=True)["markdown"]
-        rows = [l for l in md.splitlines() if l.startswith("| ") and "LG " in l]
+        rows = [l for l in md.splitlines() if l.startswith("| [rozetka]")]
         self.assertEqual(len(rows), 2)                      # Rozetka + one marketplace-seller row
         self.assertIn("24 900 ₴", rows[0])                  # cheapest in-stock third-party wins
-        self.assertIn("(+2 дубл.)", rows[0])
+        self.assertIn("(+2)", rows[0])
         self.assertIn("| — |", rows[0])                     # no "0 (0)" rating
         self.assertIn("4.4 (79)", rows[1])
-        self.assertIn("см. выше", rows[1])                  # nuances printed once per model per table
+        self.assertIn("### LG 27GS95QE-B — от 24 900 ₴", md)
 
     def test_empty_report_and_followup(self):
         md = core.render_report("monitor", self.sid, full=True)["markdown"]
-        self.assertIn("_нет данных_", md)
+        self.assertIn("_итог ещё не подведён_", md)
+        self.assertNotIn("## 4.", md)
         self.assertNotIn("## 5.", md)
         r = core.add_followup("monitor", self.sid, "Гарантия LG", "что по гарантии?", "3 года.")
         self.assertTrue(Path(r["path"]).name.startswith("01_"))

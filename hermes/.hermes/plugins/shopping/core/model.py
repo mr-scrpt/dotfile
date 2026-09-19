@@ -11,6 +11,11 @@ GROUPS = ("marketplace", "aggregator", "review")   # "shop" merged into marketpl
 GEO = ("ua_local", "ua_delivery")
 STATUSES = ("draft", "searching", "done")
 REVIEW_MODES = ("none", "cards", "full")
+MODES = ("exact", "spec", "reference")       # exact: one known model · spec: pick by parameters · reference: pick for an owned device
+CONDITIONS = ("new", "any")                  # new: drop б/у, відновлений, refurbished cards
+MODE_LABEL = {"exact": "конкретная модель (напр. iPhone 17 Pro 256)",
+              "spec": "подбор по параметрам (напр. монитор 27\" 100+ Гц 2K+)",
+              "reference": "подбор под имеющееся устройство (ссылка или название образца + что нужно)"}
 GEO_LABEL = {"ua_local": "только Украина (локальный склад)",
              "ua_delivery": "с доставкой в Украину (вкл. Rozetka EU)"}
 
@@ -21,7 +26,12 @@ SESSION_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(_[a-z0-9-]+)?(-\d+)?$")
 def default_params() -> dict:
     return {"query": "", "purpose": "", "must": [], "nice": [], "extra": [], "geo": "ua_local", "budget_uah": None,
             "notes": "", "sites": [], "category": "",
-            "reviews": "cards"}  # reviews: none | cards (buyer reviews from chosen sites) | full (cards + web reviews)  # category: product category picked from the probe (filters accessories)  # sites: [] = not chosen yet; the skill must ask before searching
+            "reviews": "cards",      # none | cards (buyer reviews from chosen sites) | full (cards + web reviews)
+            "mode": "spec",          # exact | spec | reference — chosen by the user in the first menu
+            "condition": "new",      # new | any
+            "reference": None,       # reference mode: {"title", "url", "source", "spec": {...}} of the owned device
+            "items": [],             # reference mode with several wanted things: [{"name": "инвертор", "must": [...]}, ...]
+            "shortlist": []}         # models the user picked to compare in depth (candidates menu)
 
 
 @dataclass(frozen=True)

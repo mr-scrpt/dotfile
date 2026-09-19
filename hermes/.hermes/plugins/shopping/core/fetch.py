@@ -56,6 +56,13 @@ ACCESSORY_CATEGORIES = ("чохл", "чехл", "скло", "стекл", "пл�
                         "тримач", "держател", "спрей", "серветк", "салфетк", "наклейк", "ремінц", "ремешк")
 
 
+USED_RE = re.compile(r"\b(б/у|бу|вживан\w*|відновлен\w*|восстановлен\w*|refurbished|renewed|уцін\w*|уцен\w*)\b", re.I)
+
+
+def is_used(title: str) -> bool:
+    return bool(USED_RE.search(title or ""))
+
+
 def category_ok(card_category: str, wanted: str | None) -> tuple[bool, str]:
     """(keep?, reason). `wanted` = the category the user picked from the probe (may be empty).
     Cards whose category is an accessory are dropped; when `wanted` is given the card's category
@@ -124,7 +131,7 @@ def _compact_offer(f: dict) -> dict:
 
 
 def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local", limit: int = 5,
-          store: bool = True, category: str | None = None) -> dict:
+          store: bool = True, category: str | None = None, condition: str | None = None) -> dict:
     """Search `site` for `model`, keep hits whose title carries the model code AND whose site
     category is the product itself (accessories are dropped; `category` — from the probe menu —
     must match when given), store as findings, return compact offers plus review texts (rozetka)
@@ -144,8 +151,12 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
     matched = [h for h in hits if matches_model(h.get("title") or "", model)]
     dropped = []
     keep = []
+    condition = condition or (meta.get("params") or {}).get("condition") or "new"
+    category = category or (meta.get("params") or {}).get("category") or None
     for h in matched:
         ok, why = category_ok(h.get("category") or "", category)
+        if ok and condition == "new" and is_used(h.get("title") or ""):
+            ok, why = False, "б/у или восстановленный (condition=new)"
         (keep if ok else dropped).append((h, why))
     matched = [h for h, _ in keep]
     if geo == "ua_local":
@@ -181,7 +192,7 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
     if stored.get("errors"):
         sessions.log_event(topic, session, "note", f"{site}: {len(stored['errors'])} rows rejected: {stored['errors'][0]['error'][:120]}")
     sessions.log_event(topic, session, "source_done",
-                       f"{site}: {model}: {len(hits)} hits, {len(matched)} matched, {len(dropped)} dropped by category")
+                       f"{site}: {model}: {len(hits)} hits, {len(matched)} matched, {len(dropped)} dropped (category/condition)")
     return {"success": True, "site": site, "model": model, "hits": len(hits), "matched": len(matched),
             "dropped": [{"title": (h.get("title") or "")[:70], "why": why} for h, why in dropped[:5]],
             "stored": {k: stored.get(k) for k in ("added", "merged")} | ({"rejected": len(stored["errors"])} if stored.get("errors") else {}),

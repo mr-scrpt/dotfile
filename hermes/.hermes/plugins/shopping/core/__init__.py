@@ -9,6 +9,7 @@ from .fetch import catalog as fetch_catalog, fetch as fetch_site, hotline_filter
 from . import menus, sources
 from .probe import probe as probe_sites_search, sites as probe_sites
 from .reviews import collect as collect_reviews
+from .resolve import resolve as resolve_reference
 from .findings import add as add_findings, list_ as list_findings, resume_context as get_session
 from .model import GEO, GROUPS, STATUSES
 from .report import add_followup, render as render_report

@@ -92,6 +92,14 @@ class RozetkaParsers(unittest.TestCase):
         self.assertEqual(rozetka.seller_from_url("https://hard.rozetka.com.ua/ua/520016654/p520016654/"), "продавец маркетплейса")
         self.assertEqual(rozetka.seller_from_url(""), "")
 
+    def test_parse_product_characteristics(self):
+        c = rozetka.parse_product(gz("rozetka_product_powerplant.html.gz"))
+        self.assertEqual(c["title"], "Акумуляторна батарея PowerPlant LiFePO4 24V 100Ah (NV822447)")
+        self.assertEqual(c["category_path"][:3], ["Комп'ютери та ноутбуки", "Комп'ютерні комплектуючі", "Акумулятори та аксесуари для ДБЖ"])
+        self.assertEqual(c["spec"]["Ємність"], "100 А·год")
+        self.assertEqual(c["spec"]["Напруга"], "24 В")
+        self.assertIn("LiFePO4", c["spec"]["Тип АКБ"])
+
     def test_card_eu_marker(self):
         page = '<script type="application/ld+json">{"@type":"Product","offers":{"price":100,"availability":"https://schema.org/InStock"}}</script><p>Продавець: Rozetka EU</p>'
         self.assertEqual(rozetka.parse_card(page)["delivery_scope"], "ua_delivery")
@@ -120,6 +128,37 @@ class HtmlShops(unittest.TestCase):
         self.assertEqual(r[2]["availability"], "немає")
 
 
+class ConditionFilter(unittest.TestCase):
+    def test_is_used(self):
+        from shopping.core.fetch import is_used
+        self.assertTrue(is_used("Смартфон Apple iPhone 16 Pro 256GB Black (Відновлений)"))
+        self.assertTrue(is_used("iPhone 16 Pro 256 б/у ідеальний стан"))
+        self.assertTrue(is_used("Apple iPhone 16 Pro 256GB Refurbished"))
+        self.assertFalse(is_used("Смартфон Apple iPhone 16 Pro 256GB Black Titanium"))
+        self.assertFalse(is_used("Монітор Samsung Odyssey OLED G6"))
+
+
+class ResolveReference(unittest.TestCase):
+    def test_site_for_url(self):
+        from shopping.core import resolve
+        self.assertEqual(resolve.site_for_url("https://rozetka.com.ua/ua/powerplant-nv822447/p477567849/"), "rozetka")
+        self.assertEqual(resolve.site_for_url("https://www.epicentrk.ua/ua/shop/x.html"), "epicentr")
+        self.assertIsNone(resolve.site_for_url("https://example.com/x"))
+
+    def test_resolve_url_uses_site_card(self):
+        from shopping.core import resolve
+        with mock.patch.object(rozetka, "get", return_value=Response(200, gz("rozetka_product_powerplant.html.gz"), "u")):
+            r = resolve.resolve("https://rozetka.com.ua/ua/powerplant-nv822447/p477567849/")
+        self.assertTrue(r["success"])
+        self.assertEqual(r["reference"]["source"], "rozetka")
+        self.assertEqual(r["reference"]["spec"]["Напруга"], "24 В")
+
+    def test_resolve_rejects_unknown_host(self):
+        from shopping.core import resolve
+        self.assertFalse(resolve.resolve("https://example.com/p/1")["success"])
+        self.assertFalse(resolve.resolve("")["success"])
+
+
 class FetchService(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -144,13 +183,16 @@ class FetchService(unittest.TestCase):
         from shopping.core.sources.comfy import fetcher as comfy
         page = gz("comfy_search_iphone.html.gz")
         with mock.patch.object(comfy, "chromium_dom", return_value=page):
-            r = core.fetch_site("monitor", self.sid, "comfy", "iPhone 16 Pro 256", limit=50, category="Смартфони")
-        self.assertTrue(r["success"])
-        self.assertTrue(all(o.get("category") == "Смартфони" for o in r["offers"]), [o.get("category") for o in r["offers"]])
-        self.assertTrue(any("accessory" in d["why"] for d in r["dropped"]) or r["matched"] > 0)
+            new = core.fetch_site("monitor", self.sid, "comfy", "iPhone 16 Pro 256", limit=50, category="Смартфони")
+            anyc = core.fetch_site("monitor", self.sid, "comfy", "iPhone 16 Pro 256", limit=50, category="Смартфони", condition="any")
+        # every smartphone card in this fixture is "Відновлений" → condition=new keeps nothing, says why
+        self.assertEqual(new["matched"], 0)
+        self.assertTrue(any("восстановленный" in d["why"] for d in new["dropped"]), new["dropped"])
+        self.assertTrue(anyc["matched"] > 0)
+        self.assertTrue(all(o.get("category") == "Смартфони" for o in anyc["offers"]), [o.get("category") for o in anyc["offers"]])
         rows = core.list_findings("monitor", self.sid, group="marketplace")["findings"]
         self.assertTrue(rows and all(x["category"] == "Смартфони" for x in rows))
-        self.assertIn("dropped by category", core.get_session("monitor", self.sid)["log_tail"][-1]["detail"])
+        self.assertIn("dropped (category/condition)", core.get_session("monitor", self.sid)["log_tail"][-1]["detail"])
 
     def test_matches_model(self):
         self.assertTrue(fetch_svc.matches_model('Монітор 26.5" MSI MAG 274QP QD-OLED X24', "MSI MAG 274QP QD-OLED X24"))

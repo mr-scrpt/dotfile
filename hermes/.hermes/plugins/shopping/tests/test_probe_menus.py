@@ -342,3 +342,21 @@ class UiAdapter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ModeMenus(unittest.TestCase):
+    def test_mode_menu_puts_reference_first_for_urls(self):
+        from shopping.core import menus
+        self.assertEqual([i["value"] for i in menus.mode_menu("iPhone 17 Pro")["items"]], ["exact", "spec", "reference"])
+        self.assertEqual(menus.mode_menu("https://rozetka.com.ua/ua/p1/ инвертор")["items"][0]["value"], "reference")
+        self.assertEqual([i["value"] for i in menus.condition_menu()["items"]], ["new", "any"])
+
+    def test_update_params_validates_mode_and_condition(self):
+        import os, tempfile
+        from shopping.core import sessions
+        with tempfile.TemporaryDirectory() as d, unittest.mock.patch.dict(os.environ, {"SHOPPING_HOME": d}):
+            sessions.create_topic("t"); sid = sessions.create_session("t", "q", "p")["session"]["id"]
+            self.assertIn("mode must be", sessions.update_params("t", sid, mode="fuzzy").get("error", ""))
+            self.assertIn("condition must be", sessions.update_params("t", sid, condition="mint").get("error", ""))
+            self.assertEqual(sessions.update_params("t", sid, mode="reference", condition="any")["session"]["params"]["mode"], "reference")
+

@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 
 from . import probe, sessions
+from .model import MODE_LABEL
 
 NEW_TOPIC = "__new_topic__"
 NEW_SESSION = "__new_session__"
@@ -108,6 +109,19 @@ def reviews_menu() -> dict:
             "items": [{"value": "none", "label": "не нужны (напр. iPhone — и так всё ясно)"},
                       {"value": "cards", "label": "только отзывы покупателей с выбранных магазинов (скриптом; дёшево)"},
                       {"value": "full", "label": "отзывы магазинов + обзоры и форумы в интернете (дороже; для мониторов и т.п.)"}]}
+
+
+def mode_menu(query: str = "") -> dict:
+    """First question after the session: how to search. A URL in the query puts `reference` first."""
+    order = ("reference", "exact", "spec") if re.search(r"https?://", query or "") else ("exact", "spec", "reference")
+    return {"question": "Что ищем?", "multi": False,
+            "items": [{"value": m, "label": _label(MODE_LABEL[m])} for m in order]}
+
+
+def condition_menu() -> dict:
+    return {"question": "Состояние товара", "multi": False,
+            "items": [{"value": "new", "label": "только новые (б/у и восстановленные отбрасываются)"},
+                      {"value": "any", "label": "любое (включая б/у и восстановленные)"}]}
 
 
 def candidates_menu(candidates: list[dict]) -> dict:

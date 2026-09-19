@@ -49,6 +49,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit", "category"),
     "shop_probe": _json(core.probe_sites_search, "query", "exclude", "only"),
     "shop_reviews": _json(core.collect_reviews, "topic", "session", "model", "sites"),
+    "shop_resolve": _json(core.resolve_reference, "reference"),
 }
 
 
@@ -63,6 +64,10 @@ def _menu(args: dict, **kw) -> str:
             menu = core.menus.topics_menu()
         elif kind == "sessions":
             menu = core.menus.sessions_menu(args["topic"])
+        elif kind == "mode":
+            menu = core.menus.mode_menu(args.get("query") or "")
+        elif kind == "condition":
+            menu = core.menus.condition_menu()
         elif kind == "probe":
             menu = core.menus.probe_menu()
         elif kind == "sources":
@@ -94,7 +99,7 @@ HANDLERS["shop_menu"] = _menu
 
 START_PROMPT = (
     "Загрузи скилл shopping-research (skill_view) и веди меня по его процедуре с шага 1: "
-    "тема → сессия → бриф → зонд → источники → кандидаты → поиск → отчёт. "
+    "тема → сессия → тип поиска → бриф → зонд → источники → (кандидаты) → поиск → отзывы → отчёт. "
     "Все списки — через shop_menu; свободные поля спрашивай по одному. Начинай."
 )
 

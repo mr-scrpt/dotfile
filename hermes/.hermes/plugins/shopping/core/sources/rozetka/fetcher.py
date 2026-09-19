@@ -101,6 +101,34 @@ def parse_card(page: str) -> dict:
     return out
 
 
+def parse_product(page: str) -> dict:
+    """Product page (SSR) → {title, category_path, spec}. Characteristics live in
+    <dl class="list"><div class="item"><dt class="label">…</dt><dd class="value">…</dd>."""
+    h1 = re.search(r"<h1[^>]*>(.*?)</h1>", page, re.S)
+    title = text(h1.group(1)) if h1 else ""
+    path: list[str] = []
+    for y in ld_json(page):
+        if isinstance(y, dict) and y.get("@type") == "BreadcrumbList":
+            names = [(i.get("item") or {}).get("name") if isinstance(i.get("item"), dict) else i.get("name")
+                     for i in y.get("itemListElement") or []]
+            path = [n for n in names if n][1:-1]   # drop "Інтернет-магазин Rozetka" and the product itself
+    spec: dict[str, str] = {}
+    dl = re.search(r'<dl[^>]*class="list"[^>]*>(.*?)</dl>', page, re.S)
+    for item in re.findall(r'<div[^>]*class="item"[^>]*>(.*?)</div>', dl.group(1), re.S) if dl else []:
+        k = re.search(r"<dt[^>]*>(.*?)</dt>", item, re.S)
+        v = re.search(r"<dd[^>]*>(.*?)</dd>", item, re.S)
+        if k and v and text(k.group(1)) and text(v.group(1)):
+            spec[text(k.group(1))] = text(v.group(1))
+    return {"title": title, "category_path": path, "spec": spec}
+
+
+def card(url: str) -> dict:
+    r = get(url)
+    if r.blocked:
+        raise FetchError(f"rozetka card blocked ({r.status})")
+    return parse_product(r.text)
+
+
 def seller_from_url(url: str) -> str:
     """Rozetka's own listings have a slug URL (/msi-mag-274qp-…/p581847193/); third-party marketplace
     listings get a numeric-only slug (/520016654/p520016654/). Seller names of third parties are

@@ -5,7 +5,7 @@ from datetime import date
 from typing import Any
 
 from .fs import append_jsonl, err, now, read_json, read_jsonl, root, slugify, write_json
-from .model import REVIEW_MODES, GEO, SESSION_RE, SLUG_RE, STATUSES, SessionPaths, default_params, topic_dir
+from .model import CONDITIONS, MODES, REVIEW_MODES, GEO, SESSION_RE, SLUG_RE, STATUSES, SessionPaths, default_params, topic_dir
 
 
 # ------------------------------------------------------------------ topics
@@ -111,6 +111,10 @@ def update_params(topic: str, session: str, status: str | None = None, **params)
         return err(f"geo must be one of {GEO}")
     if changes.get("reviews") not in (None, *REVIEW_MODES):
         return err(f"reviews must be one of {REVIEW_MODES}")
+    if changes.get("mode") not in (None, *MODES):
+        return err(f"mode must be one of {MODES}")
+    if changes.get("condition") not in (None, *CONDITIONS):
+        return err(f"condition must be one of {CONDITIONS}")
     meta["params"].update(changes)
     if status:
         meta["status"] = status

@@ -8,10 +8,6 @@ from .fs import append_jsonl, now, read_jsonl, slugify
 from .model import GEO_LABEL
 from . import sessions
 
-MD_TABLE_HEAD: tuple[str, ...] = ("| # | Модель | Цена | Магазин | Рейтинг | Нюансы по отзывам | Рассрочка | Гео | Продавец / наличие |",
-                 "|---|---|---|---|---|---|---|---|---|")
-
-
 def _n(v: int) -> str:
     return f"{v:,}".replace(",", " ")
 
@@ -93,72 +89,53 @@ def _collapse_offers(items: list[dict]) -> list[dict]:
     return list(best.values())
 
 
-def _offers_table(items: list[dict], reviews: dict[str, list[dict]]) -> list[str]:
-    if not items:
-        return ["_нет данных_", ""]
-    items = sorted(_collapse_offers(items), key=lambda f: (f.get("price_uah") is None, f.get("price_uah") or 0))
-    out = list(MD_TABLE_HEAD)
-    shown: set[str] = set()
-    for i, f in enumerate(items, 1):
-        name = cell(f.get("title") or f.get("model"))
-        if f.get("model") and f["model"] not in name:
-            name += f" ({cell(f['model'])})"
-        mk = model_key(f)
-        if mk in shown:
-            nuances_cell = "см. выше"
-        else:
-            shown.add(mk)
-            nuances = list(f.get("nuances") or []) + list(f.get("cons") or [])
-            for r in reviews.get(mk, []):
-                nuances += r.get("nuances") or []
-            nuances_cell = "; ".join(_dedupe(nuances)) or "—"
-        geo = "UA" if f.get("delivery_scope") == "ua_local" else "доставка в UA"
-        seller = " / ".join(x for x in (cell(f.get("seller")), cell(f.get("availability"))) if x) or "—"
-        if f.get("_dups"):
-            seller += f" (+{f['_dups']} дубл.)"
-        out.append(f"| {i} | {name} | {cell(fmt_price(f))} | {link(f)} | {cell(fmt_rating(f))} | "
-                   f"{cell(nuances_cell)} | {cell(fmt_installment(f))} | {geo} | {seller} |")
-    return out + [""]
-
-
-def _aggregator_table(aggs: list[dict]) -> list[str]:
-    if not aggs:
-        return ["_нет данных_", ""]
-    out = ["| Модель | Агрегатор | Цена мин – макс | Предложений | Рейтинг |", "|---|---|---|---|---|"]
-    for f in sorted(aggs, key=lambda f: (model_key(f), f.get("source", ""))):
-        out.append(f"| {cell(f.get('model') or f.get('title'))} | {link(f)} | {cell(fmt_price(f))} | "
-                   f"{cell(f.get('offers_count') or '—')} | {cell(fmt_rating(f))} |")
-    return out + [""]
-
-
-def _reviews_block(reviews: dict[str, list[dict]]) -> list[str]:
-    if not reviews:
-        return ["_отзывы ещё не собраны_", ""]
+def _pick_lines(pk: dict, offers: list[dict], aggs: list[dict], reviews: list[dict]) -> list[str]:
+    """One pick: header with the best price + links, then offers table, aggregator links, pros/cons."""
     out = []
-    for key in sorted(reviews):
-        rs = reviews[key]
-        out.append(f"### {cell(rs[0].get('model') or rs[0].get('title'))}")
-        for r in rs:
-            match = f" · совпадение модели: {r['model_match']}" if r.get("model_match") else ""
-            out.append(f"- {link(r, r.get('source') or 'источник')}{match}")
-            out += [f"  - ⚠ {n}" for n in r.get("nuances") or []]
-            out += [f"  - ＋ {n}" for n in r.get("pros") or []]
-            if r.get("notes"):
-                out.append(f"  - {r['notes']}")
+    offers = sorted(_collapse_offers(offers), key=lambda f: (f.get("price_uah") is None, f.get("price_uah") or 0))
+    best = next((f for f in offers if f.get("price_uah") is not None and "немає" not in (f.get("availability") or "")), None)
+    head = f"### {cell(pk.get('model'))}"
+    if best:
+        head += f" — от {_n(best['price_uah'])} ₴ ({link(best)})"
+    out += [head, ""]
+    if pk.get("why"):
+        out += [pk["why"], ""]
+    if offers:
+        out += ["| Магазин | Цена | Рейтинг | Рассрочка | Продавец / наличие |", "|---|---|---|---|---|"]
+        for f in offers:
+            seller = " / ".join(x for x in (cell(f.get("seller")), cell(f.get("availability"))) if x) or "—"
+            if f.get("_dups"):
+                seller += f" (+{f['_dups']})"
+            out.append(f"| {link(f)} | {cell(fmt_price(f))} | {cell(fmt_rating(f))} | {cell(fmt_installment(f))} | {seller} |")
         out.append("")
-    return out
+    if aggs:
+        out.append("Агрегаторы: " + " · ".join(f"{link(a)} {cell(fmt_price(a))}" + (f", {a['offers_count']} предл." if a.get("offers_count") else "")
+                                                for a in sorted(aggs, key=lambda a: a.get("source", ""))))
+        out.append("")
+    pros = _dedupe([x for r in reviews for x in (r.get("pros") or [])] + list(pk.get("pros") or []), 8)
+    cons = _dedupe([x for r in reviews for x in (r.get("nuances") or []) + (r.get("cons") or [])] + list(pk.get("cons") or []), 8)
+    if pros:
+        out += ["Плюсы:"] + [f"- ＋ {x}" for x in pros]
+    if cons:
+        out += ["Минусы / нюансы:"] + [f"- ⚠ {x}" for x in cons]
+    srcs = [link(r, r.get("source") or "источник") for r in reviews]
+    if srcs:
+        out.append("Отзывы: " + " · ".join(srcs))
+    return out + [""]
 
 
-def _summary_block(s: dict) -> list[str]:
-    if not s:
+def _others_block(models: list[str], by_model: dict[str, list[dict]], aggs_by: dict[str, list[dict]]) -> list[str]:
+    if not models:
         return []
-    out = ["## 4. Итог", ""]
-    if s.get("verdict"):
-        out += [s["verdict"], ""]
-    for pk in s.get("picks") or []:
-        out.append(f"- **{pk.get('model', '')}** — {pk.get('why', '')}" + (f" ({pk['url']})" if pk.get("url") else ""))
-    if s.get("caveats"):
-        out += ["", "Оговорки:"] + [f"- {c}" for c in s["caveats"]]
+    out = ["## 4. Остальные кандидаты", "", "| Модель | Цена от | Где | Рейтинг |", "|---|---|---|---|"]
+    for mk in models:
+        rows = _collapse_offers(by_model.get(mk, [])) + aggs_by.get(mk, [])
+        if not rows:
+            continue
+        best = min(rows, key=lambda f: (f.get("price_uah") is None and f.get("price_min_uah") is None,
+                                         f.get("price_uah") or f.get("price_min_uah") or 0))
+        rated = max(rows, key=lambda f: f.get("rating_count") or 0)
+        out.append(f"| {cell(best.get('model') or best.get('title'))} | {cell(fmt_price(best))} | {link(best)} | {cell(fmt_rating(rated))} |")
     return out + [""]
 
 
@@ -173,33 +150,72 @@ def _followups_block(sp) -> list[str]:
     return out + [""]
 
 
+def _reference_block(p: dict) -> list[str]:
+    ref = p.get("reference") or {}
+    if not ref:
+        return []
+    out = [f"- Образец: [{cell(ref.get('title'))}]({ref.get('url')})"]
+    spec = ref.get("spec") or {}
+    if spec:
+        out.append("  - " + "; ".join(f"{k}: {v}" for k, v in list(spec.items())[:8]))
+    for it in p.get("items") or []:
+        out.append(f"- Нужно: {it.get('name')}" + (" — " + "; ".join(it.get("must") or []) if it.get("must") else ""))
+    return out
+
+
 def render(topic: str, session: str, full: bool = False) -> dict:
-    """Write report.md. Returns a compact summary (path, sizes, picks) — the markdown itself only
-    when `full=True`; the agent shows the file to the user via read_file, not from the tool result."""
+    """Write report.md: parameters → 1. best picks (links) → 2. per-pick summary (offers, aggregators,
+    pros/cons) → 3. comparison (verdict + caveats) → 4. other candidates → 5. follow-ups.
+    Returns a compact summary; the markdown only with `full=True` (the agent shows the file via read_file)."""
     meta, sp = sessions.load(topic, session)
     if meta is None:
         return sessions.not_found(topic, session)
     rows = read_jsonl(sp.findings)
     by = {g: [f for f in rows if f["group"] == g] for g in ("marketplace", "aggregator", "review")}
     by["marketplace"] += [f for f in rows if f["group"] == "shop"]   # legacy sessions
-    reviews: dict[str, list[dict]] = {}
-    for f in by["review"]:
-        reviews.setdefault(model_key(f), []).append(f)
+    offers_by: dict[str, list[dict]] = {}
+    aggs_by: dict[str, list[dict]] = {}
+    reviews_by: dict[str, list[dict]] = {}
+    for g, dst in (("marketplace", offers_by), ("aggregator", aggs_by), ("review", reviews_by)):
+        for f in by[g]:
+            dst.setdefault(model_key(f), []).append(f)
     p = meta["params"]
+    s = meta.get("summary") or {}
+    picks = s.get("picks") or []
+    pick_keys = [model_key({"model": pk.get("model", "")}) for pk in picks]
+    all_keys = sorted(set(offers_by) | set(aggs_by), key=lambda k: (k not in pick_keys, k))
+    others = [k for k in all_keys if k not in pick_keys]
     lines = [f"# {meta['topic']}: {p['query']}", "",
              f"Сессия `{meta['id']}` · статус: {meta['status']} · обновлено: {meta['updated'][:16].replace('T', ' ')}", "",
-             "## Параметры поиска", "", *_params_block(p), "",
-             "## 1. Маркетплейсы и крупные сети", "", *_offers_table(by["marketplace"], reviews),
-             "## 2. Агрегаторы цен (где выгоднее)", "", *_aggregator_table(by["aggregator"]),
-             "## 3. Отзывы и нюансы по моделям", "", *_reviews_block(reviews),
-             *_summary_block(meta.get("summary") or {}),
-             *_followups_block(sp)]
+             "## Параметры поиска", "", *_params_block(p), *_reference_block(p), "",
+             "## 1. Лучшие позиции", ""]
+    if picks:
+        for i, pk in enumerate(picks, 1):
+            mk = pick_keys[i - 1]
+            offers = sorted(_collapse_offers(offers_by.get(mk, [])), key=lambda f: (f.get("price_uah") is None, f.get("price_uah") or 0))
+            best = next((f for f in offers if f.get("price_uah") is not None), None)
+            price = f"от {_n(best['price_uah'])} ₴ · {link(best)}" if best else "цена: см. ниже"
+            lines.append(f"{i}. **{cell(pk.get('model'))}** — {price}" + (f" — {cell(pk['why'])}" if pk.get("why") else ""))
+        lines.append("")
+    else:
+        lines += ["_итог ещё не подведён_", ""]
+    lines += ["## 2. По каждой позиции", ""]
+    for pk, mk in zip(picks, pick_keys):
+        lines += _pick_lines(pk, offers_by.get(mk, []), aggs_by.get(mk, []), reviews_by.get(mk, []))
+    if not picks:
+        lines += ["_—_", ""]
+    lines += ["## 3. Сравнение и вывод", ""]
+    lines += [s["verdict"], ""] if s.get("verdict") else ["_—_", ""]
+    if s.get("caveats"):
+        lines += ["Оговорки:"] + [f"- {c}" for c in s["caveats"]] + [""]
+    lines += _others_block(others, offers_by, aggs_by)
+    lines += _followups_block(sp)
     md = "\n".join(lines)
     sp.report.write_text(md, encoding="utf-8")
     append_jsonl(sp.log, {"ts": now(), "event": "report_rendered", "detail": {"findings": len(rows)}})
     out = {"success": True, "path": str(sp.report), "findings": len(rows), "lines": len(lines), "chars": len(md),
            "rows": {g: len(_collapse_offers(by[g])) if g == "marketplace" else len(by[g]) for g in by},
-           "picks": [pk.get("model") for pk in (meta.get("summary") or {}).get("picks") or []]}
+           "picks": [pk.get("model") for pk in picks], "others": len(others)}
     if full:
         out["markdown"] = md
     return out

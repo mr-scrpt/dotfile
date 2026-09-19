@@ -61,6 +61,12 @@ SHOP_UPDATE_PARAMS = {
         "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"}, "sites": _STR_LIST,
         "category": {"type": "string", "description": "product category name as the sites call it (from the probe), e.g. Смартфони / Монітори"},
         "reviews": {"type": "string", "enum": ["none", "cards", "full"], "description": "review depth chosen via shop_menu(reviews)"},
+        "mode": {"type": "string", "enum": ["exact", "spec", "reference"], "description": "search type chosen via shop_menu(mode)"},
+        "condition": {"type": "string", "enum": ["new", "any"], "description": "chosen via shop_menu(condition); new = б/у/відновлений cards dropped"},
+        "reference": {"type": "object", "description": "reference mode: result of shop_resolve (title, url, source, spec)"},
+        "items": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "must": _STR_LIST, "nice": _STR_LIST}, "required": ["name"]},
+                  "description": "reference mode: the things to buy, each with its own must/nice (confirmed by the user)"},
+        "shortlist": {**_STR_LIST, "description": "models picked in shop_menu(candidates) to compare in depth"},
     }, "required": ["topic", "session"]},
 }
 
@@ -76,8 +82,11 @@ SHOP_LOG = {"name": "shop_log", "description": "Journal a step (source_done / so
 SHOP_SET_SUMMARY = {
     "name": "shop_set_summary", "description": "Store verdict, picks, caveats; mark done.",
     "parameters": {"type": "object", "properties": {
-        **_TS, "verdict": {"type": "string"},
-        "picks": {"type": "array", "items": {"type": "object", "properties": {"model": {"type": "string"}, "why": {"type": "string"}, "url": {"type": "string"}}, "required": ["model", "why"]}},
+        **_TS,
+        "picks": {"type": "array", "description": "best positions in rank order; each gets its own block in the report",
+                  "items": {"type": "object", "properties": {"model": {"type": "string"}, "why": {"type": "string", "description": "1–2 sentences: why it fits the brief / purpose"}, "url": {"type": "string"},
+                                                             "pros": _STR_LIST, "cons": _STR_LIST}, "required": ["model", "why"]}},
+        "verdict": {"type": "string", "description": "comparison of the picks against each other + the final recommendation (markdown ok)"},
         "caveats": _STR_LIST, "status": {"type": "string", "enum": ["draft", "searching", "done"]},
     }, "required": ["topic", "session"]},
 }
@@ -122,14 +131,20 @@ SHOP_PROBE = {
 
 SHOP_MENU = {
     "name": "shop_menu",
-    "description": "Interactive pick list rendered by the plugin in the host UI (arrows/numbers/checkboxes, one screen). kinds: topics | sessions(topic) | probe (→ {probe:bool, only}) | sources(query, only?, probe?) | candidates(candidates). Returns {values:[...], free_text, probe?}. On error no_ui → ask in chat with a numbered list.",
+    "description": "Interactive pick list rendered by the plugin in the host UI (arrows/numbers/checkboxes, one screen). kinds: topics | sessions(topic) | mode(query) | condition | probe (→ {probe:bool, only}) | sources(query, only?, probe?) | candidates(candidates) | reviews. Returns {values:[...], free_text, probe?}. On error no_ui → ask in chat with a numbered list.",
     "parameters": {"type": "object", "properties": {
-        "kind": {"type": "string", "enum": ["topics", "sessions", "probe", "sources", "candidates", "reviews"]},
+        "kind": {"type": "string", "enum": ["topics", "sessions", "mode", "condition", "probe", "sources", "candidates", "reviews"]},
         "topic": _TOPIC, "query": {"type": "string", "description": "sources: run the probe with this query first"},
         "exclude": _STR_LIST, "only": {**_STR_LIST, "description": "sources: probe only these sites (from the probe menu)"},
         "probe": {"type": "boolean", "description": "sources: run the probe before listing (default true when query given)"},
         "candidates": {"type": "array", "items": {"type": "object"}, "description": "candidates: rows from shop_catalog"},
     }, "required": ["kind"]},
+}
+
+SHOP_RESOLVE = {
+    "name": "shop_resolve",
+    "description": "Reference mode: read the owned device from a product URL (rozetka …) or a model name (hotline) → {title, url, source, category_path, spec{}} for deriving what to buy. Store the result with shop_update_params(reference=…).",
+    "parameters": {"type": "object", "properties": {"reference": {"type": "string", "description": "product URL or model name"}}, "required": ["reference"]},
 }
 
 SHOP_REVIEWS = {
@@ -141,4 +156,4 @@ SHOP_REVIEWS = {
 
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE]

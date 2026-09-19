@@ -47,6 +47,12 @@ class Source:
             raise KeyError(f"no fetcher for {self.key!r}")
         return _load_module(self.key, self.dir / "fetcher.py")
 
+    @property
+    def host(self) -> str:
+        """Hostname of the search URL, without www — used to map a product URL to its source."""
+        from urllib.parse import urlparse
+        return (urlparse(self.search).hostname or "").lower().removeprefix("www.")
+
     def search_url(self, query: str) -> str:
         from urllib.parse import quote_plus
         return self.search.replace("{q}", quote_plus(query))
