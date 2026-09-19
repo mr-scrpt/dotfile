@@ -134,7 +134,7 @@ SHOP_MENU = {
 
 SHOP_REVIEWS = {
     "name": "shop_reviews",
-    "description": "Scripted buyer reviews for one model from its stored offers (rozetka, hotline, comfy, moyo, citrus …): parallel fetch, condensed to per-site rating stats + only informative sentences (≤2.5k chars). Stores one review finding per site. Raw texts never returned.",
+    "description": "Scripted buyer reviews for one model from its stored offers (rozetka, hotline, comfy, moyo, citrus, allo, prom, epicentr): parallel fetch, condensed to per-site rating stats + only informative sentences (≤2.5k chars). Stores one review finding per site. Raw texts never returned.",
     "parameters": {"type": "object", "properties": {**_TS, "model": {"type": "string"}, "sites": {**_STR_LIST, "description": "limit to these sites (default: all stored)"}},
                    "required": ["topic", "session", "model"]},
 }

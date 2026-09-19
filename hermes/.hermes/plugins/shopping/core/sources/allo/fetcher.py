@@ -6,6 +6,8 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
+import json
+
 from ...http import FetchError, get, text, to_int
 
 SITE, GROUP = "allo", "marketplace"
@@ -42,6 +44,48 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "notes": f"код {sku.group(1)}" if sku else "",
         })
     return out
+
+
+REVIEWS_XHR = (BASE + "/ua/discussion/reviewQuestion/update/?tab_id=reviews&tab=discussion&product_id={pid}"
+               "&isAjax=1&currentLocale=uk_UA&page={page}")
+NUXT_HEADERS = ("X-USE-NUXT: 1", "X-Requested-With: XMLHttpRequest")
+
+
+def product_id(card_page: str) -> str | None:
+    m = re.search(r"allomobileua://\?product=(\d+)", card_page)
+    return m.group(1) if m else None
+
+
+def parse_reviews(raw: dict) -> dict:
+    """reviewQuestion/update JSON → contract dict. items[] {type review|question, text, rating{value},
+    was_bought_in_allo}; count_items counts reviews+questions."""
+    out = []
+    for r in raw.get("items") or []:
+        if not isinstance(r, dict) or r.get("type") not in (None, "review"):
+            continue
+        rating = (r.get("rating") or {}).get("value") if isinstance(r.get("rating"), dict) else r.get("rating")
+        out.append({"rating": int(rating) if rating not in (None, "") else None, "text": text(str(r.get("text") or "")),
+                    "pros": "", "cons": "", "verified": bool(r.get("was_bought_in_allo"))})
+    total = raw.get("count_items") if raw.get("count_items") is not None else len(out)
+    return {"total": total, "avg": None, "distribution": None, "reviews": out}
+
+
+def reviews(product_url: str) -> dict:
+    """Contract for core.reviews: card → product id → reviews XHR (2 requests; allo rate-limits bursts)."""
+    r = get(product_url)
+    if r.blocked:
+        raise FetchError(f"allo blocked ({r.status})")
+    pid = product_id(r.text)
+    if not pid:
+        raise FetchError("allo: product id not found on card")
+    r2 = get(REVIEWS_XHR.format(pid=pid, page=1), accept="application/json, text/plain, */*",
+             headers=NUXT_HEADERS + (f"Referer: {product_url}?tab=discussion",))
+    if r2.blocked:
+        raise FetchError(f"allo reviews blocked ({r2.status})")
+    try:
+        return parse_reviews(json.loads(r2.text))
+    except json.JSONDecodeError as e:
+        raise FetchError("allo reviews: non-JSON (maintenance page?)") from e
 
 
 def search(query: str, meta: dict | None = None) -> list[dict]:

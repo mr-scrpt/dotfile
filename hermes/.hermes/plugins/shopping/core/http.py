@@ -35,9 +35,13 @@ class Response:
         return self.status in (403, 429, 503) or "Just a moment" in self.text[:5000]
 
 
-def get(url: str, timeout: int = 25, accept: str = "text/html,application/json;q=0.9,*/*;q=0.8") -> Response:
-    cmd = ["curl", "-sL", "--max-time", str(timeout), "-A", UA, "-H", f"Accept: {accept}",
-           "-H", "Accept-Language: uk-UA,uk;q=0.9,ru;q=0.8", "-w", "\n%{http_code}\n%{url_effective}", url]
+def get(url: str, timeout: int = 25, accept: str = "text/html,application/json;q=0.9,*/*;q=0.8",
+        headers: tuple[str, ...] = ()) -> Response:
+    cmd = ["curl", "-sL", "--compressed", "--max-time", str(timeout), "-A", UA, "-H", f"Accept: {accept}",
+           "-H", "Accept-Language: uk-UA,uk;q=0.9,ru;q=0.8"]
+    for h in headers:
+        cmd += ["-H", h]
+    cmd += ["-w", "\n%{http_code}\n%{url_effective}", url]
     try:
         out = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=timeout + 5).stdout
     except (subprocess.TimeoutExpired, OSError) as e:
@@ -83,8 +87,8 @@ def chromium_dom(url: str, timeout: int = 40, budget_ms: int = 4000, profile: st
     return out
 
 
-def get_json(url: str, timeout: int = 25):
-    r = get(url, timeout, accept="application/json, text/plain, */*")
+def get_json(url: str, timeout: int = 25, headers: tuple[str, ...] = ()):
+    r = get(url, timeout, accept="application/json, text/plain, */*", headers=headers)
     if r.blocked:
         raise FetchError(f"blocked ({r.status}) {url}")
     try:

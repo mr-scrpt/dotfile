@@ -94,7 +94,7 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
 6. Reviews — governed by `params.reviews`:
    `none` → skip this step entirely (verdict from prices/specs/ratings only).
    `cards` → per shortlisted model ONE call: `shop_reviews(model)`. The plugin reads buyer
-   reviews from every stored offer of that model (rozetka, hotline, comfy, moyo, citrus, …) in
+   reviews from every stored offer of that model (rozetka, hotline, comfy, moyo, citrus, allo, prom, epicentr) in
    parallel and returns a digest: per-site rating stats + only informative sentences (≤2.5k
    chars, low ratings first, generic praise removed). It stores `<site>-reviews` findings itself.
    Read the digest, write `nuances` from it — never ask for raw texts.

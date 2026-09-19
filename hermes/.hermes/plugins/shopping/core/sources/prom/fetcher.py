@@ -57,6 +57,44 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
     return out
 
 
+OPINIONS = BASE + "/ua/model-opinions/list/{model_id}"
+
+
+def parse_reviews(page: str) -> dict:
+    """model-opinions page → contract dict. Items: data-qaid="opinion_item" with
+    count_stars[data-qaid-raiting=0..100], opinion_text, "Придбано на Prom.ua" = verified."""
+    out = []
+    for c in re.split(r'data-qaid="opinion_item"', page)[1:]:
+        c = c[:20000]
+        pct = re.search(r'data-qaid="count_stars"[^>]*data-qaid-raiting="(\d+)"', c)
+        body = _qaid(c, "opinion_text")
+        if not body and not pct:
+            continue
+        out.append({"rating": round(int(pct.group(1)) / 20) if pct else None, "text": body,
+                    "pros": "", "cons": "", "verified": "Придбано на Prom" in text(c[:6000])})
+    m = re.search(r"Відгуки\s*\((\d+)\)", text(page))
+    return {"total": to_int(m.group(1)) if m else len(out), "avg": None, "distribution": None, "reviews": out}
+
+
+def model_id(card_page: str) -> str | None:
+    m = re.search(r"model-opinions/list/(\d+)", card_page)
+    return m.group(1) if m else None
+
+
+def reviews(product_url: str) -> dict:
+    """Contract for core.reviews: card page → model id → opinions page (2 requests)."""
+    r = get(product_url)
+    if r.blocked:
+        raise FetchError(f"prom blocked ({r.status})")
+    mid = model_id(r.text)
+    if not mid:
+        return {"total": 0, "avg": None, "distribution": None, "reviews": []}
+    r2 = get(OPINIONS.format(model_id=mid))
+    if r2.blocked:
+        raise FetchError(f"prom opinions blocked ({r2.status})")
+    return parse_reviews(r2.text)
+
+
 def search(query: str, meta: dict | None = None) -> list[dict]:
     r = get(SEARCH.format(q=quote_plus(query)))
     if r.blocked:

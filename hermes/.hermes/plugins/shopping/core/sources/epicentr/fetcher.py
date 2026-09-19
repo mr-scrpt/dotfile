@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from urllib.parse import quote_plus
 
-from ...http import FetchError, get, nuxt_state
+from ...http import FetchError, get, get_json, nuxt_state
 
 SITE, GROUP = "epicentr", "marketplace"
 BASE = "https://epicentrk.ua"
@@ -40,6 +40,36 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "notes": f"розділ: {p['sectionsUa']}" if p.get("sectionsUa") else "",
         })
     return out
+
+
+REVIEWS_API = ("https://api.epicentrk.ua/api/v1/review/product_card_list?entity_type=product&show_main=1&type=review"
+               "&slug={slug}&from={from_}&limit={limit}&product_page_type=comments")
+
+
+def parse_reviews(raw: dict) -> dict:
+    """review/product_card_list → contract dict. main.rating.items = {"1".."5": count}, review.items[]
+    {rating "5", message, benefits, disadvantages, purchased}."""
+    main = raw.get("main") or {}
+    total = main.get("review_count") if main.get("review_count") is not None else (raw.get("review") or {}).get("count")
+    # rating.items are PERCENTAGES of `count` (all feedback incl. questions); convert to review counts
+    base = main.get("count") or total or 0
+    dist = {int(k): round(v * base / 100) for k, v in ((main.get("rating") or {}).get("items") or {}).items() if v}
+    out = []
+    for r in (raw.get("review") or {}).get("items") or []:
+        try:
+            rating = int(float(r.get("rating"))) if r.get("rating") not in (None, "") else None
+        except ValueError:
+            rating = None
+        out.append({"rating": rating, "text": r.get("message") or "", "pros": r.get("benefits") or "",
+                    "cons": r.get("disadvantages") or "", "verified": bool(r.get("purchased"))})
+    return {"total": total, "avg": (main.get("rating") or {}).get("summary"), "distribution": dist or None, "reviews": out}
+
+
+def reviews(product_url: str, limit: int = 50) -> dict:
+    """Contract for core.reviews. Slug = last path segment without .html; one API call, up to `limit`."""
+    slug = product_url.rstrip("/").rsplit("/", 1)[-1].removesuffix(".html")
+    return parse_reviews(get_json(REVIEWS_API.format(slug=slug, from_=0, limit=limit),
+                                  headers=("Origin: https://epicentrk.ua", "Referer: https://epicentrk.ua/")))  # CORS-gated
 
 
 def search(query: str, meta: dict | None = None) -> list[dict]:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import gzip
+import json
 import os
 import sys
 import tempfile
@@ -44,6 +45,31 @@ class Parsers(unittest.TestCase):
     def test_rozetka_reviews_needs_goods_id(self):
         with self.assertRaises(rozetka.FetchError):
             rozetka.reviews("https://rozetka.com.ua/ua/no-id/")
+
+
+class SiteParsers(unittest.TestCase):
+    def test_epicentr_api(self):
+        from shopping.core.sources.epicentr import fetcher as ep
+        d = ep.parse_reviews(json.loads(gz("epicentr_reviews_api.json.gz")))
+        self.assertEqual((d["total"], d["avg"], len(d["reviews"])), (20, 5, 20))
+        self.assertEqual(d["distribution"], {5: 18})  # percentages → counts of `main.count`
+        self.assertTrue(d["reviews"][0]["text"].startswith("Управління"))
+
+    def test_prom_opinions_page(self):
+        from shopping.core.sources.prom import fetcher as prom
+        d = prom.parse_reviews(gz("prom_opinions.html.gz"))
+        self.assertEqual(d["total"], 1)
+        self.assertEqual(d["reviews"][0], {"rating": 5, "text": "Підключив,все працює", "pros": "", "cons": "", "verified": True})
+        self.assertEqual(prom.model_id('href="https://prom.ua/ua/model-opinions/list/7592311121459235926"'), "7592311121459235926")
+
+    def test_allo_xhr(self):
+        from shopping.core.sources.allo import fetcher as allo
+        d = allo.parse_reviews(json.loads(gz("allo_reviews_xhr.json.gz")))
+        self.assertEqual(d["total"], 25)
+        self.assertTrue(all(r["rating"] in (1, 2, 3, 4, 5) for r in d["reviews"]))
+        self.assertEqual(d["reviews"][0]["text"], "Все супер")
+        self.assertEqual(allo.product_id("x allomobileua://?product=14094172 y"), "14094172")
+        self.assertEqual(allo.parse_reviews({"count_items": 0, "empty_text": "-", "current_page": 1})["reviews"], [])
 
 
 class Condense(unittest.TestCase):
