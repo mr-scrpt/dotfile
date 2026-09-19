@@ -2,5 +2,5 @@ key: ekatalog
 title: E-Katalog
 order: 20
 group: aggregator
-fetch: browser
-search: https://ek.ua/ua/ek-list.php?search_={q}
+fetch: script
+search: https://ek.ua/ua/ek-list.php?search_={q}&_a=1

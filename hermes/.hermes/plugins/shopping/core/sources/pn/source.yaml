@@ -2,5 +2,5 @@ key: pn
 title: Прайс Навигатор (pn.com.ua)
 order: 40
 group: aggregator
-fetch: browser
-search: https://pn.com.ua/search/?fn={q}
+fetch: script
+search: https://pn.com.ua/search/?fn={q}&tab=products

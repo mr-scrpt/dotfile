@@ -2,5 +2,5 @@ key: eldorado
 title: Eldorado
 order: 70
 group: marketplace
-fetch: browser
+fetch: script
 search: https://eldorado.ua/uk/search/?q={q}

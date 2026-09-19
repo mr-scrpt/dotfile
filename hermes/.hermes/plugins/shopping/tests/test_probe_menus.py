@@ -20,6 +20,11 @@ from shopping.core.sources.epicentr import fetcher as epicentr  # noqa: E402
 from shopping.core.sources.prom import fetcher as prom  # noqa: E402
 from shopping.core.sources.rozetka import fetcher as rozetka  # noqa: E402
 from shopping.core.sources.telemart import fetcher as telemart  # noqa: E402
+from shopping.core.sources.citrus import fetcher as citrus  # noqa: E402
+from shopping.core.sources.eldorado import fetcher as eldorado  # noqa: E402
+from shopping.core.sources.brain import fetcher as brain  # noqa: E402
+from shopping.core.sources.pn import fetcher as pn  # noqa: E402
+from shopping.core.sources.ekatalog import fetcher as ekatalog  # noqa: E402
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -63,6 +68,63 @@ class NewParsers(unittest.TestCase):
         self.assertEqual(rows[1]["price_note"], "было 109400 ₴")
         self.assertEqual(rows[1]["installment_note"], "від 14997 ₴/міс")
 
+    def test_citrus(self):
+        meta = {}
+        rows = citrus.parse_search(gz("citrus_search.html.gz"), meta)
+        self.assertEqual(len(rows), 23)
+        self.assertEqual(meta["total_est"], 78)
+        self.assertEqual(rows[0]["price_uah"], 47099)
+        self.assertEqual(rows[0]["notes"], "б/у")
+        self.assertTrue(rows[0]["url"].startswith("https://citrus.ua/"))
+        self.assertEqual(rows[0]["availability"], "є в наявності")
+
+    def test_eldorado_api(self):
+        meta = {}
+        rows = eldorado.parse_search(json.loads(gz("eldorado_search_api.json.gz")), meta)
+        self.assertEqual(len(rows), 8)
+        self.assertEqual(meta["total_est"], 8)
+        self.assertEqual(rows[0]["price_uah"], 27999)
+        self.assertEqual(rows[0]["availability"], "в наявності")
+        self.assertEqual(rows[0]["url"], "https://eldorado.ua/uk/monitor-corsair-xeneon-27-qhd240-cm-9030002-pe-/p71468445/")
+        self.assertIsNone(rows[1]["price_uah"])                 # "0.00" → no price
+        self.assertEqual(rows[1]["availability"], "незабаром")
+
+    def test_brain(self):
+        meta = {}
+        rows = brain.parse_search(gz("brain_search.html.gz"), meta)
+        self.assertEqual(len(rows), 24)
+        self.assertEqual(meta["total_est"], 2389)
+        self.assertEqual(rows[0]["title"], "Скло захисне Armorstandart Pro Apple iPhone 17 / 16 Pro (ARM86210)")
+        self.assertEqual(rows[0]["price_uah"], 299)
+        self.assertEqual(rows[0]["price_note"], "было 369 ₴")
+        self.assertEqual(rows[1]["price_uah"], 159)            # sibling card's price must not leak
+
+    def test_pn(self):
+        meta = {}
+        rows = pn.parse_search(gz("pn_search.html.gz"), meta)
+        self.assertEqual(len(rows), 13)
+        self.assertEqual(meta["total_est"], 13)
+        r = rows[0]
+        self.assertEqual(r["title"], "Apple iPhone 16 Pro 256Gb Natural Titanium (MYNL3)")
+        self.assertEqual((r["price_min_uah"], r["price_max_uah"], r["offers_count"]), (52099, 54272, 2))
+        self.assertEqual(r["url"], "https://pn.com.ua/md/5789650/")
+
+    def test_ekatalog_list_and_exact_redirect(self):
+        meta = {}
+        rows = ekatalog.parse_search(gz("ekatalog_search.html.gz"), meta)
+        self.assertEqual(len(rows), 24)
+        self.assertEqual(meta["total_est"], 47)
+        r = rows[0]
+        self.assertEqual(r["url"], "https://ek.ua/ua/ASUS-ROG-STRIX-OLED-XG27AQWMG.htm")
+        self.assertEqual((r["price_min_uah"], r["price_max_uah"], r["offers_count"], r["rating_count"]), (29999, 37799, 12, 1))
+        self.assertTrue(r["notes"].startswith("Екран: 26.5"))
+        meta = {}
+        rows = ekatalog.parse_search(gz("ekatalog_item_redirect.html.gz"), meta)   # exact query → product page
+        self.assertEqual(meta["total_est"], 1)
+        self.assertEqual(rows[0]["title"], "Смартфон Apple iPhone 16 Pro 256 ГБ")
+        self.assertEqual(rows[0]["url"], "https://ek.ua/ua/ek-item.php?idg_=2760965")
+        self.assertEqual(rows[0]["price_min_uah"], 40999)
+
     def test_rozetka_search_total_and_seller(self):
         meta = {}
         ids = rozetka.parse_search(json.loads(gz("rozetka_search_api.json.gz")), meta)
@@ -93,7 +155,7 @@ class Registry(Isolated):
         self.assertEqual(keys[0], "hotline")                       # aggregators first
         self.assertEqual(sources.validate(), [])
         self.assertEqual(sorted(s.key for s in sources.scripted()),
-                         ["allo", "epicentr", "foxtrot", "hotline", "moyo", "prom", "rozetka", "telemart"])
+                         ["allo", "brain", "citrus", "ekatalog", "eldorado", "epicentr", "foxtrot", "hotline", "moyo", "pn", "prom", "rozetka", "telemart"])
         self.assertTrue(sources.get("hotline").filters)
         self.assertIn("{q}", sources.get("comfy").search)
         with self.assertRaises(KeyError):
@@ -126,7 +188,7 @@ class Probe(Isolated):
         self.assertEqual(keys[0], "hotline")
         self.assertNotIn("comfy", keys)
         self.assertTrue(next(x for x in s if x["site"] == "epicentr")["scripted"])
-        self.assertFalse(next(x for x in s if x["site"] == "brain")["scripted"])
+        self.assertFalse(next(x for x in s if x["site"] == "ktc")["scripted"])
 
     def test_probe_parallel_and_error_isolated(self):
         def fake_search(query, meta=None, **kw):
@@ -186,7 +248,8 @@ class Menus(Isolated):
         m = menus.sources_menu(None, exclude=["comfy"])
         self.assertEqual(m["items"][0]["value"], "hotline")
         self.assertNotIn("comfy", [i["value"] for i in m["items"]])
-        self.assertIn("E-Katalog (браузер)", [i["label"] for i in m["items"]])
+        self.assertIn("KTC (браузер)", [i["label"] for i in m["items"]])
+        self.assertIn("Прайс Навигатор (pn.com.ua)", [i["label"] for i in m["items"]])
 
     def test_parse_answer_multi_string_and_free_text(self):
         menu = {"multi": True, "items": [{"value": "hotline", "label": "Hotline (25)"}, {"value": "rozetka", "label": "Rozetka (719+)"}]}
@@ -201,7 +264,7 @@ class Menus(Isolated):
     def test_probe_menu_lists_every_scripted_site_by_name(self):
         m = menus.probe_menu()
         labels = [i["label"] for i in m["items"]]
-        self.assertTrue(labels[0].startswith("все 8"))
+        self.assertTrue(labels[0].startswith("все 13"))
         self.assertIn("Епіцентр", labels)
         self.assertEqual(m["items"][-1]["value"], menus.PROBE_SKIP)
         self.assertTrue(m["multi"])

@@ -74,10 +74,9 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    Then `shop_menu(kind="candidates", candidates=[…])` → the user ticks which models to compare.
    Done: 1–12 candidate model codes chosen by the user, `source_done` logged.
 5. Offers — for EVERY chosen candidate and EVERY site in `params.sites` with `fetch: script`
-   (`shop_sources` says which; today: hotline, rozetka, foxtrot, moyo, allo, epicentr, prom,
-   telemart): `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns
-   compact data; you only read it. Chosen sites with `fetch: browser` (comfy, citrus, eldorado,
-   brain, ktc, …): open the `search` URL in `browser_exec`, take the first exact-model card, store via
+   (`shop_sources` says which; today 13 of 18: hotline, ekatalog, pn, rozetka, foxtrot, moyo, allo, citrus,
+   eldorado, prom, epicentr, telemart, brain): `shop_fetch(site, model, geo)`. The tool stores matching offers itself and returns
+   compact data; you only read it. Chosen sites with `fetch: browser` (comfy, price, ktc, elmir, compx): open the `search` URL in `browser_exec`, take the first exact-model card, store via
    `shop_add_findings`; on "Just a moment"/empty → `shop_log(source_blocked)` and move on.
    Never retry a blocked site more than once. Done: each candidate has ≥1 marketplace finding
    or a `source_blocked` line per missing site.

@@ -2,5 +2,5 @@ key: brain
 title: Brain
 order: 20
 group: shop
-fetch: browser
+fetch: script
 search: https://brain.com.ua/ukr/search/?search={q}

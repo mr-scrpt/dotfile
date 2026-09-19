@@ -103,7 +103,7 @@ SHOP_FETCH = {
     "name": "shop_fetch",
     "description": "Scripted site fetch for one model (script sites only, see enum). Stores matching offers; returns compact offers + rozetka review texts / hotline per-shop prices.",
     "parameters": {"type": "object", "properties": {
-        **_TS, "site": {"type": "string", "enum": ["hotline", "rozetka", "foxtrot", "moyo", "allo", "epicentr", "prom", "telemart"]},
+        **_TS, "site": {"type": "string", "enum": ["hotline", "ekatalog", "pn", "rozetka", "foxtrot", "moyo", "allo", "citrus", "eldorado", "prom", "epicentr", "telemart", "brain"]},
         "model": {"type": "string"}, "geo": _GEO, "limit": {"type": "integer"},
     }, "required": ["topic", "session", "site", "model"]},
 }
