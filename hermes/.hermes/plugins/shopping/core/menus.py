@@ -103,6 +103,13 @@ def sources_menu(probe_result: dict | None = None, exclude: list[str] | None = N
     return {"question": q, "items": items, "multi": True}
 
 
+def reviews_menu() -> dict:
+    return {"question": "Отзывы: собирать?", "multi": False,
+            "items": [{"value": "none", "label": "не нужны (напр. iPhone — и так всё ясно)"},
+                      {"value": "cards", "label": "только отзывы покупателей с выбранных магазинов (скриптом; дёшево)"},
+                      {"value": "full", "label": "отзывы магазинов + обзоры и форумы в интернете (дороже; для мониторов и т.п.)"}]}
+
+
 def candidates_menu(candidates: list[dict]) -> dict:
     items = [{"value": c["model"], "label": _label(f"{c['model']} · {_n(c.get('price_min_uah'))}–{_n(c.get('price_max_uah'))} ₴ · {c.get('offers') or 0} предл.")}
              for c in candidates]

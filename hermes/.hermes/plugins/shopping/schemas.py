@@ -60,6 +60,7 @@ SHOP_UPDATE_PARAMS = {
         "query": {"type": "string"}, "purpose": {"type": "string"}, "must": _STR_LIST, "nice": _STR_LIST, "extra": _STR_LIST,
         "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"}, "sites": _STR_LIST,
         "category": {"type": "string", "description": "product category name as the sites call it (from the probe), e.g. Смартфони / Монітори"},
+        "reviews": {"type": "string", "enum": ["none", "cards", "full"], "description": "review depth chosen via shop_menu(reviews)"},
     }, "required": ["topic", "session"]},
 }
 
@@ -123,7 +124,7 @@ SHOP_MENU = {
     "name": "shop_menu",
     "description": "Interactive pick list rendered by the plugin in the host UI (arrows/numbers/checkboxes, one screen). kinds: topics | sessions(topic) | probe (→ {probe:bool, only}) | sources(query, only?, probe?) | candidates(candidates). Returns {values:[...], free_text, probe?}. On error no_ui → ask in chat with a numbered list.",
     "parameters": {"type": "object", "properties": {
-        "kind": {"type": "string", "enum": ["topics", "sessions", "probe", "sources", "candidates"]},
+        "kind": {"type": "string", "enum": ["topics", "sessions", "probe", "sources", "candidates", "reviews"]},
         "topic": _TOPIC, "query": {"type": "string", "description": "sources: run the probe with this query first"},
         "exclude": _STR_LIST, "only": {**_STR_LIST, "description": "sources: probe only these sites (from the probe menu)"},
         "probe": {"type": "boolean", "description": "sources: run the probe before listing (default true when query given)"},
@@ -131,6 +132,13 @@ SHOP_MENU = {
     }, "required": ["kind"]},
 }
 
+SHOP_REVIEWS = {
+    "name": "shop_reviews",
+    "description": "Scripted buyer reviews for one model from its stored offers (rozetka, hotline, comfy, moyo, citrus …): parallel fetch, condensed to per-site rating stats + only informative sentences (≤2.5k chars). Stores one review finding per site. Raw texts never returned.",
+    "parameters": {"type": "object", "properties": {**_TS, "model": {"type": "string"}, "sites": {**_STR_LIST, "description": "limit to these sites (default: all stored)"}},
+                   "required": ["topic", "session", "model"]},
+}
+
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH, SHOP_PROBE, SHOP_MENU]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CATALOG, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS]

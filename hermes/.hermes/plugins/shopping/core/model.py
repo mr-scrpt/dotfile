@@ -10,6 +10,7 @@ from .fs import root
 GROUPS = ("marketplace", "aggregator", "review")   # "shop" merged into marketplace: small shops come via aggregators
 GEO = ("ua_local", "ua_delivery")
 STATUSES = ("draft", "searching", "done")
+REVIEW_MODES = ("none", "cards", "full")
 GEO_LABEL = {"ua_local": "только Украина (локальный склад)",
              "ua_delivery": "с доставкой в Украину (вкл. Rozetka EU)"}
 
@@ -19,7 +20,8 @@ SESSION_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(_[a-z0-9-]+)?(-\d+)?$")
 
 def default_params() -> dict:
     return {"query": "", "purpose": "", "must": [], "nice": [], "extra": [], "geo": "ua_local", "budget_uah": None,
-            "notes": "", "sites": [], "category": ""}  # category: product category picked from the probe (filters accessories)  # sites: [] = not chosen yet; the skill must ask before searching
+            "notes": "", "sites": [], "category": "",
+            "reviews": "cards"}  # reviews: none | cards (buyer reviews from chosen sites) | full (cards + web reviews)  # category: product category picked from the probe (filters accessories)  # sites: [] = not chosen yet; the skill must ask before searching
 
 
 @dataclass(frozen=True)

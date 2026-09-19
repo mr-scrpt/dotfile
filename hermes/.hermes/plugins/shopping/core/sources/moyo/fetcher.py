@@ -42,6 +42,28 @@ def parse_search(page: str) -> list[dict]:
     return out
 
 
+def parse_reviews(page: str) -> dict:
+    out = []
+    for c in re.split(r'class="product_review-item js-comment-item', page)[1:]:
+        stars = len(re.findall(r'rate-star active-start', c[:c.find("product_review-item_body")] if "product_review-item_body" in c else c[:1500]))
+        body = re.search(r'product_review-item_text[^>]*>(.*?)</div>', c, re.S)
+        adv = re.findall(r'product_review-item_advantages(?:\s+negative)?"[^>]*>.*?_title[^>]*>(.*?)</[^>]+>.*?_text[^>]*>(.*?)</', c, re.S)
+        pros = " ".join(text(v) for k, v in adv if "Переваги" in text(k) or "Достоинства" in text(k))
+        cons = " ".join(text(v) for k, v in adv if "Недоліки" in text(k) or "Недостатки" in text(k))
+        if not stars:            # unrated item = question/answer thread, not a review
+            continue
+        out.append({"rating": stars, "text": text(body.group(1)) if body else "", "pros": pros, "cons": cons, "verified": False})
+    m = re.search(r"(\d+)\s*відгук", text(page[:200000]))
+    return {"total": to_int(m.group(1)) if m else len(out), "avg": None, "distribution": None, "reviews": out}
+
+
+def reviews(product_url: str) -> dict:
+    r = get(product_url)
+    if r.blocked:
+        raise FetchError(f"moyo blocked ({r.status})")
+    return parse_reviews(r.text)
+
+
 def search(query: str, meta: dict | None = None) -> list[dict]:
     del meta  # no site-reported total on this page
     r = get(SEARCH.format(q=quote_plus(query)))

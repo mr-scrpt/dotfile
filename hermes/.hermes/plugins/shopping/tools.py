@@ -48,6 +48,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_catalog": _json(core.fetch_catalog, "topic", "session", "section", "filter_ids", "want", "max_pages"),
     "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit", "category"),
     "shop_probe": _json(core.probe_sites_search, "query", "exclude", "only"),
+    "shop_reviews": _json(core.collect_reviews, "topic", "session", "model", "sites"),
 }
 
 
@@ -70,6 +71,8 @@ def _menu(args: dict, **kw) -> str:
             menu = core.menus.sources_menu(pr, exclude=args.get("exclude"))
         elif kind == "candidates":
             menu = core.menus.candidates_menu(args.get("candidates") or [])
+        elif kind == "reviews":
+            menu = core.menus.reviews_menu()
         else:
             return json.dumps({"success": False, "error": f"unknown menu kind {kind!r}"})
         res = ui.ask(menu)

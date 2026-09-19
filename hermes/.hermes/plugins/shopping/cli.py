@@ -50,6 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("catalog"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("section")
     p.add_argument("filter_ids", type=int, nargs="+"); p.add_argument("--want", help="JSON: {diagonal_in:[lo,hi],panel_any:[..],resolution:'',refresh_min:N}")
     p = sub.add_parser("hotline-filters"); p.add_argument("section")
+    p = sub.add_parser("reviews", help="scripted buyer reviews digest for a model"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("model")
+    p.add_argument("--sites", nargs="*", default=None)
     p = sub.add_parser("probe", help="parallel hit-count probe on scripted sites"); p.add_argument("query")
     p.add_argument("--exclude", nargs="*", default=None); p.add_argument("--only", nargs="*", default=None)
     p.add_argument("--table", action="store_true", help="human table instead of JSON")
@@ -84,6 +86,8 @@ def run(a: argparse.Namespace) -> dict:
         return core.fetch_catalog(a.topic, a.session, a.section, a.filter_ids, json.loads(a.want) if a.want else None)
     if a.cmd == "hotline-filters":
         return core.hotline_filters(a.section)
+    if a.cmd == "reviews":
+        return core.collect_reviews(a.topic, a.session, a.model, a.sites)
     if a.cmd == "probe":
         return core.probe_sites_search(a.query, a.exclude, a.only)
     return core.get_sources(a.group, a.query)

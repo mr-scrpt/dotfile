@@ -54,7 +54,9 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    (a) что ищем + hard spec (`query`, `must`), (b) **назначение** (`purpose`: для чего —
    работа/текст/код/видео/игры/…; mandatory, the tool rejects an empty one), (c) nice-to-have,
    (d) extra conditions (рассрочка, гарантия), (e) budget, (f) geo `ua_local` (default) /
-   `ua_delivery`. → `shop_create_session`. Done: `search.json` exists.
+   `ua_delivery`, (g) `shop_menu(kind="reviews")` → `none` | `cards` | `full` (how deep to go
+   on reviews; iPhone → none, monitor → full). → `shop_create_session`, then
+   `shop_update_params(reviews=…)`. Done: `search.json` exists.
 3b. Sources — the user decides where to search; you never pick sites for them.
    `shop_menu(kind="probe")` shows every probe-able site by name; the result carries
    `probe: bool` and `only: [...]|null`. Then `shop_menu(kind="sources", query=<query>,
@@ -89,17 +91,20 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    Parallel option for ≥6 candidates: `delegate_task`, one child per site group, each child
    uses the CLI (`python3 ~/.hermes/plugins/shopping/cli.py fetch <topic> <session> <site>
    "<model>"`). Verify with `shop_get_session` counts after they return.
-6. Reviews — per candidate, in this order and nothing else:
-   (a) `shop_fetch("rozetka")` already returned `reviews[]`; `shop_fetch("hotline")` returned
-   per-shop offers — read them. (b) `web_search` for each template in
-   `shop_sources(group="reviews", query=<model>)["web_search_queries"]`, `limit` = its
-   `web_search_limit` (5). (c) Open at most 3 result pages per model: `web_extract` first; if
-   empty/bot-wall → `browser_exec` unless the host is in `blocked_for_browser`; YouTube →
-   skill `youtube-content` transcript. (d) One `review` finding per source with `model_match`
-   (drop `unclear`), `nuances` as concrete user complaints, `pros`; rozetka comments →
-   `source: rozetka-comments`. Weigh nuances against `purpose` (text/code: fringing, flicker,
-   brightness, matte coating; games: VRR, latency). Done: ≥2 review findings per shortlisted
-   model or a `note` that none exist.
+6. Reviews — governed by `params.reviews`:
+   `none` → skip this step entirely (verdict from prices/specs/ratings only).
+   `cards` → per shortlisted model ONE call: `shop_reviews(model)`. The plugin reads buyer
+   reviews from every stored offer of that model (rozetka, hotline, comfy, moyo, citrus, …) in
+   parallel and returns a digest: per-site rating stats + only informative sentences (≤2.5k
+   chars, low ratings first, generic praise removed). It stores `<site>-reviews` findings itself.
+   Read the digest, write `nuances` from it — never ask for raw texts.
+   `full` → `cards` + web: `web_search` for each template in `shop_sources(group="reviews",
+   query=<model>)["web_search_queries"]`, limit 5; open at most 3 result pages per model
+   (`web_extract` first; `browser_exec` only if empty and the host is not in
+   `blocked_for_browser`; YouTube → skill `youtube-content`). One `review` finding per source
+   with `model_match` (drop `unclear`), concrete `nuances`, `pros`. Weigh nuances against
+   `purpose` (text/code: fringing, flicker, brightness, matte coating; games: VRR, latency).
+   Done: ≥1 review finding per shortlisted model (or a `note` that none exist) — unless `none`.
 7. Verdict — `shop_set_summary(verdict, picks, caveats, status="done")`: verdict must state
    how the pick fits the `purpose`. `shop_render_report` (returns path + row counts, not the
    text) → `read_file(path)` → paste the file verbatim to the user + its absolute path.
@@ -109,6 +114,7 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
 ## Token discipline
 
 - Never print raw HTML/JSON from a page; scripted tools already return compact data.
+- Reviews: `shop_reviews` digest only (~2.5k chars per model) — raw comment lists never enter the context.
 - `shop_render_report` is called once at the end (and once per follow-up); read the file once.
 - `web_search` limit 5, exactly the template queries; no improvised queries.
 - `shop_probe` costs one compact JSON (~1.5k chars for 8 sites); `browser_exec` costs 10–50× that.

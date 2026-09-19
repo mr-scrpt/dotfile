@@ -119,6 +119,21 @@ def _seller(details_row: dict, url: str) -> str:
     return name or seller_from_url(url)
 
 
+def reviews(product_url: str, pages: int = 3) -> dict:
+    """Contract for core.reviews. Goods id parsed from …/p<ID>/ ; comments API, newest first."""
+    m = re.search(r"/p(\d+)/?", product_url or "")
+    if not m:
+        raise FetchError(f"rozetka: no goods id in {product_url}")
+    gid = int(m.group(1))
+    first = parse_comments(get_json(COMMENTS.format(id=gid, page=1)))
+    comments = list(first["comments"])
+    for p in range(2, min(first.get("pages") or 1, pages) + 1):
+        comments += parse_comments(get_json(COMMENTS.format(id=gid, page=p)))["comments"]
+    return {"total": first.get("total_comments"), "avg": None, "distribution": None,
+            "reviews": [{"rating": c.get("mark"), "text": c.get("text") or "", "pros": c.get("pros") or "",
+                         "cons": c.get("cons") or "", "verified": bool(c.get("from_buyer"))} for c in comments]}
+
+
 # ------------------------------------------------------------------ network
 def search(query: str, meta: dict | None = None, limit: int = 5, with_card: bool = True,
            comments_pages: int = 1) -> list[dict]:

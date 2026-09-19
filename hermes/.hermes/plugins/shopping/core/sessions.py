@@ -5,7 +5,7 @@ from datetime import date
 from typing import Any
 
 from .fs import append_jsonl, err, now, read_json, read_jsonl, root, slugify, write_json
-from .model import GEO, SESSION_RE, SLUG_RE, STATUSES, SessionPaths, default_params, topic_dir
+from .model import REVIEW_MODES, GEO, SESSION_RE, SLUG_RE, STATUSES, SessionPaths, default_params, topic_dir
 
 
 # ------------------------------------------------------------------ topics
@@ -109,6 +109,8 @@ def update_params(topic: str, session: str, status: str | None = None, **params)
         return err(f"unknown params {unknown}; allowed: {sorted(default_params())}")
     if changes.get("geo") not in (None, *GEO):
         return err(f"geo must be one of {GEO}")
+    if changes.get("reviews") not in (None, *REVIEW_MODES):
+        return err(f"reviews must be one of {REVIEW_MODES}")
     meta["params"].update(changes)
     if status:
         meta["status"] = status

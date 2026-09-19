@@ -8,6 +8,7 @@ from .catalog import get as get_sources
 from .fetch import catalog as fetch_catalog, fetch as fetch_site, hotline_filters
 from . import menus, sources
 from .probe import probe as probe_sites_search, sites as probe_sites
+from .reviews import collect as collect_reviews
 from .findings import add as add_findings, list_ as list_findings, resume_context as get_session
 from .model import GEO, GROUPS, STATUSES
 from .report import add_followup, render as render_report
@@ -17,4 +18,4 @@ from .sessions import (create_session, create_topic, list_sessions, list_topics,
 __all__ = ["GEO", "GROUPS", "STATUSES", "get_sources", "add_findings", "list_findings", "get_session",
            "add_followup", "render_report", "create_session", "create_topic", "list_sessions",
            "list_topics", "log_event", "set_summary", "update_params",
-           "fetch_catalog", "fetch_site", "hotline_filters", "probe_sites_search", "probe_sites", "menus", "sources"]
+           "fetch_catalog", "fetch_site", "hotline_filters", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]

@@ -47,6 +47,25 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
     return out
 
 
+def parse_reviews(page: str) -> dict:
+    d = ((_next_data(page).get("props") or {}).get("pageProps") or {}).get("data") or {}
+    cm = d.get("comments") or {}
+    out = []
+    for r in cm.get("reviews") or []:
+        out.append({"rating": r.get("rating") or r.get("mark"), "text": r.get("text") or r.get("comment") or r.get("body") or "",
+                    "pros": r.get("advantages") or r.get("pros") or "", "cons": r.get("disadvantages") or r.get("cons") or "",
+                    "verified": bool(r.get("isBuyer") or r.get("verified"))})
+    total = (cm.get("pagination") or {}).get("total")
+    return {"total": total if total is not None else len(out), "avg": None, "distribution": None, "reviews": out}
+
+
+def reviews(product_url: str) -> dict:
+    r = get(product_url)
+    if r.blocked:
+        raise FetchError(f"citrus blocked ({r.status})")
+    return parse_reviews(r.text)
+
+
 def search(query: str, meta: dict | None = None) -> list[dict]:
     r = get(SEARCH.format(q=quote_plus(query)))
     if r.blocked:

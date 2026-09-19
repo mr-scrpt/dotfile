@@ -155,6 +155,10 @@ def offers(product_url: str) -> dict:
     return parse_offers(_page(url.split("?")[0] + "?tab=prices"))
 
 
-def reviews(product_url: str) -> list[dict]:
+def reviews(product_url: str) -> dict:
+    """Contract for core.reviews: {"total", "avg", "distribution", "reviews":[{rating,text,pros,cons,verified}]}."""
     url = product_url if product_url.startswith("http") else BASE + product_url
-    return parse_reviews(_page(url.split("?")[0] + "?tab=reviews"))
+    rows = parse_reviews(_page(url.split("?")[0] + "?tab=reviews"))
+    return {"total": len(rows), "avg": None, "distribution": None,
+            "reviews": [{"rating": r.get("rating"), "text": r.get("text") or "", "pros": r.get("pros") or "",
+                         "cons": r.get("cons") or "", "verified": False} for r in rows]}

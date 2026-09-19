@@ -57,6 +57,29 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
     return out
 
 
+REVIEW_URL = BASE + "/ua/review/{slug}"
+
+
+def parse_reviews(page: str) -> dict:
+    rv = _state(page).get("reviews") or {}
+    summ = rv.get("reviewsSummary") or {}
+    dist = {int(x["productRating"]): x["count"] for x in summ.get("summaryRating") or [] if x.get("productRating")}
+    out = []
+    for r in rv.get("reviews") or []:
+        pr = r.get("productRating")
+        out.append({"rating": round(pr / 20) if isinstance(pr, (int, float)) and pr else None,
+                    "text": r.get("detail") or "", "pros": r.get("advantages") or "", "cons": r.get("disadvantages") or "",
+                    "verified": bool(r.get("wasOrdered"))})
+    return {"total": rv.get("reviewsTotal") if rv.get("reviewsTotal") is not None else summ.get("count"),
+            "avg": (summ.get("rating") or {}).get("avg"), "distribution": dist or None, "reviews": out}
+
+
+def reviews(product_url: str) -> dict:
+    """Contract for core.reviews. The review tab is its own SSR page: /ua/review/<slug>.html (5 per page)."""
+    slug = product_url.rsplit("/", 1)[-1]
+    return parse_reviews(chromium_dom(REVIEW_URL.format(slug=slug)))
+
+
 def search(query: str, meta: dict | None = None) -> list[dict]:
     page = chromium_dom(SEARCH.format(q=quote_plus(query)))
     rows = parse_search(page, meta)
