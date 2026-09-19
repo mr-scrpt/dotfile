@@ -19,6 +19,8 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
     if meta is not None:
         m = re.search(r"Знайдено\s*([\d\s\u00a0]+)\s*товар", text(page))
         meta["total_est"] = to_int(m.group(1)) if m else None
+        meta["categories"] = [{"name": text(n), "count": to_int(c)} for n, c in
+                              re.findall(r'category-label-val[^>]*>\s*([^<]+?)\s*<span class="category-label-count">\((\d+)\)</span>', page)]
     out = []
     for c in re.split(r'<div class="br-pp br-pp-ex goods-block__item', page)[1:]:
         c = re.sub(r"<svg.*?</svg>", "", c, flags=re.S)

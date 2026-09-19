@@ -76,7 +76,12 @@ def parse_catalog(page: str) -> dict:
             "pages": pag.get("lastPage") or 1, "total": pag.get("totalCount")}
 
 
-def parse_search(page: str) -> list[dict]:
+def parse_search(page: str, meta: dict | None = None) -> list[dict]:
+    if meta is not None:
+        sr = nuxt_state(page).get("state", {}).get("sr") or {}
+        meta["total_est"] = sr.get("countProducts") or None
+        meta["categories"] = [{"name": c.get("catalogTitle"), "count": c.get("total")}
+                              for s in sr.get("sections") or [] for c in s.get("catalogs") or [] if c.get("catalogTitle")]
     return parse_catalog(page)["cards"]
 
 
@@ -125,8 +130,7 @@ def _page(url: str) -> str:
 
 
 def search(query: str, meta: dict | None = None) -> list[dict]:
-    del meta  # no site-reported total on this page
-    return parse_search(_page(f"{BASE}/ua/sr/?q={quote_plus(query)}"))
+    return parse_search(_page(f"{BASE}/ua/sr/?q={quote_plus(query)}"), meta)
 
 
 def catalog(section: str, filter_ids: list[int], max_pages: int = 6) -> dict:

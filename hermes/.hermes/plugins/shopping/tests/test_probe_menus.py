@@ -77,6 +77,7 @@ class NewParsers(unittest.TestCase):
         self.assertEqual(rows[0]["notes"], "б/у")
         self.assertTrue(rows[0]["url"].startswith("https://citrus.ua/"))
         self.assertEqual(rows[0]["availability"], "є в наявності")
+        self.assertEqual(meta["categories"][0], {"name": "Б/В iPhone", "count": 62})
 
     def test_eldorado_api(self):
         meta = {}
@@ -98,6 +99,7 @@ class NewParsers(unittest.TestCase):
         self.assertEqual(rows[0]["price_uah"], 299)
         self.assertEqual(rows[0]["price_note"], "было 369 ₴")
         self.assertEqual(rows[1]["price_uah"], 159)            # sibling card's price must not leak
+        self.assertIn({"name": "Мобільні телефони", "count": 246}, meta["categories"])
 
     def test_pn(self):
         meta = {}
@@ -130,6 +132,7 @@ class NewParsers(unittest.TestCase):
         ids = rozetka.parse_search(json.loads(gz("rozetka_search_api.json.gz")), meta)
         self.assertEqual(meta["total_est"], 1119)
         self.assertEqual(len(ids), 60)
+        self.assertEqual(meta["categories"][0], {"name": "Інвертори", "count": 107})
         det = rozetka.parse_details(json.loads(gz("rozetka_details_api.json.gz")))
         self.assertIn(615896048, det)
         self.assertEqual(rozetka._seller({"seller": "RENEGAT"}, ""), "RENEGAT (маркетплейс)")
@@ -194,6 +197,7 @@ class Probe(Isolated):
         def fake_search(query, meta=None, **kw):
             if meta is not None:
                 meta["total_est"] = 42
+                meta["categories"] = [{"name": "чохли", "count": 30}, {"name": "телефони", "count": 12}, {"name": "x", "count": None}, {"name": "чохли", "count": 30}]
             return [{"title": f"{query} x", "price_uah": 10}] * 5
 
         class Mod:
@@ -214,6 +218,7 @@ class Probe(Isolated):
         self.assertEqual(by["hotline"]["hits"], 5)
         self.assertEqual(by["hotline"]["total_est"], 42)
         self.assertEqual(len(by["hotline"]["sample"]), 3)
+        self.assertEqual([c["name"] for c in by["hotline"]["categories"]], ["чохли", "телефони", "x"])
         self.assertIn("boom", by["moyo"]["error"])
         self.assertEqual(by["moyo"]["status"], "error")
         self.assertEqual(r["with_hits"], ["hotline", "prom"])
@@ -228,6 +233,9 @@ class Probe(Isolated):
 class Menus(Isolated):
     def test_sources_menu_order_and_labels(self):
         pr = {"sites": [{"site": "hotline", "status": "hits", "probed": True, "hits": 25, "total_est": None},
+                        {"site": "brain", "status": "hits", "probed": True, "hits": 24, "total_est": 2389,
+                         "categories": [{"name": "Чохли для мобільних телефонів", "count": 1400}, {"name": "Захисне скло", "count": 543},
+                                        {"name": "Мобільні телефони", "count": 246}, {"name": "Планшети", "count": 1}]},
                         {"site": "rozetka", "status": "hits", "probed": True, "hits": 3, "total_est": 719},
                         {"site": "moyo", "status": "zero", "probed": True, "hits": 0},
                         {"site": "allo", "status": "error", "probed": True, "hits": 0, "error": "blocked (403)"},
@@ -235,7 +243,8 @@ class Menus(Isolated):
                         {"site": "comfy", "status": "no_script", "probed": False}]}
         m = menus.sources_menu(pr)
         labels = [i["label"] for i in m["items"]]
-        self.assertEqual(labels[:2], ["Rozetka (719+)", "Hotline (25)"])      # most hits first
+        self.assertEqual(labels[0], "Brain (1 400 чохли для мобільних телефонів · 543 захисне скло · 246 мобільні телефони · +1)")
+        self.assertEqual(labels[1:3], ["Rozetka (719+)", "Hotline (25)"])      # most hits first
         self.assertIn("Алло (ошибка зонда)", labels)
         self.assertIn("Prom.ua (исключён из зонда)", labels)
         self.assertIn("Comfy (нет скрипта — только браузер)", labels)

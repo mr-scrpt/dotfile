@@ -29,7 +29,19 @@ def parse_search(raw: dict, meta: dict | None = None) -> list[int]:
     d = raw.get("data") or {}
     if meta is not None:
         meta["total_est"] = (d.get("quantities") or {}).get("goods_quantity_total_found")
+        cats = (d.get("categories") or {}).get("list_categories") if isinstance(d.get("categories"), dict) else None
+        meta["categories"] = _leaf_categories(cats or [])
     return [g["id"] for g in d.get("goods") or [] if g.get("id")]
+
+
+def _leaf_categories(nodes: list, out: list | None = None) -> list:
+    out = out if out is not None else []
+    for n in nodes:
+        if n.get("children"):
+            _leaf_categories(n["children"], out)
+        elif n.get("title") and n.get("count"):
+            out.append({"name": n["title"], "count": n["count"]})
+    return out
 
 
 def parse_details(raw: dict) -> dict[int, dict]:

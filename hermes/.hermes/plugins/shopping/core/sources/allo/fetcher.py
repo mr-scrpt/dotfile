@@ -13,7 +13,11 @@ BASE = "https://allo.ua"
 SEARCH = BASE + "/ua/catalogsearch/result/?q={q}"
 
 
-def parse_search(page: str) -> list[dict]:
+def parse_search(page: str, meta: dict | None = None) -> list[dict]:
+    if meta is not None:
+        cats = re.findall(r'href="[^"]*catalogsearch/result/index/cat-\d+/[^"]*"[^>]*>\s*<span>([^<]+)</span>\s*<i class="f-radio__amount">\((\d+)\)</i>', page)
+        meta["categories"] = [{"name": text(n), "count": to_int(c)} for n, c in cats]
+        meta["total_est"] = max((to_int(c) for _, c in cats), default=None)
     out = []
     for c in re.split(r'<div class="product-card"', page)[1:]:
         c = re.sub(r"<svg.*?</svg>", "", c, flags=re.S)
@@ -41,8 +45,7 @@ def parse_search(page: str) -> list[dict]:
 
 
 def search(query: str, meta: dict | None = None) -> list[dict]:
-    del meta  # no site-reported total on this page
     r = get(SEARCH.format(q=quote_plus(query)))
     if r.blocked:
         raise FetchError(f"allo blocked ({r.status})")
-    return parse_search(r.text)
+    return parse_search(r.text, meta)

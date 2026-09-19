@@ -93,8 +93,9 @@ def _probe_table(out: dict) -> str:
     for s in out["sites"]:
         n = s.get("total_est") or s.get("hits")
         tag = {"hits": f"{n}", "zero": "0", "error": s.get("error"), "excluded": "исключён", "no_script": "нет скрипта", "not_probed": "не зондировался"}[s["status"]]
+        cats = " · ".join(f"{c['count'] or '?'} {c['name'][:24]}" for c in s.get("categories", [])[:4])
         smp = "; ".join(f"{x['title'][:38]} {x['price_uah'] or ''}".strip() for x in s.get("sample", [])[:2])
-        rows.append(f"{s['site']:<10} {s['group']:<12} {tag:<22} {smp}")
+        rows.append(f"{s['site']:<10} {s['group']:<12} {tag:<14} {cats or smp}")
     return "\n".join(rows)
 
 

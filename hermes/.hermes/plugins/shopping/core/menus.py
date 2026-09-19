@@ -62,6 +62,19 @@ def probe_selection(values: list[str]) -> dict:
     return {"probe": True, "only": [v for v in values if v not in (PROBE_ALL, PROBE_SKIP)]}
 
 
+MENU_CATS = 3            # categories shown inline per site
+
+
+def _hits_tag(n: int, r: dict) -> str:
+    """'246 телефонов · 1400 чехлов · 543 стёкол' when the site reports categories, else the total."""
+    cats = [c for c in r.get("categories") or [] if c.get("count")]
+    if not cats:
+        return f"{_n(n)}{'+' if r.get('total_est') and (r.get('hits') or 0) < n else ''}"
+    parts = [f"{_n(c['count'])} {c['name'].lower()}" for c in cats[:MENU_CATS]]
+    rest = len(cats) - MENU_CATS
+    return " · ".join(parts) + (f" · +{rest}" if rest > 0 else "")
+
+
 STATUS_TAG = {"excluded": "исключён из зонда", "no_script": "нет скрипта — только браузер",
               "not_probed": "не зондировался", "error": "ошибка зонда", "zero": "0 — не найдено"}
 
@@ -80,13 +93,13 @@ def sources_menu(probe_result: dict | None = None, exclude: list[str] | None = N
         status = (r or {}).get("status") or ("no_script" if not s["scripted"] else "not_probed")
         if status == "hits":
             n = r.get("total_est") or r["hits"]
-            rows.append((0, -n, s, f"{_n(n)}{'+' if r.get('total_est') and r['hits'] < n else ''}"))
+            rows.append((0, -n, s, _hits_tag(n, r)))
         else:
             rows.append((2 if status == "zero" else 1, 0, s, STATUS_TAG[status]))
     rows.sort(key=lambda x: (x[0], x[1]))
     items = [{"value": s["site"], "label": _label(f"{s['title']} ({tag})" if tag else s["title"]), "group": s["group"]}
              for _, _, s, tag in rows]
-    q = "Где искать? (в скобках — позиций по зонду / состояние)" if probe_result else "Где искать?"
+    q = "Где искать? (в скобках — что нашёл зонд: по категориям, если сайт их отдаёт)" if probe_result else "Где искать?"
     return {"question": q, "items": items, "multi": True}
 
 

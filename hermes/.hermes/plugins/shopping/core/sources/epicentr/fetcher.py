@@ -23,7 +23,7 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
         meta["pages"] = pages
         meta["total_est"] = pages * PER_PAGE if pages else len(prods)
         cats = ((st.get("filters") or {}).get("list") or {}).get("categories") or []
-        meta["categories"] = [i.get("name") for c in cats[:1] for i in (c.get("items") or [])[:8]]
+        meta["categories"] = [{"name": i.get("name"), "count": None} for c in cats[:1] for i in (c.get("items") or [])[:8] if i.get("name")]
     out = []
     for p in prods:
         if not (p.get("name") and p.get("url")):

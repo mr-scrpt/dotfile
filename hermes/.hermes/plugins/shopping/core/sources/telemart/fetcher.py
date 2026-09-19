@@ -15,6 +15,11 @@ SEARCH = BASE + "/ua/search/{q}/"
 
 
 def parse_search(page: str, meta: dict | None = None) -> list[dict]:
+    if meta is not None:
+        cats = re.findall(r'catalog-slider-main-mobile__txt">\s*([^<]+?)\s*<i>\((\d+)\)</i>', page)
+        meta["categories"] = [{"name": text(n), "count": to_int(c)} for n, c in cats if not n.startswith("Усі")]
+        tot = next((to_int(c) for n, c in cats if n.startswith("Усі")), None)
+        meta["total_est"] = tot
     out = []
     for c in re.split(r'<div class="product-item col-lg-3', page)[1:]:
         c = re.sub(r"<svg.*?</svg>", "", c, flags=re.S)

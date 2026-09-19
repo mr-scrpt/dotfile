@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from . import sources
 
 SAMPLE = 3
+MAX_CATS = 6            # top categories by count kept per site (what the menu shows)
 TIMEOUT_S = 40
 
 
@@ -27,7 +28,14 @@ def _probe_one(site: str, query: str) -> dict:
         hits = mod.search(query, meta, **(getattr(mod, "PROBE_KWARGS", {}) or {}))
     except Exception as e:  # noqa: BLE001 — a dead site must not kill the probe
         return {"site": site, "probed": True, "error": f"{type(e).__name__}: {e}"[:120], "hits": 0, "sample": []}
+    seen, cats = set(), []
+    for c in meta.get("categories") or []:
+        if c.get("name") and c["name"] not in seen:
+            seen.add(c["name"])
+            cats.append(c)
+    cats.sort(key=lambda c: -(c.get("count") or 0))
     return {"site": site, "probed": True, "hits": len(hits), "total_est": meta.get("total_est"),
+            "categories": cats[:MAX_CATS],
             "sample": [{"title": (h.get("title") or "")[:90], "price_uah": h.get("price_uah")} for h in hits[:SAMPLE]]}
 
 

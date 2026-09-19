@@ -25,6 +25,8 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
     pp = (_next_data(page).get("props") or {}).get("pageProps") or {}
     if meta is not None:
         meta["total_est"] = (pp.get("counts") or {}).get("totalCount")
+        cat_attr = next((a for a in pp.get("attributes") or [] if a.get("id") == "categories"), {})
+        meta["categories"] = [{"name": i.get("title"), "count": i.get("count")} for i in cat_attr.get("items") or [] if i.get("title")]
     out = []
     for p in pp.get("products") or []:
         if not (p.get("name") and p.get("url")):
