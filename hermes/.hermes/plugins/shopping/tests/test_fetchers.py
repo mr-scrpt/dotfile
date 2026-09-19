@@ -131,10 +131,38 @@ class FetchService(unittest.TestCase):
         self._tmp.cleanup()
         os.environ.pop("SHOPPING_HOME", None)
 
+    def test_category_ok(self):
+        ok = fetch_svc.category_ok
+        self.assertEqual(ok("Смартфони", "Смартфони"), (True, ""))
+        self.assertEqual(ok("Смартфони і мобільні телефони", "Смартфони")[0], True)   # substring either way
+        self.assertFalse(ok("Захисне скло", "Смартфони")[0])                        # accessory
+        self.assertFalse(ok("Чохли для смартфонів", None)[0])                         # accessory even without wanted
+        self.assertFalse(ok("Планшети", "Смартфони")[0])                              # other product category
+        self.assertEqual(ok("", "Смартфони"), (True, ""))                             # unknown → title match decides
+
+    def test_fetch_drops_accessories_by_category(self):
+        from shopping.core.sources.comfy import fetcher as comfy
+        page = gz("comfy_search_iphone.html.gz")
+        with mock.patch.object(comfy, "chromium_dom", return_value=page):
+            r = core.fetch_site("monitor", self.sid, "comfy", "iPhone 16 Pro 256", limit=50, category="Смартфони")
+        self.assertTrue(r["success"])
+        self.assertTrue(all(o.get("category") == "Смартфони" for o in r["offers"]), [o.get("category") for o in r["offers"]])
+        self.assertTrue(any("accessory" in d["why"] for d in r["dropped"]) or r["matched"] > 0)
+        rows = core.list_findings("monitor", self.sid, group="marketplace")["findings"]
+        self.assertTrue(rows and all(x["category"] == "Смартфони" for x in rows))
+        self.assertIn("dropped by category", core.get_session("monitor", self.sid)["log_tail"][-1]["detail"])
+
     def test_matches_model(self):
         self.assertTrue(fetch_svc.matches_model('Монітор 26.5" MSI MAG 274QP QD-OLED X24', "MSI MAG 274QP QD-OLED X24"))
         self.assertFalse(fetch_svc.matches_model("Монітор MSI MAG 274QPF X30MV", "MSI MAG 274QP QD-OLED X24"))
         self.assertTrue(fetch_svc.matches_model("LG UltraGear 27GS95QE-B", "LG 27GS95QE-B"))
+        m = fetch_svc.matches_model
+        self.assertTrue(m("Смартфон Apple iPhone 16 Pro 256Gb Black Titanium", "iPhone 16 Pro 256"))
+        self.assertFalse(m("Смартфон Apple iPhone 16 Pro Max 256Gb Black Titanium", "iPhone 16 Pro 256"))   # variant
+        self.assertTrue(m("Смартфон Apple iPhone 16 Pro Max 256Gb Black", "iPhone 16 Pro Max 256"))
+        self.assertFalse(m("Samsung Galaxy S25 Ultra 256GB", "Galaxy S25 256"))
+        self.assertTrue(m("Samsung Galaxy S25+ 256GB", "Galaxy S25 Plus 256"))
+        self.assertFalse(m("Samsung Galaxy S25+ 256GB", "Galaxy S25 256"))
 
     def test_fetch_foxtrot_stores_only_matching(self):
         with mock.patch.object(foxtrot, "get", return_value=Response(200, gz("foxtrot_search.html.gz"), "u")):

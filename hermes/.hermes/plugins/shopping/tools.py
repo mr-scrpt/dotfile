@@ -46,7 +46,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_add_followup": _json(core.add_followup, "topic", "session", "title", "question", "answer_md"),
     "shop_sources": _json(core.get_sources, "group", "query"),
     "shop_catalog": _json(core.fetch_catalog, "topic", "session", "section", "filter_ids", "want", "max_pages"),
-    "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit"),
+    "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit", "category"),
     "shop_probe": _json(core.probe_sites_search, "query", "exclude", "only"),
 }
 

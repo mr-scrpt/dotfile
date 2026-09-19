@@ -19,6 +19,7 @@ FINDING = {
         "price_note": {"type": "string"},
         "rating": {"type": "number"}, "rating_count": {"type": "integer"}, "offers_count": {"type": "integer"},
         "availability": {"type": "string"}, "seller": {"type": "string"}, "delivery_scope": _GEO,
+        "category": {"type": "string", "description": "site category of the card (e.g. Смартфони)"},
         "installment": {"type": "boolean"}, "installment_note": {"type": "string"},
         "pros": _STR_LIST, "cons": _STR_LIST,
         "nuances": {**_STR_LIST, "description": "concrete user-reported issues for THIS model"},
@@ -58,6 +59,7 @@ SHOP_UPDATE_PARAMS = {
         **_TS, "status": {"type": "string", "enum": ["draft", "searching", "done"]},
         "query": {"type": "string"}, "purpose": {"type": "string"}, "must": _STR_LIST, "nice": _STR_LIST, "extra": _STR_LIST,
         "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"}, "sites": _STR_LIST,
+        "category": {"type": "string", "description": "product category name as the sites call it (from the probe), e.g. Смартфони / Монітори"},
     }, "required": ["topic", "session"]},
 }
 
@@ -105,6 +107,7 @@ SHOP_FETCH = {
     "parameters": {"type": "object", "properties": {
         **_TS, "site": {"type": "string", "enum": ["hotline", "ekatalog", "pn", "rozetka", "foxtrot", "moyo", "allo", "comfy", "citrus", "eldorado", "prom", "epicentr", "telemart", "brain"]},
         "model": {"type": "string"}, "geo": _GEO, "limit": {"type": "integer"},
+        "category": {"type": "string", "description": "product category chosen from the probe (e.g. Смартфони); cards in other/accessory categories are dropped"},
     }, "required": ["topic", "session", "site", "model"]},
 }
 

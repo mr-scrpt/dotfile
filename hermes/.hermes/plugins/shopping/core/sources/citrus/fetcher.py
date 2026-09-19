@@ -41,6 +41,7 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "rating": rev.get("rating") or None, "rating_count": rev.get("commentsCount") or None,
             "availability": (st.get("description") or st.get("type") or "").lower(),
             "seller": "Цитрус", "delivery_scope": "ua_local",
+            "category": (p.get("category") or {}).get("name") if isinstance(p.get("category"), dict) else (p.get("category") or ""),
             "notes": "б/у" if used else "",
         })
     return out

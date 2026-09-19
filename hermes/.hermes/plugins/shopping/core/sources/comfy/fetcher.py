@@ -52,7 +52,7 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "seller": "продавец маркетплейса" if third else "Comfy", "delivery_scope": "ua_local",
             "installment": True if it.get("creditMonthlyMin") else None,
             "installment_note": f"від {it['creditMonthlyMin']} ₴/міс" if it.get("creditMonthlyMin") else "",
-            "notes": (it.get("category") or {}).get("name") or "",
+            "category": (it.get("category") or {}).get("name") or "",
         })
     return out
 

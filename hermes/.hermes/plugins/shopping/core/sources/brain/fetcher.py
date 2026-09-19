@@ -41,7 +41,8 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "rating": float(stars) if stars else None,
             "availability": "в наявності" if "Купити" in text(c) else "",
             "seller": "Brain", "delivery_scope": "ua_local",
-            "notes": "; ".join(x for x in (attrs.get("category-name-ua", ""), text(spec.group(1))[:160] if spec else "") if x),
+            "category": attrs.get("category-name-ua", ""),
+            "notes": text(spec.group(1))[:160] if spec else "",
         })
     return out
 

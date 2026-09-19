@@ -61,8 +61,8 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    probe=<probe>, only=<only>)` — the plugin runs the parallel probe first and lists EVERY site
    with its state: hit count (by category when the site reports them) / «исключён из зонда» /
    «0 — не найдено». Store the
-   answer: `shop_update_params(sites=values)`; `free_text` = extra sites the user typed → add
-   to `notes`. Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
+   answer: `shop_update_params(sites=values, category=<name as the sites call it>)`; `free_text`
+   = extra sites the user typed → add to `notes`. Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
 4. Candidates — if `hotline` ∈ sites: `shop_sources(group="hotline_filters")` → map the hard spec to filter ids
    (diagonal, panel, resolution; refresh as a range id when it is a lower bound → use the
    `want.refresh_min` instead of a frequency id). `shop_catalog(section, filter_ids, want)`
@@ -74,7 +74,10 @@ Lists → `shop_menu`; free-form fields (query, purpose, budget…) → one plai
    Then `shop_menu(kind="candidates", candidates=[…])` → the user ticks which models to compare.
    Done: 1–12 candidate model codes chosen by the user, `source_done` logged.
 5. Offers — for EVERY chosen candidate and EVERY site in `params.sites`: `shop_fetch(site, model,
-   geo)`. All 14 catalogue sites are scripted (hotline, ekatalog, pn, rozetka, comfy, foxtrot,
+   geo, category=params.category)`. The tool keeps only cards whose title carries the model code
+   without an extra variant word (Pro ≠ Pro Max) AND whose site category is the product itself —
+   accessories (чохли, скло, кабелі…) are dropped and listed in `dropped`, so reviews/prices never
+   come from a case or a screen protector. All 14 catalogue sites are scripted (hotline, ekatalog, pn, rozetka, comfy, foxtrot,
    moyo, allo, citrus, eldorado, prom, epicentr, telemart, brain; comfy runs through local
    headless Chromium inside the plugin). The tool stores matching offers itself and returns
    compact data; you only read it. Policy: a site stays in the catalogue only while its scripted

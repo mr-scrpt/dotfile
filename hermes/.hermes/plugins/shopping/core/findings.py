@@ -23,7 +23,7 @@ def defaults() -> dict:
         "id": None, "ts": None, "group": None, "source": "", "title": "", "model": "", "url": "",
         "price_uah": None, "price_min_uah": None, "price_max_uah": None, "price_note": "",
         "rating": None, "rating_count": None, "offers_count": None,
-        "availability": "", "seller": "", "delivery_scope": "ua_local",
+        "availability": "", "seller": "", "delivery_scope": "ua_local", "category": "",
         "installment": None, "installment_note": "",
         "pros": [], "cons": [], "nuances": [], "review_sources": [], "notes": "",
         "model_match": "",
@@ -40,7 +40,8 @@ def normalize_url(url: str) -> str:
 
 
 def normalize_model(model: str | None) -> str:
-    return re.sub(r"[\s\-_/]+", "", (model or "").upper())
+    """Spacing/dash/case-insensitive key; '+' spelled out so 'S25+' == 'S25 Plus'."""
+    return re.sub(r"[\s\-_/]+", "", (model or "").upper().replace("+", "PLUS"))
 
 
 def model_key(f: dict) -> str:

@@ -36,6 +36,7 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "rating": p.get("rating") or None, "rating_count": p.get("commentsCount") or None,
             "availability": (p.get("available") or "").lower(),
             "seller": _SELLER.get(seller, seller), "delivery_scope": "ua_local",
+            "category": (p.get("sectionsUa") or "").split()[-1] if p.get("sectionsUa") else "",
             "notes": f"розділ: {p['sectionsUa']}" if p.get("sectionsUa") else "",
         })
     return out
