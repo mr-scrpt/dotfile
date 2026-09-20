@@ -78,7 +78,12 @@ def _menu(args: dict, **kw) -> str:
                 pr = core.probe_sites_search(args["query"], exclude=args.get("exclude"), only=args.get("only"))
             menu = core.menus.sources_menu(pr, exclude=args.get("exclude"))
         elif kind == "candidates":
-            menu = core.menus.candidates_menu(args.get("candidates") or [], args.get("picked"))
+            # Removed by design: the shortlist is never pre-picked by the user (see core/menus.py).
+            return json.dumps({"success": False, "error":
+                               "kind=candidates отменён: отзывы собираются по ВСЕМ прошедшим критерии "
+                               "(shop_compare), тройку лидеров выбираешь ты по итоговой таблице. "
+                               "Если моделей >20 — сузь критерии вместе с пользователем."},
+                              ensure_ascii=False)
         elif kind == "reviews":
             menu = core.menus.reviews_menu()
         else:

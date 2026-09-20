@@ -124,18 +124,10 @@ def condition_menu() -> dict:
                       {"value": "any", "label": "любое (включая б/у и восстановленные)"}]}
 
 
-def candidates_menu(candidates: list[dict], picked: list[str] | None = None) -> dict:
-    """Confirmation, not a quiz: the plugin has already picked the leaders, the user only
-    corrects them if they disagree. Picked models are marked so the choice is obvious."""
-    chosen = set(picked or [])
-    items = [{"value": c["model"],
-              "label": _label(("★ " if c["model"] in chosen else "") +
-                              f"{c['model']} · {_n(c.get('price_min_uah'))}–{_n(c.get('price_max_uah'))} ₴ · "
-                              f"{c.get('offers') or 0} предл.")}
-             for c in candidates]
-    q = ("Сравниваю отмеченные ★ — заменить выбор? (Enter — оставить как есть)" if chosen
-         else "Какие модели сравнивать подробно?")
-    return {"question": q, "items": items, "multi": True}
+# NOTE: there is deliberately NO "which models do we compare?" menu. Everything that passed the
+# criteria goes to offers+reviews; the three leaders are chosen by the model AFTERWARDS, from the
+# full picture. Asking the user to pre-pick models would throw away exactly the candidates whose
+# reviews might have won — see SKILL step 5.
 
 
 # ------------------------------------------------------------------ parsing

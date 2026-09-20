@@ -147,14 +147,12 @@ SHOP_PROBE = {
 
 SHOP_MENU = {
     "name": "shop_menu",
-    "description": "Interactive pick list rendered by the plugin in the host UI (arrows/numbers/checkboxes, one screen). kinds: topics | sessions(topic) | mode(query) | condition | probe (→ {probe:bool, only}) | sources(query, only?, probe?) | candidates(candidates) | reviews. Returns {values:[...], free_text, probe?}. On error no_ui → ask in chat with a numbered list.",
+    "description": "Interactive pick list rendered by the plugin in the host UI (arrows/numbers/checkboxes, one screen). kinds: topics | sessions(topic) | mode(query) | condition | probe (→ {probe:bool, only}) | sources(query, only?, probe?) | reviews. Returns {values:[...], free_text, probe?}. On error no_ui → ask in chat with a numbered list.",
     "parameters": {"type": "object", "properties": {
-        "kind": {"type": "string", "enum": ["topics", "sessions", "mode", "condition", "probe", "sources", "candidates", "reviews"]},
+        "kind": {"type": "string", "enum": ["topics", "sessions", "mode", "condition", "probe", "sources", "reviews"]},
         "topic": _TOPIC, "query": {"type": "string", "description": "sources: run the probe with this query first"},
         "exclude": _STR_LIST, "only": {**_STR_LIST, "description": "sources: probe only these sites (from the probe menu)"},
         "probe": {"type": "boolean", "description": "sources: run the probe before listing (default true when query given)"},
-        "candidates": {"type": "array", "items": {"type": "object"}, "description": "candidates: rows from shop_candidates"},
-        "picked": {**_STR_LIST, "description": "candidates: models you already chose (shortlist) — shown as ★ for confirmation"},
     }, "required": ["kind"]},
 }
 

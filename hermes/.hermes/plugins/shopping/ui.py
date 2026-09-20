@@ -33,11 +33,26 @@ def resolve_clarify_callback():
     return cb if callable(cb) else None
 
 
-def _show(callback, question: str, choices: list[str], multi: bool):
+def _human_wait():
+    """Mark the wait as 'parked on a human answer' so the host excludes it from the tool
+    deadline. Without this a panel left open for a few minutes is killed by
+    `timeouts.tools.sequential_call` and the agent continues as if the user had answered —
+    the plugin must never proceed on its own. Falls back to a no-op context when the host
+    does not provide the helper."""
     try:
-        return callback(question, choices, multi_select=multi)
-    except TypeError:  # older callbacks without the kwarg
-        return callback(question, choices)
+        from tools.approval_human_wait import human_wait_window
+        return human_wait_window()
+    except Exception:  # noqa: BLE001 — older/embedded hosts
+        import contextlib
+        return contextlib.nullcontext()
+
+
+def _show(callback, question: str, choices: list[str], multi: bool):
+    with _human_wait():
+        try:
+            return callback(question, choices, multi_select=multi)
+        except TypeError:  # older callbacks without the kwarg
+            return callback(question, choices)
 
 
 def ask(menu: dict, callback=None) -> dict:

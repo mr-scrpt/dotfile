@@ -423,15 +423,22 @@ class QueryWidening(unittest.TestCase):
         self.assertTrue(len(calls) > 1)
 
 
-class CandidatesShortlist(unittest.TestCase):
-    def test_menu_marks_the_plugin_choice_for_confirmation(self):
-        rows = [{"model": "A", "price_min_uah": 1, "price_max_uah": 2, "offers": 9},
-                {"model": "B", "price_min_uah": 3, "price_max_uah": 4, "offers": 2}]
-        m = menus.candidates_menu(rows, picked=["A"])
-        self.assertTrue(m["items"][0]["label"].startswith("★ A"))
-        self.assertFalse(m["items"][1]["label"].startswith("★"))
-        self.assertIn("заменить выбор", m["question"])
-        self.assertIn("Какие модели", menus.candidates_menu(rows)["question"])
+class NoShortlistQuestion(unittest.TestCase):
+    """The user is never asked which models to compare — reviews cover every survivor."""
+
+    def test_candidates_menu_is_gone(self):
+        self.assertFalse(hasattr(menus, "candidates_menu"))
+
+    def test_shop_menu_refuses_the_candidates_kind(self):
+        import json
+        from shopping import tools
+        res = json.loads(tools.HANDLERS["shop_menu"]({"kind": "candidates", "candidates": [{"model": "A"}]}))
+        self.assertFalse(res["success"])
+        self.assertIn("отменён", res["error"])
+
+    def test_kind_not_offered_in_the_schema(self):
+        from shopping import schemas
+        self.assertNotIn("candidates", schemas.SHOP_MENU["parameters"]["properties"]["kind"]["enum"])
 
 
 class ModeMenus(unittest.TestCase):

@@ -1,7 +1,7 @@
 ---
 name: shopping-research
 description: "Use when the user wants to find/compare goods to buy in Ukraine."
-version: 0.8.0
+version: 0.9.0
 author: mr-scrpt, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -186,6 +186,13 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
   never open rozetka in `browser_exec`.
 - Aggregator specs are patchy: a missing parameter is `unverified`, NOT a rejection — never
   claim a model lacks a feature just because its spec line is silent.
+- НИКОГДА не спрашивай, какие модели сравнивать. Такого меню больше нет (`kind=candidates`
+  возвращает ошибку): отзывы и цены собираются по ВСЕМ прошедшим критерии, тройку лидеров ты
+  выбираешь сам по таблице `shop_compare` — в самом конце. Если моделей больше 20 — сужай
+  КРИТЕРИИ вместе с пользователем, а не выбирай модели вручную.
+- НИЧЕГО не делай без ответа пользователя, когда задал вопрос. Панель ждёт сколько угодно; если
+  инструмент всё же вернул `timed_out`, пустой ответ или ошибку — это НЕ ответ и НЕ разрешение
+  продолжать: повтори вопрос в чате обычным текстом и жди. Никаких «раз не ответил, решу сам».
 - НЕ ЧИНИ ПЛАГИН ВО ВРЕМЯ РАБОТЫ. `shopping` — продукт, которым пользуются другие: его код,
   схемы и этот скилл НЕ правятся из исследовательской сессии, даже если баг очевиден и правка
   в одну строку. Нашёл дефект (инструмент падает, ничего не сохраняет, врёт про успех) —
