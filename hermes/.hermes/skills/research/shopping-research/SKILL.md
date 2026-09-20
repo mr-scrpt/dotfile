@@ -1,7 +1,7 @@
 ---
 name: shopping-research
 description: "Use when the user wants to find/compare goods to buy in Ukraine."
-version: 0.7.0
+version: 0.8.0
 author: mr-scrpt, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -186,6 +186,14 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
   never open rozetka in `browser_exec`.
 - Aggregator specs are patchy: a missing parameter is `unverified`, NOT a rejection — never
   claim a model lacks a feature just because its spec line is silent.
+- НЕ ЧИНИ ПЛАГИН ВО ВРЕМЯ РАБОТЫ. `shopping` — продукт, которым пользуются другие: его код,
+  схемы и этот скилл НЕ правятся из исследовательской сессии, даже если баг очевиден и правка
+  в одну строку. Нашёл дефект (инструмент падает, ничего не сохраняет, врёт про успех) —
+  `shop_bugreport(title, observed, expected, where, repro, error, severity, workaround)`, скажи
+  пользователю одной строкой и продолжай с обходным путём, если он есть; если обойти нельзя —
+  останови поиск и сообщи. Правка делается отдельно, в сессии разработки, с тестом и ревью.
+  Подозреваешь, что инструмент «сохранил», но не проверил — перечитай `shop_get_session` и
+  сверься с тем, что реально лежит в параметрах, прежде чем идти дальше.
 - Division of labour, no exceptions: the PLUGIN does everything deterministic (menus, fetching,
   parsing, criteria checking, dedup, review digests, ordering the comparison table, report
   rendering); the MODEL supplies only semantics (topic recon, criteria from `observed`, wording

@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 PLUGINS_DIR = Path(__file__).resolve().parents[2]
@@ -232,6 +233,90 @@ class Adapters(Base):
         out = cli.run(cli.build_parser().parse_args(["render", "monitor", self.sid]))
         self.assertNotIn("markdown", out)
         self.assertTrue(Path(out["path"]).exists())
+
+
+class ParamsContract(unittest.TestCase):
+    """Every param the schema advertises must actually round-trip into the session.
+
+    Regression: `criteria` was in SHOP_UPDATE_PARAMS but missing from default_params(), so
+    update_params rejected it as unknown and shop_recon reported success while storing nothing.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = mock.patch.dict(os.environ, {"SHOPPING_HOME": self.tmp.name})
+        self.env.start()
+        from shopping import core
+        core.create_topic("t")
+        self.sid = core.create_session("t", "q", "p")["session"]["id"]
+
+    def tearDown(self):
+        self.env.stop()
+        self.tmp.cleanup()
+
+    SAMPLES = {"query": "монітор", "purpose": "код", "category": "монітори", "mode": "spec",
+               "condition": "any", "geo": "ua_local", "reviews": "cards", "budget_uah": 20000,
+               "must": ["27 дюймов"], "nice": ["USB-C"], "sites": ["hotline"], "shortlist": ["A"],
+               "criteria": [{"key": "частота", "any_of": [{"min": 100, "unit": "Гц"}]}],
+               "recon": {"terms": ["OLED"]}, "reference": {"title": "x"},
+               "items": [{"name": "инвертор"}], "notes": "тест", "extra": {"free": "form"}}
+
+    def test_every_schema_param_round_trips(self):
+        from shopping import core, schemas
+        from shopping.core.model import default_params
+        props = set(schemas.SHOP_UPDATE_PARAMS["parameters"]["properties"]) - {"topic", "session", "status"}
+        self.assertEqual(props - set(default_params()), set(), "schema advertises params the session cannot store")
+        missing = props - set(self.SAMPLES)
+        self.assertEqual(missing, set(), f"add sample values for {missing} to this test")
+        for key in sorted(props):
+            r = core.update_params("t", self.sid, **{key: self.SAMPLES[key]})
+            self.assertTrue(r.get("success"), f"{key}: {r.get('error')}")
+            stored = core.get_session("t", self.sid)["session"]["params"][key]
+            self.assertEqual(stored, self.SAMPLES[key], f"{key} did not round-trip")
+
+    def test_recon_store_fails_loudly_when_params_reject_it(self):
+        from shopping import tools
+        payload = {"terms": ["OLED"], "criteria": [{"key": "частота", "contains": ["Гц"]}]}
+        with mock.patch.object(tools.core, "update_params",
+                               return_value={"success": False, "error": "unknown params"}):
+            res = json.loads(tools.HANDLERS["shop_recon"]({"action": "store", "topic": "t",
+                                                           "session": self.sid, "payload": payload}))
+        self.assertFalse(res["success"])          # never report stored when storage failed
+        self.assertNotIn("stored", res)
+
+
+class BugReports(unittest.TestCase):
+    """A defect in the plugin becomes a report, never a live code edit."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = mock.patch.dict(os.environ, {"SHOPPING_HOME": self.tmp.name})
+        self.env.start()
+
+    def tearDown(self):
+        self.env.stop()
+        self.tmp.cleanup()
+
+    def test_file_and_list(self):
+        from shopping import core
+        r = core.bugs_mod.file_report(title="criteria не сохраняются",
+                                      observed="shop_recon(action=store) вернул success, params.criteria пуст",
+                                      expected="criteria попадают в сессию", where="shop_recon(action=store)",
+                                      severity="blocker", workaround="передал criteria прямо в shop_candidates",
+                                      topic="monitor", session="2026-09-20_x", version="0.1.0")
+        self.assertTrue(r["success"])
+        text = Path(r["path"]).read_text(encoding="utf-8")
+        self.assertIn("criteria не сохраняются", text)
+        self.assertIn("shop_recon(action=store)", text)
+        self.assertIn("передал criteria прямо в shop_candidates", text)
+        lst = core.bugs_mod.list_reports()
+        self.assertEqual(lst["count"], 1)
+        self.assertEqual(lst["reports"][0]["severity"], "blocker")
+
+    def test_rejects_empty_report(self):
+        from shopping import core
+        self.assertFalse(core.bugs_mod.file_report(title="", observed="x")["success"])
+        self.assertFalse(core.bugs_mod.file_report(title="x", observed="y", severity="huge")["success"])
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from . import recon as recon_mod
 from .throttle import state as fetch_state
 from .plans import capabilities as source_capabilities, probe_plans, run as run_plans, sample as sample_source
 from .fetch import fetch as fetch_site
-from . import menus, sessions, sources
+from . import bugs as bugs_mod, menus, sessions, sources
 from .probe import probe as probe_sites_search, sites as probe_sites
 from .reviews import collect as collect_reviews
 from .resolve import resolve as resolve_reference
@@ -24,4 +24,4 @@ from .sessions import (create_session, create_topic, list_sessions, list_topics,
 __all__ = ["GEO", "GROUPS", "STATUSES", "get_sources", "add_findings", "list_findings", "get_session",
            "add_followup", "render_report", "create_session", "create_topic", "list_sessions",
            "list_topics", "log_event", "set_summary", "update_params",
-           "find_candidates", "build_comparison", "recon_mod", "fetch_state", "source_capabilities", "sample_source", "probe_plans", "run_plans", "fetch_site", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]
+           "find_candidates", "build_comparison", "recon_mod", "bugs_mod", "fetch_state", "source_capabilities", "sample_source", "probe_plans", "run_plans", "fetch_site", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]

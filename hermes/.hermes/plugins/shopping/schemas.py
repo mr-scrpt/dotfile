@@ -182,6 +182,26 @@ SHOP_SOURCE_PLAN = {
     }, "required": ["action"]},
 }
 
+SHOP_BUGREPORT = {
+    "name": "shop_bugreport",
+    "description": ("File a defect report about the PLUGIN ITSELF (a tool errors out, stores nothing, returns wrong "
+                    "data). The plugin is a shipped product: NEVER edit its code, schemas or skill during a research "
+                    "session — report it here, tell the user, and continue with a workaround if one exists. "
+                    "action=list shows open reports."),
+    "parameters": {"type": "object", "properties": {
+        "action": {"type": "string", "enum": ["file", "list"], "default": "file"},
+        "title": {"type": "string", "description": "one line, what is broken"},
+        "observed": {"type": "string", "description": "what actually happened (with the tool call and its answer)"},
+        "expected": {"type": "string"},
+        "where": {"type": "string", "description": "tool name / pipeline step, e.g. shop_recon(action=store)"},
+        "repro": {"type": "string", "description": "minimal steps to reproduce"},
+        "error": {"type": "string", "description": "verbatim error text if any"},
+        "severity": {"type": "string", "enum": ["blocker", "degraded", "cosmetic"], "default": "degraded"},
+        "workaround": {"type": "string", "description": "what you did instead, so the session could continue"},
+        "topic": {"type": "string"}, "session": {"type": "string"},
+    }, "required": []},
+}
+
 SHOP_RECON = {
     "name": "shop_recon",
     "description": ("Topic research contract — run BEFORE authoring criteria when the category or a named technology "
@@ -224,4 +244,4 @@ SHOP_REVIEWS = {
 
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE, SHOP_SOURCE_PLAN, SHOP_RECON, SHOP_COMPARE]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE, SHOP_SOURCE_PLAN, SHOP_RECON, SHOP_COMPARE, SHOP_BUGREPORT]

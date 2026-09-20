@@ -4,10 +4,13 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Callable
+from pathlib import Path
 
 from . import core
 
 logger = logging.getLogger(__name__)
+
+VERSION = (Path(__file__).parent / "plugin.yaml").read_text(encoding="utf-8").split("version:", 1)[1].split("\n", 1)[0].strip()
 
 
 def _json(fn: Callable, *keys: str):
@@ -131,14 +134,37 @@ def _recon(args: dict, **kw) -> str:
             res = core.recon_mod.validate(args.get("payload"))
             if res.get("success"):
                 r = res["recon"]
-                core.update_params(args["topic"], args["session"], recon=r, criteria=r["criteria"])
-                res["stored"] = {"criteria": len(r["criteria"]), "queries": r["queries"]}
+                saved = core.update_params(args["topic"], args["session"], recon=r, criteria=r["criteria"])
+                if not saved.get("success"):
+                    res = saved  # storing failed → do not report the recon as stored
+                else:
+                    res["stored"] = {"criteria": len(r["criteria"]), "queries": r["queries"]}
     except Exception as e:  # noqa: BLE001
         logger.exception("shop_recon failed")
         res = {"success": False, "error": f"{type(e).__name__}: {e}"}
     return json.dumps(res, ensure_ascii=False)
 
 
+def _bugreport(args: dict, **kw) -> str:
+    """shop_bugreport — the ONLY sanctioned reaction to a plugin defect during a session."""
+    del kw
+    try:
+        if args.get("action") == "list":
+            res = core.bugs_mod.list_reports(args.get("status", ""))
+        else:
+            res = core.bugs_mod.file_report(
+                title=args.get("title", ""), observed=args.get("observed", ""),
+                expected=args.get("expected", ""), where=args.get("where", ""),
+                repro=args.get("repro", ""), error=args.get("error", ""),
+                severity=args.get("severity", "degraded"), workaround=args.get("workaround", ""),
+                topic=args.get("topic", ""), session=args.get("session", ""), version=VERSION)
+    except Exception as e:  # noqa: BLE001
+        logger.exception("shop_bugreport failed")
+        res = {"success": False, "error": f"{type(e).__name__}: {e}"}
+    return json.dumps(res, ensure_ascii=False)
+
+
+HANDLERS["shop_bugreport"] = _bugreport
 HANDLERS["shop_recon"] = _recon
 HANDLERS["shop_compare"] = _json(core.build_comparison, "topic", "session", "models", "sites", "geo", "plans_by_model")
 HANDLERS["shop_source_plan"] = _source_plan

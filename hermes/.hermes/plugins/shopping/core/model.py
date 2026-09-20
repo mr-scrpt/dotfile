@@ -32,6 +32,7 @@ def default_params() -> dict:
             "reference": None,       # reference mode: {"title", "url", "source", "spec": {...}} of the owned device
             "items": [],             # reference mode with several wanted things: [{"name": "инвертор", "must": [...]}, ...]
             "shortlist": [],         # models that passed the criteria and go to offers+reviews
+            "criteria": [],          # criteria authored from `observed` and confirmed by the user (core.spec format)
             "recon": None}           # topic research result (terms/variants/quality/criteria), see core.recon
 
 

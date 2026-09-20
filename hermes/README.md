@@ -35,6 +35,7 @@ Bundled Hermes skills stay in `~/.hermes/skills/` unmanaged; only our own live h
     core/query.py          AND-ish site search: widen a query until the source answers
     core/recon.py          shop_recon: contract (schema+prompt+validate) for the topic-research subagent
     core/compare.py        shop_compare: offers+reviews for EVERY survivor → one comparison table
+    core/bugs.py           shop_bugreport: defects are reported to ~/shopping/.bugs, never patched live
     core/resolve.py        shop_resolve (owned device → title/spec, reference mode)
     core/reviews.py        shop_reviews (parallel buyer reviews → token-cheap digest)
     core/probe.py          parallel hit-count probe over scripted sites (status per site)
