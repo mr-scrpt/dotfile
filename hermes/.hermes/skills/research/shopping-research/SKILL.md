@@ -169,6 +169,9 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
 - `shop_render_report` is called once at the end (and once per follow-up); read the file once.
 - `web_search` limit 5, exactly the template queries; no improvised queries.
 - `shop_probe` costs one compact JSON (~1.5k chars for 8 sites); `browser_exec` costs 10–50× that.
+- Repeated identical requests are served from the plugin's cache (per-source `cache_ttl`), so
+  re-running a step is cheap — but a NEW query to a slow source (e-katalog: ~8 s apart) is not:
+  plan the queries you need instead of probing many variants.
 - Read `shop_list_findings` with `fields` when you only need a subset.
 - Prefer `shop_fetch`/`shop_candidates` over `browser_exec` whenever `fetch: script`.
 
@@ -194,6 +197,10 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
   semantics (author criteria from `observed`, word them for the user, split them per source,
   read the review digest, write the verdict). Never re-implement a plugin step by hand, and
   never let the plugin guess a parameter.
+- Politeness is enforced by the plugin (per-host delay + jitter, response cache, cooldown after a
+  block), declared per source in `source.yaml: rate:`. Never loop a site by hand, never retry a
+  blocked source: `shop_source_plan(action="state")` shows who is cooling down and for how long.
+  If a source answers with a captcha, say so and continue without it — do not hammer it.
 - Units are strings, not knowledge: the engine converts nothing. If a category writes "3 кBт"
   and another "3000 Вт", cover BOTH in `any_of` — that is why you must read `observed` first.
 - Never hardcode a category anywhere: no filter ids, no per-product parsers, no unit tables.

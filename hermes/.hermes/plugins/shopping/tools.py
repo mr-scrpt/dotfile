@@ -103,6 +103,8 @@ def _source_plan(args: dict, **kw) -> str:
             res = core.source_capabilities(args.get("sites"))
         elif action == "sample":
             res = core.sample_source(args["site"], args.get("query") or "")
+        elif action == "state":
+            res = {"success": True, **core.fetch_state()}
         elif action == "probe":
             res = core.probe_plans(args.get("plans") or [])
         elif action == "run":

@@ -153,9 +153,10 @@ SHOP_SOURCE_PLAN = {
                     "action=capabilities → what every source can do (search URL shape, card/reviews support, its notes). "
                     "action=sample(site, query) → that site's titles + `observed`, so you see ITS wording before writing its criteria. "
                     "action=probe(plans) → dry-run [{site, query, criteria?, strict?}] in parallel: hits vs kept per plan + a dropped example. "
-                    "action=run(topic, session, plans, model) → execute the plans and store the offers."),
+                    "action=run(topic, session, plans, model) → execute the plans and store the offers. "
+                    "action=state → which hosts are on cooldown after a block/captcha and for how long."),
     "parameters": {"type": "object", "properties": {
-        "action": {"type": "string", "enum": ["capabilities", "sample", "probe", "run"]},
+        "action": {"type": "string", "enum": ["capabilities", "sample", "probe", "run", "state"]},
         "topic": _TOPIC, "session": {"type": "string"},
         "sites": {**_STR_LIST, "description": "capabilities: limit to these sources"},
         "site": {"type": "string", "description": "sample: the source to sample"},

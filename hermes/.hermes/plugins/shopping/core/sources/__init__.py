@@ -34,6 +34,7 @@ class Source:
     order: int = 100
     notes: str = ""
     filters: dict = field(default_factory=dict)
+    rate: dict = field(default_factory=dict)   # politeness for this host (see core.throttle)
     dir: Path = BUNDLED
 
     @property
@@ -86,7 +87,8 @@ def _read(dir_: Path) -> Source | None:
     d = yaml.safe_load(y.read_text(encoding="utf-8")) or {}
     return Source(key=d.get("key") or dir_.name, title=d.get("title") or dir_.name, group=d.get("group", "marketplace"),
                   fetch=d.get("fetch", "browser"), search=d.get("search", ""), order=int(d.get("order", 100)),
-                  notes=d.get("notes", "") or "", filters=d.get("filters") or {}, dir=dir_)
+                  notes=d.get("notes", "") or "", filters=d.get("filters") or {},
+                  rate=d.get("rate") or {}, dir=dir_)
 
 
 def _scan(base: Path) -> dict[str, Source]:
@@ -104,6 +106,10 @@ def _scan(base: Path) -> dict[str, Source]:
 def _registry() -> dict[str, Source]:
     reg = _scan(BUNDLED)
     reg.update(_scan(root() / ".config" / "sources"))     # user additions / overrides
+    from ..throttle import register_rate                  # pacing is declared per source package
+    for src in reg.values():
+        if src.search:
+            register_rate(src.search, src.rate)
     return reg
 
 

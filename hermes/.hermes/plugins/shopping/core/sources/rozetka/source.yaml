@@ -4,3 +4,7 @@ order: 10
 group: marketplace
 fetch: script
 search: https://rozetka.com.ua/ua/search/?text={q}
+rate:
+  min_delay: 1.0
+  jitter: 0.5
+  cache_ttl: 600

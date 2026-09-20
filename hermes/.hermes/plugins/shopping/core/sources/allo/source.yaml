@@ -4,3 +4,8 @@ order: 40
 group: marketplace
 fetch: script
 search: https://allo.ua/ua/catalogsearch/result/?q={q}
+rate:
+  min_delay: 4.0
+  jitter: 2.0
+  cache_ttl: 900
+  cooldown: 900

@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 from unittest import mock
 
@@ -15,6 +16,7 @@ os.environ["SHOPPING_HOME"] = tempfile.mkdtemp(prefix="shoptest-")
 
 from shopping import core, ui  # noqa: E402
 from shopping.core import menus  # noqa: E402
+from shopping.core.http import Response  # noqa: E402
 from shopping.core import probe as probe_mod  # noqa: E402
 from shopping.core.sources.epicentr import fetcher as epicentr  # noqa: E402
 from shopping.core.sources.prom import fetcher as prom  # noqa: E402
@@ -341,6 +343,41 @@ class UiAdapter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EkatalogSuggestPath(unittest.TestCase):
+    """e-katalog is searched through its own suggest endpoint: ek-list.php serves a captcha."""
+
+    def test_parse_suggest_splits_listings_and_products(self):
+        from shopping.core.sources.ekatalog import fetcher as ek
+        hints = ek.parse_suggest(gz("ekatalog_suggest.html.gz"))
+        self.assertTrue(hints)
+        self.assertEqual(hints[0]["kind"], "listing")
+        self.assertTrue(hints[0]["url"].startswith("https://ek.ua/ua/list/"))
+        self.assertIn("нвертор", hints[0]["title"])
+
+    def test_listing_page_prices_and_specs(self):
+        from shopping.core.sources.ekatalog import fetcher as ek
+        rows = ek.parse_search(gz("ekatalog_listing.html.gz"))
+        self.assertGreater(len(rows), 10)
+        self.assertTrue(all(r["model"] and r["notes"] for r in rows[:5]))
+        self.assertEqual((rows[0]["price_min_uah"], rows[0]["price_max_uah"]), (13705, 21658))  # "Ціна від A до B грн"
+
+    def test_search_uses_suggest_then_listing(self):
+        from shopping.core.sources.ekatalog import fetcher as ek
+        pages = {"mui_qs3": gz("ekatalog_suggest.html.gz"), "list/598": gz("ekatalog_listing.html.gz")}
+
+        def fake_get(url, *a, **k):
+            for frag, body in pages.items():
+                if frag in url:
+                    return Response(200, body, url)
+            raise AssertionError(f"unexpected url {url}")     # ek-list.php must NOT be touched
+
+        with unittest.mock.patch.object(ek, "get", side_effect=fake_get):
+            meta = {}
+            rows = ek.search("інвертор 24", meta)
+        self.assertGreater(len(rows), 10)
+        self.assertTrue(meta["suggestions"])
 
 
 class ModeMenus(unittest.TestCase):

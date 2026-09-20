@@ -6,6 +6,7 @@ Layers: fs (io) → http/model → sources/<key>/ (declarative site packages) �
 """
 from .catalog import get as get_sources
 from .candidates import discover as find_candidates
+from .throttle import state as fetch_state
 from .plans import capabilities as source_capabilities, probe_plans, run as run_plans, sample as sample_source
 from .fetch import fetch as fetch_site
 from . import menus, sources
@@ -21,4 +22,4 @@ from .sessions import (create_session, create_topic, list_sessions, list_topics,
 __all__ = ["GEO", "GROUPS", "STATUSES", "get_sources", "add_findings", "list_findings", "get_session",
            "add_followup", "render_report", "create_session", "create_topic", "list_sessions",
            "list_topics", "log_event", "set_summary", "update_params",
-           "find_candidates", "source_capabilities", "sample_source", "probe_plans", "run_plans", "fetch_site", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]
+           "find_candidates", "fetch_state", "source_capabilities", "sample_source", "probe_plans", "run_plans", "fetch_site", "probe_sites_search", "probe_sites", "menus", "sources", "collect_reviews"]

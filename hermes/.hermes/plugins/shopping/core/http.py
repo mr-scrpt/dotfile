@@ -16,6 +16,9 @@ import re
 import subprocess
 from dataclasses import dataclass
 
+from . import throttle
+from .throttle import Cooling  # noqa: F401  (re-exported: callers catch it next to FetchError)
+
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
 _NUM = re.compile(r"[^\d]")
 
@@ -30,15 +33,34 @@ class Response:
     text: str
     url: str
 
+    BLOCK_MARKERS = ("just a moment", "не робот", "не робот", "recaptcha", "g-recaptcha",
+                     "captcha", "проверка браузера", "перевірка браузера", "access denied")
+
     @property
     def blocked(self) -> bool:
-        return self.status in (403, 429, 503) or "Just a moment" in self.text[:5000]
+        """HTTP refusal, or a 200 page that is really a challenge (captcha/interstitial).
+        A block is a signal to back off, never to retry harder."""
+        if self.status in (401, 403, 429, 503):
+            return True
+        head = self.text[:8000].casefold()
+        return any(m in head for m in self.BLOCK_MARKERS)
 
 
 def get(url: str, timeout: int = 25, accept: str = "text/html,application/json;q=0.9,*/*;q=0.8",
-        headers: tuple[str, ...] = ()) -> Response:
+        headers: tuple[str, ...] = (), cache: bool = True) -> Response:
+    """Polite GET: serves a fresh cached copy when there is one, otherwise waits for this host's
+    turn (see core.throttle), and puts the host on cooldown when the answer is a block."""
+    if cache:
+        hit = throttle.cached(url)
+        if hit:
+            return Response(hit["status"], hit["text"], hit["url"])
+    throttle.wait_turn(url)                    # raises Cooling while the host is off-limits
     cmd = ["curl", "-sL", "--compressed", "--max-time", str(timeout), "-A", UA, "-H", f"Accept: {accept}",
-           "-H", "Accept-Language: uk-UA,uk;q=0.9,ru;q=0.8"]
+           "-H", "Accept-Language: uk-UA,uk;q=0.9,ru;q=0.8",
+           "-H", "Accept-Encoding: gzip, deflate, br", "-H", "Connection: keep-alive",
+           "-H", "Sec-Fetch-Dest: document", "-H", "Sec-Fetch-Mode: navigate", "-H", "Sec-Fetch-Site: same-origin",
+           "-H", "Upgrade-Insecure-Requests: 1",
+           "--cookie-jar", str(_cookie_jar(url)), "--cookie", str(_cookie_jar(url))]
     for h in headers:
         cmd += ["-H", h]
     cmd += ["-w", "\n%{http_code}\n%{url_effective}", url]
@@ -49,9 +71,22 @@ def get(url: str, timeout: int = 25, accept: str = "text/html,application/json;q
     body, _, tail = out.rpartition("\n")
     body, _, code = body.rpartition("\n")
     try:
-        return Response(int(code), body, tail.strip())
+        resp = Response(int(code), body, tail.strip())
     except ValueError as e:
         raise FetchError(f"curl gave no status for {url}") from e
+    if resp.blocked:
+        throttle.mark_blocked(url, f"ответ {resp.status} похож на блок/капчу")
+    elif cache:
+        throttle.store(url, resp.status, resp.text, resp.url)
+    return resp
+
+
+def _cookie_jar(url: str):
+    """One cookie jar per host: a session cookie makes the client look like a returning browser."""
+    from .fs import root
+    d = root() / ".cache" / "cookies"
+    d.mkdir(parents=True, exist_ok=True)
+    return d / f"{throttle.host_of(url) or 'default'}.txt"
 
 
 CHROMIUM_BIN = ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome")

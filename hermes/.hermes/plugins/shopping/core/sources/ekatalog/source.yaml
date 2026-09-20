@@ -4,3 +4,8 @@ order: 20
 group: aggregator
 fetch: script
 search: https://ek.ua/ua/ek-list.php?search_={q}&_a=1
+rate:
+  min_delay: 8.0      # e-katalog shows reCAPTCHA on burst traffic
+  jitter: 4.0
+  cache_ttl: 3600
+  cooldown: 1800

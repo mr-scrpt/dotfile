@@ -6,3 +6,7 @@ fetch: script
 search: https://hotline.ua/ua/sr/?q={q}
 notes: shop_candidates — search pages with category + short spec line; shop_fetch('hotline', model) — min/max + per-shop
   offers + installment banks; shop_reviews — product reviews tab.
+rate:
+  min_delay: 1.5
+  jitter: 1.0
+  cache_ttl: 900
