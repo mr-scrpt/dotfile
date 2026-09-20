@@ -45,7 +45,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_render_report": _json(core.render_report, "topic", "session", "full"),
     "shop_add_followup": _json(core.add_followup, "topic", "session", "title", "question", "answer_md"),
     "shop_sources": _json(core.get_sources, "group", "query"),
-    "shop_candidates": _json(core.find_candidates, "topic", "session", "query", "category", "pages", "want", "strict"),
+    "shop_candidates": _json(core.find_candidates, "topic", "session", "query", "category", "pages", "criteria", "strict"),
     "shop_fetch": _json(core.fetch_site, "topic", "session", "site", "model", "geo", "limit", "category"),
     "shop_probe": _json(core.probe_sites_search, "query", "exclude", "only"),
     "shop_reviews": _json(core.collect_reviews, "topic", "session", "model", "sites"),
@@ -94,6 +94,29 @@ def _menu(args: dict, **kw) -> str:
         return json.dumps({"success": False, "error": f"{type(e).__name__}: {e}"}, ensure_ascii=False)
 
 
+def _source_plan(args: dict, **kw) -> str:
+    """shop_source_plan — one entry point for per-source planning (capabilities/sample/probe/run)."""
+    del kw
+    action = args.get("action")
+    try:
+        if action == "capabilities":
+            res = core.source_capabilities(args.get("sites"))
+        elif action == "sample":
+            res = core.sample_source(args["site"], args.get("query") or "")
+        elif action == "probe":
+            res = core.probe_plans(args.get("plans") or [])
+        elif action == "run":
+            res = core.run_plans(args["topic"], args["session"], args.get("plans") or [],
+                                 args.get("model"), args.get("geo") or "ua_local", args.get("limit") or 5)
+        else:
+            res = {"success": False, "error": f"unknown action {action!r}"}
+    except Exception as e:  # noqa: BLE001
+        logger.exception("shop_source_plan failed")
+        res = {"success": False, "error": f"{type(e).__name__}: {e}"}
+    return json.dumps(res, ensure_ascii=False)
+
+
+HANDLERS["shop_source_plan"] = _source_plan
 HANDLERS["shop_menu"] = _menu
 
 

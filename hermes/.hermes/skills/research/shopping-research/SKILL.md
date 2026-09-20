@@ -1,7 +1,7 @@
 ---
 name: shopping-research
 description: "Use when the user wants to find/compare goods to buy in Ukraine."
-version: 0.5.0
+version: 0.6.0
 author: mr-scrpt, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -83,32 +83,48 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
    зонда» / «0 — не найдено». Store the answer: `shop_update_params(sites=values, category=<name
    as the sites call it>)`; `free_text` = extra sites the user typed → add to `notes`.
    Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
-4. Candidates (mode=spec, and each reference item) — `shop_candidates(query, category, want?)`.
-   `query` = short product query in Ukrainian (type + 1–2 key words: "монітор 27 OLED",
-   "інвертор 24V", "пральна машина"). The plugin searches hotline + e-katalog, dedupes by model,
-   ranks by market presence and returns ≤40 rows (model, price range, offers, reviews, `spec`)
-   plus `facets` — the parameters this category actually has, with units, ranges and the most
-   common values. It also widens a too-narrow query by itself (`query_tried`).
-   Three cases, same call:
-   (a) the user gave hard parameters → pass them as `want`, e.g.
-       `want={"потужність": [2000, 3000], "форма": "синус"}` — [min, max] or [min] is a numeric
-       range in the value's own unit (3 кВт == 3000 Вт), a bare number is exact ±2%, a string or
-       list of strings is a substring. Keys are matched loosely, so use the user's wording.
-       Cards whose spec is silent are KEPT and marked `unverified` (add `strict=true` to drop
-       them); everything rejected is in `dropped_by_spec` with the reason — quote it if the user
-       asks why a model is missing.
-   (b) the user does NOT know which parameters matter → call once WITHOUT `want`, show the top
-       `facets` in 3–6 lines ("частота: 100–500 Гц, чаще 240; матриця: IPS/OLED/VA…"), ask which
-       of them matter, then repeat the call with `want`.
-   (c) mode=reference → derive `want` from the sample's `spec` (step 3r) and say in the report
-       which sample parameter each constraint came from.
-   Aim for 3–15 survivors: >15 → add a constraint or ask about budget/brand; <2 → drop one
-   constraint (`dropped_by_spec` says which one bites). Then
-   `shop_menu(kind="candidates", candidates=[rows])` → the user ticks models →
-   `shop_update_params(shortlist=values)`. Done: 1–12 models in `params.shortlist`.
-   mode=exact: `shortlist = [query]`, no candidates call at all.
-5. Offers — for EVERY model in the shortlist and EVERY site in `params.sites`:
-   `shop_fetch(site, model, geo)`. The tool keeps only cards whose title carries the model code
+4. Criteria — the ONE artefact all three search types converge on. The plugin never guesses a
+   parameter and never knows a unit; you author `criteria` from what the sources actually print.
+   4.1 Material: `shop_candidates(query, category)` — WITHOUT criteria the first time. It returns
+       candidates plus `observed`: every key this result set has, with its real values and, per
+       RAW unit token, the range seen ("номінальна потужність: кBт 2–4.2", "потужність: Вт 300–5000").
+       For the exact-model case use `shop_resolve`/`shop_source_plan(action="sample")` instead —
+       same idea: read the parameters off the real card.
+   4.2 Author the criteria from `observed`, one entry per parameter:
+       `{"key": "потужність", "label": "2–3 кВт",
+         "any_of": [{"min": 2000, "max": 3000, "unit": "Вт"}, {"min": 2, "max": 3, "unit": "кBт"}],
+         "contains": ["синус"], "required": true}`
+       Units are compared AS WRITTEN and never converted, so cover every spelling `observed`
+       showed (both "Вт" and "кBт"). `contains` is a substring test over the value and the whole
+       spec line. Mark a nice-to-have with `"required": false`.
+       Per search type: (a) exact model — derive the criteria from the card and check nothing is
+       missing; (b) parameters given — restate the user's words as criteria against `observed`
+       wording; (c) nothing known — read `observed`, pick the parameters that actually separate
+       this category, and say which values are common.
+   4.3 SHOW the criteria to the user before searching (`criteria_shown` gives ready lines) and
+       ask for corrections — always in cases (b) and (c); in case (a) only when something is
+       ambiguous (memory, colour, condition). Then persist: `shop_update_params(criteria=[...])`.
+   4.4 Apply: `shop_candidates(query, category, criteria)` → survivors + `dropped_by_spec` with
+       the reason per model. Aim for 3–15: >15 add a criterion or ask about budget/brand; <2 drop
+       the criterion `dropped_by_spec` blames. A card whose spec is silent is KEPT and flagged
+       `unverified` — never claim such a model lacks the feature (add `strict=true` only when the
+       user insists on verified-only).
+   Then `shop_menu(kind="candidates", candidates=[rows])` → the user ticks models →
+   `shop_update_params(shortlist=values)`. Done: 1–12 models in `params.shortlist`, criteria stored.
+   mode=exact: `shortlist = [query]`, no candidates menu.
+4b. Per-source plans — the same criteria, expressed in each source's own language.
+   `shop_source_plan(action="capabilities", sites=params.sites)` → what each source can do.
+   For a source you have not searched before, or whose wording you are unsure of:
+   `shop_source_plan(action="sample", site, query)` → its titles + its own `observed`.
+   Write one plan per chosen source: `{site, query, criteria?, strict?}` — the query carries the
+   parameters in THAT site's words (aggregators take a short type query; marketplaces need the
+   parameters inside the text because their result lists have no specs at all), and `criteria`
+   may differ per site because each site words its keys differently.
+   `shop_source_plan(action="probe", plans)` dry-runs them in parallel: hits vs kept per plan,
+   a dropped example, and a `warning` when a source prints no specs (there the query must carry
+   everything). Fix the weak queries, then keep the plans for step 5.
+5. Offers — `shop_source_plan(action="run", plans, model)` per shortlisted model (or
+   `shop_fetch(site, model, geo)` when a single site needs a one-off). The tool keeps only cards whose title carries the model code
    without an extra variant word (Pro ≠ Pro Max) AND whose site category is the product itself
    (accessories dropped) AND — with `condition=new` — that are not б/у/відновлений; everything
    dropped is listed in `dropped` with the reason, so say it when a site had only refurbished
@@ -173,8 +189,14 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
   never open rozetka in `browser_exec`.
 - Aggregator specs are patchy: a missing parameter is `unverified`, NOT a rejection — never
   claim a model lacks a feature just because its spec line is silent.
-- Never hardcode a category: no filter ids, no per-product parsers. Everything goes through
-  `want` + `facets`, which work off whatever the aggregator prints.
+- Division of labour, no exceptions: the PLUGIN does everything deterministic (menus, fetching,
+  parsing, criteria checking, dedup, review digests, report rendering); the MODEL only supplies
+  semantics (author criteria from `observed`, word them for the user, split them per source,
+  read the review digest, write the verdict). Never re-implement a plugin step by hand, and
+  never let the plugin guess a parameter.
+- Units are strings, not knowledge: the engine converts nothing. If a category writes "3 кBт"
+  and another "3000 Вт", cover BOTH in `any_of` — that is why you must read `observed` first.
+- Never hardcode a category anywhere: no filter ids, no per-product parsers, no unit tables.
 - Browser daemon hung ("timed out waiting for the daemon"): `curl 127.0.0.1:<port>/json/list`,
   `/json/close/<id>` for the stuck tab, then `ensure_real_tab()`.
 - This SKILL.md is a stow symlink; edit with `patch`, not `skill_manage`.

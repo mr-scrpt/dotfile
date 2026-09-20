@@ -1,120 +1,93 @@
-"""Layer 1 — specs: parse an aggregator's short characteristics line into key→value pairs,
-match user constraints against them, and summarise which parameters a category even has.
+"""Layer 1 — spec: STRUCTURE ONLY. Knows nothing about products, units, categories or languages.
 
-Nothing here knows what a product is. A spec line is any mix of
+The plugin does three mechanical things:
 
-    "дисплей: 27\"; IPS; 2560x1440; частота оновлення: 240 Гц"          (hotline, ';' separated)
-    "Екран: 26.5 \", 2560x1440 (16:9) Матриця: WOLED, відгук 0.03 мс"   (e-katalog, inline keys)
+    parse(line)               "Ключ: значення; тег; Ключ2: значення2" → pairs + flags
+    observe(lines)            which keys this result set has, their real values, and — grouped by
+                              the RAW unit token — the numeric range actually seen
+    evaluate(line, criteria)  check criteria against those pairs
 
-→ {"дисплей": "27\"", "частота оновлення": "240 Гц", ...} plus `flags` for the bare tokens
-(IPS, 2560x1440) that carry no key.
+All semantics live in `criteria`, authored by the MODEL after it has seen `observe()` output,
+i.e. after it has seen how this particular category spells its values. A criterion:
 
-Values are additionally read as numbers with a unit, normalised to a base unit so that
-"3 кBт" and "3000 Вт" compare equal. Constraints (`want`) are therefore category-agnostic:
+    {"key": "потужність",                                  # loose match against the spec's keys
+     "any_of": [{"min": 2000, "max": 3000, "unit": "Вт"},  # alternative spellings the model saw
+                {"min": 2, "max": 3, "unit": "кВт"}],
+     "contains": ["синус"],                                # and/or a substring test
+     "label": "2–3 кВт, чистый синус"}                     # wording for the user and the report
 
-    {"потужність": [2000, 3000]}   numeric range in the value's own base unit
-    {"напруга": 24}               exact number (±2%)
-    {"форма": "синус"}            substring, checked in the value and in the whole line
-    {"тип": ["AGM", "LiFePO4"]}   any of these substrings
-
-A key is matched by normalised substring ("потужність" finds "номінальна потужність"), so the
-user never has to know the aggregator's exact wording.
+Units are compared as opaque strings (case/punctuation-insensitive); with no `unit` the number
+is compared regardless of unit. NOTHING is converted and no unit, prefix or synonym is ever
+enumerated here, so a unit nobody has seen yet (Нм, люмен, psi, dpi) needs no code change — the
+model writes the alternatives it observed.
 """
 from __future__ import annotations
 
 import re
 import unicodedata
 
-# unit → (base unit, multiplier). Only arithmetic, no product knowledge.
-UNITS: dict[str, tuple[str, float]] = {
-    "вт": ("Вт", 1), "квт": ("Вт", 1000), "мвт": ("Вт", 0.001),
-    "в·а": ("В·А", 1), "ва": ("В·А", 1), "кв·а": ("В·А", 1000),
-    "в": ("В", 1), "кв": ("В", 1000), "мв": ("В", 0.001),
-    "а": ("А", 1), "ма": ("А", 0.001),
-    "а·год": ("А·год", 1), "а-год": ("А·год", 1), "ач": ("А·год", 1), "mah": ("А·год", 0.001),
-    "вт·год": ("Вт·год", 1), "квт·год": ("Вт·год", 1000),
-    "гц": ("Гц", 1), "кгц": ("Гц", 1000), "мгц": ("Гц", 1e6), "ггц": ("Гц", 1e9),
-    "гб": ("ГБ", 1), "тб": ("ГБ", 1024), "мб": ("ГБ", 1 / 1024),
-    "мм": ("мм", 1), "см": ("мм", 10), "м": ("мм", 1000),
-    "кг": ("кг", 1), "г": ("кг", 0.001),
-    "мс": ("мс", 1), "с": ("мс", 1000),
-    "л": ("л", 1), "мл": ("л", 0.001),
-    "°": ("°", 1), "%": ("%", 1),
-    '"': ('"', 1), "″": ('"', 1), "дюйм": ('"', 1), "мп": ("Мп", 1),
-}
-UNIT_RE = "|".join(sorted((re.escape(u) for u in UNITS), key=len, reverse=True))
-# a '-' right after a digit is a range separator ('220-230 В'), not a sign
-NUM_RE = re.compile(r"((?<![\d,.])-?\d+(?:[.,]\d+)?)\s*(" + UNIT_RE + r")?", re.I)
-# "Ключ: " — a key is 1–4 words, starts with a letter, ends at the colon.
+# A unit is whatever token trails the number — never enumerated.
+# A '-' straight after a digit is a range separator ("220-230 В"), not a minus sign.
+NUM_RE = re.compile(r"((?<![\d,.])-?\d+(?:[.,]\d+)?)\s*"
+                    r"((?:[^\W\d_]|[°%\"″·])[^\s,;()/]{0,11})?(?=[\s,;()/-]|$)")
+# "Ключ: " — a few words ending at a colon.
 KEY_RE = re.compile(r"(?:^|[;\u2022]\s*|\s)([A-Za-zА-Яа-яІЇЄҐіїєґ][\w'’\-()/ ]{1,45}?):\s*")
-TOLERANCE = 0.02
+SHAPE_RE = re.compile(r"\d\s*[xх×]\s*\d")      # 2560x1440, 520 x 240 x 220 — not a scalar
+EQ_TOLERANCE = 0.02
 
 
 def norm(s: str) -> str:
-    """Casefold + strip accents/punctuation so 'Номінальна потужність' ≈ 'номинальная потужность'."""
+    """Casefold + drop accents/punctuation so keys and units compare forgivingly."""
     s = unicodedata.normalize("NFKD", str(s or "")).casefold()
-    return re.sub(r"[^\w\s·]", " ", s).strip()
+    return re.sub(r"[^\w\s·°%\"/]", " ", s).strip()
 
 
-def number(value: str) -> tuple[float | None, str]:
-    """'3 кBт' → (3000.0, 'Вт'); '26,5\"' → (26.5, '\"'); '2560x1440' → (None, '').
+def norm_unit(u: str) -> str:
+    """A unit is an opaque string; only spelling noise is removed."""
+    return re.sub(r"[\s.]", "", norm(u))
 
-    A value may bundle several things ('26.5 ", 2560x1440 (16:9)'): each comma-separated part is
-    tried in turn and the first scalar wins; shapes like 2560x1440 are never scalars.
+
+def numbers(value: str) -> list[dict]:
+    """Scalars of a value with their raw unit token: '12/24 В' → [{n:12,unit:'В'}, {n:24,unit:'В'}].
+
+    Only the first meaningful part is read ('26.5 ", 2560x1440' → the diagonal), shapes are
+    skipped, and a number without its own unit borrows the part's only unit.
     """
-    whole = str(value or "").replace("\u00a0", " ").replace("B", "В")
-    # split on separators, but NEVER on a decimal comma ('3,2 кВт' is one number)
+    whole = str(value or "").replace("\u00a0", " ")
     for part in re.split(r",(?!\d)|[()]", whole):
-        v = part.replace("x", "х").strip()
-        if not v or re.search(r"\d\s*х\s*\d", v):   # 2560x1440, 520 x 240 x 220 — a shape
+        v = part.strip()
+        if not v or SHAPE_RE.search(v):
             continue
-        m = NUM_RE.search(v)
-        if not m:
-            continue
-        n = float(m.group(1).replace(",", "."))
-        unit = (m.group(2) or "").strip().casefold()
-        base, mult = UNITS.get(unit, (m.group(2) or "", 1))
-        return n * mult, base
-    return None, ""
-
-
-def _clean_key(key: str) -> str:
-    """Drop leading tokens that belong to the previous value, not to this key:
-    '280 Гц Відображення кольорів' → 'Відображення кольорів'."""
-    words = key.split()
-    while words and (re.fullmatch(r"-?\d+(?:[.,]\d+)?", words[0]) or words[0].casefold() in UNITS):
-        words.pop(0)
-    return " ".join(words).strip(" -–—,")
-
-
-def numbers(value: str) -> list[tuple[float, str]]:
-    """Every scalar in a value, so multi-mode specs match: '12/24 В' → [(12,'В'), (24,'В')].
-    The unit of the last number applies to the earlier ones when they carry none."""
-    whole = str(value or "").replace("\u00a0", " ").replace("B", "В")
-    out: list[tuple[float, str]] = []
-    for part in re.split(r",(?!\d)|[()]", whole):
-        v = part.replace("x", "х").strip()
-        if not v or re.search(r"\d\s*х\s*\d", v):
-            continue
-        found = [(float(m.group(1).replace(",", ".")), (m.group(2) or "").strip().casefold())
-                 for m in NUM_RE.finditer(v) if m.group(1)]
+        found = [(float(m.group(1).replace(",", ".")), (m.group(2) or "").strip(" .,"))
+                 for m in NUM_RE.finditer(v)]
         if not found:
             continue
-        unit_of = {u for _, u in found if u}
-        fallback = next(iter(unit_of)) if len(unit_of) == 1 else ""
-        for n, u in found:
-            base, mult = UNITS.get(u or fallback, (u or fallback, 1))
-            out.append((n * mult, base))
-        if out:
-            break
-    return out
+        units = {u for _, u in found if u}
+        fallback = next(iter(units)) if len(units) == 1 else ""
+        return [{"n": n, "unit": u or fallback} for n, u in found]
+    return []
+
+
+def _clean_key(key: str, tail_of_previous_value: bool = False) -> str:
+    """Strip tokens that belong to the PREVIOUS value, not to this key:
+    '280 Гц Відображення кольорів' → 'Відображення кольорів'. Only a leading NUMBER (and the unit
+    token right after it) is stripped, so real multi-word keys ('вхідна напруга') stay intact."""
+    words = key.split()
+    while words and re.fullmatch(r"-?\d+(?:[.,]\d+)?", words[0]):
+        words.pop(0)                                   # the number itself
+        if words and len(words) > 1 and len(words[0]) <= 6 and re.fullmatch(r"[^\W\d_]+", words[0]):
+            words.pop(0)                               # its unit
+    # after a value, a short lowercase-or-unit lead-in token is that value's tail, not a key word
+    if tail_of_previous_value and len(words) > 1 and len(words[0]) <= 6 and re.fullmatch(r"[^\W\d_]+", words[0]):
+        words.pop(0)
+    return " ".join(words).strip(" -–—,")
 
 
 def parse(line: str) -> dict:
     """Spec line → {"pairs": {key: value}, "flags": [bare tokens], "raw": line}.
 
-    Segments are split on ';' first (hotline style), then each segment is scanned for inline
-    'Ключ: значення' runs (e-katalog style); a segment with no key at all becomes a flag.
+    Segments split on ';' (hotline style); inside a segment inline 'Ключ: значення' runs are
+    detected (e-katalog style); a segment with no key at all becomes a flag.
     """
     raw = re.sub(r"\s+", " ", str(line or "")).strip()
     if not raw:
@@ -124,7 +97,12 @@ def parse(line: str) -> dict:
     for segment in (seg.strip() for seg in raw.split(";")):
         if not segment:
             continue
-        marks = [(m.start(1), m.end(0), _clean_key(m.group(1))) for m in KEY_RE.finditer(segment)]
+        raw_marks = list(KEY_RE.finditer(segment))
+        marks = []
+        for i, m in enumerate(raw_marks):
+            # a key that starts right where the previous value ended may have swallowed its tail
+            after_value = i > 0
+            marks.append((m.start(1), m.end(0), _clean_key(m.group(1), after_value)))
         marks = [m for m in marks if m[2]]
         if not marks:
             flags += [t.strip() for t in segment.split(",") if t.strip()]
@@ -140,60 +118,69 @@ def parse(line: str) -> dict:
     return {"pairs": pairs, "flags": flags, "raw": raw}
 
 
-def find(spec: dict, key: str) -> tuple[str | None, str | None]:
-    """Constraint key → (actual key, value) by normalised substring; longest key wins."""
+def find(pairs: dict, key: str) -> tuple[str | None, str | None]:
+    """Criterion key → (actual key, value) by loose substring; the most specific key wins."""
     want = norm(key)
-    hits = [(k, v) for k, v in spec["pairs"].items() if want in norm(k) or norm(k) in want]
+    hits = [(k, v) for k, v in pairs.items() if want and (want in norm(k) or norm(k) in want)]
     if not hits:
         return None, None
-    k, v = max(hits, key=lambda kv: len(norm(kv[0])))
-    return k, v
+    return max(hits, key=lambda kv: len(norm(kv[0])))
 
 
-def check(spec: dict, key: str, want) -> tuple[bool | None, str]:
-    """(True | False | None = not stated in this spec, explanation)."""
-    actual_key, value = find(spec, key)
-    hay = " ".join([spec["raw"], *spec["flags"]])
-    if isinstance(want, (list, tuple)) and want and all(isinstance(x, (int, float)) for x in want):
-        lo, hi = (float(want[0]), float(want[1])) if len(want) > 1 else (float(want[0]), float("inf"))
+def _rule_ok(nums: list[dict], rule: dict) -> bool:
+    lo, hi = rule.get("min", float("-inf")), rule.get("max", float("inf"))
+    unit = norm_unit(rule.get("unit", ""))
+    eq = rule.get("eq")
+    for item in nums:
+        if unit and norm_unit(item["unit"]) != unit:
+            continue
+        if eq is not None:
+            if abs(item["n"] - float(eq)) <= abs(float(eq)) * EQ_TOLERANCE:
+                return True
+        elif lo <= item["n"] <= hi:
+            return True
+    return False
+
+
+def check(spec: dict, criterion: dict) -> tuple[bool | None, str]:
+    """(True | False | None = the spec does not state it, human explanation)."""
+    key = criterion.get("key") or ""
+    label = criterion.get("label") or key or "критерий"
+    actual_key, value = find(spec["pairs"], key)
+    haystack = " ".join([spec["raw"], *spec["flags"]])
+    rules = criterion.get("any_of")
+    if not rules and any(k in criterion for k in ("min", "max", "eq")):
+        rules = [criterion]
+    contains = criterion.get("contains") or []
+    if rules:
         if value is None:
-            return None, f"{key}: не указано в спеке"
+            return None, f"{label}: не указано"
         nums = numbers(value)
         if not nums:
-            return None, f"{key}: «{value}» не число"
-        ok = any(lo * (1 - TOLERANCE) <= n <= hi * (1 + TOLERANCE) for n, _ in nums)   # '12/24 В' fits 24
-        unit = nums[0][1]
-        return ok, f"{actual_key}: {value}" + ("" if ok else f" вне [{lo:g}–{hi:g}]{' ' + unit if unit else ''}")
-    if isinstance(want, (int, float)):
-        if value is None:
-            return None, f"{key}: не указано в спеке"
-        nums = numbers(value)
-        if not nums:
-            return None, f"{key}: «{value}» не число"
-        ok = any(abs(n - float(want)) <= abs(float(want)) * TOLERANCE for n, _ in nums)
-        return ok, f"{actual_key}: {value}" + ("" if ok else f" ≠ {want:g}")
-    words = [want] if isinstance(want, str) else list(want)
-    for w in words:
-        if norm(w) in norm(value or "") or norm(w) in norm(hay):
-            return True, f"{actual_key or 'спека'}: содержит «{w}»"
-    if value is None and not spec["pairs"]:
-        return None, f"{key}: спека пустая"
-    return False, f"{key}: нет «{'/'.join(words)}»" + (f" (есть {actual_key}: {value})" if value else "")
+            return None, f"{label}: «{value}» без числа"
+        ok = any(_rule_ok(nums, r) for r in rules)
+        return ok, f"{actual_key}: {value}" + ("" if ok else f" ≠ {label}")
+    if contains:
+        hay, whole = norm(value if value is not None else haystack), norm(haystack)
+        ok = any(norm(c) in hay or norm(c) in whole for c in contains)
+        if not ok and value is None and not spec["pairs"]:
+            return None, f"{label}: спека пустая"
+        return ok, f"{actual_key or 'спека'}: " + ("есть" if ok else "нет") + f" «{'/'.join(contains)}»"
+    return None, f"{label}: пустой критерий"
 
 
-def match(line: str, want: dict | None, strict: bool = False) -> tuple[bool, list[str], list[str]]:
-    """Check every constraint against one spec line.
+def evaluate(line: str, criteria: list[dict] | None, strict: bool = False) -> tuple[bool, list[str], list[str]]:
+    """Apply the model's criteria to one spec line → (keep, failed, unverifiable).
 
-    Returns (keep, reasons_failed, reasons_unknown). `strict=True` also drops rows whose spec
-    does not state a constrained parameter — aggregator specs are patchy, so the default keeps
-    them and reports what could not be verified.
+    A criterion the spec is silent about does NOT reject the card (aggregator specs are patchy):
+    it is reported instead, unless `strict`.
     """
-    if not want:
+    if not criteria:
         return True, [], []
     spec = parse(line)
     failed, unknown = [], []
-    for key, value in want.items():
-        ok, why = check(spec, key, value)
+    for criterion in criteria:
+        ok, why = check(spec, criterion)
         if ok is False:
             failed.append(why)
         elif ok is None:
@@ -201,32 +188,54 @@ def match(line: str, want: dict | None, strict: bool = False) -> tuple[bool, lis
     return (not failed and (not unknown or not strict)), failed, unknown
 
 
-def facets(lines: list[str], top: int = 6, min_share: float = 0.15) -> list[dict]:
-    """What parameters does this category actually have? Aggregate the candidates' own specs.
+def observe(lines: list[str], top: int = 6, min_share: float = 0.1) -> list[dict]:
+    """What this result set actually contains — the material the model needs to author criteria.
 
-    → [{"key", "coverage", "unit", "range": [min, max], "values": [(value, count), ...]}]
-    sorted by coverage. This is how the user picks constraints without knowing the category.
+    → [{"key", "coverage", "values": [{value, count}], "units": [{unit, min, max, count}]}]
+    Numeric summaries are grouped BY RAW UNIT TOKEN and never converted, so the model can see
+    that the category spells power both as "2000 Вт" and "3 кBт" and cover both in `any_of`.
     """
     total = max(len(lines), 1)
     buckets: dict[str, dict] = {}
     for line in lines:
         for k, v in parse(line)["pairs"].items():
-            b = buckets.setdefault(norm(k), {"key": k, "count": 0, "values": {}, "nums": [], "unit": ""})
+            b = buckets.setdefault(norm(k), {"key": k, "count": 0, "values": {}, "units": {}})
             b["count"] += 1
             b["values"][v] = b["values"].get(v, 0) + 1
-            n, unit = number(v)
-            if n is not None:
-                b["nums"].append(n)
-                b["unit"] = b["unit"] or unit
+            for item in numbers(v):
+                u = b["units"].setdefault(norm_unit(item["unit"]),
+                                          {"unit": item["unit"], "min": item["n"], "max": item["n"], "count": 0})
+                u["min"], u["max"] = min(u["min"], item["n"]), max(u["max"], item["n"])
+                u["count"] += 1
     out = []
     for b in buckets.values():
         if b["count"] / total < min_share:
             continue
-        vals = sorted(b["values"].items(), key=lambda kv: -kv[1])[:top]
         item = {"key": b["key"], "coverage": round(b["count"] / total, 2),
-                "values": [{"value": v, "count": c} for v, c in vals]}
-        if b["nums"]:
-            item["unit"] = b["unit"]
-            item["range"] = [min(b["nums"]), max(b["nums"])]
+                "values": [{"value": v, "count": c}
+                           for v, c in sorted(b["values"].items(), key=lambda kv: -kv[1])[:top]]}
+        if b["units"]:
+            item["units"] = sorted(b["units"].values(), key=lambda u: -u["count"])[:4]
         out.append(item)
     return sorted(out, key=lambda x: (-x["coverage"], x["key"]))
+
+
+def describe(criteria: list[dict] | None) -> list[str]:
+    """Criteria → plain lines for showing the user before the search runs."""
+    out = []
+    for c in criteria or []:
+        label = c.get("label")
+        if not label:
+            parts = []
+            for r in (c.get("any_of") or ([c] if any(k in c for k in ("min", "max", "eq")) else [])):
+                if r.get("eq") is not None:
+                    parts.append(f"= {r['eq']:g} {r.get('unit', '')}".strip())
+                else:
+                    lo = f"{r['min']:g}" if "min" in r else "…"
+                    hi = f"{r['max']:g}" if "max" in r else "…"
+                    parts.append(f"{lo}–{hi} {r.get('unit', '')}".strip())
+            if c.get("contains"):
+                parts.append("/".join(c["contains"]))
+            label = ", ".join(parts) or "—"
+        out.append(f"{c.get('key', '?')}: {label}" + ("" if c.get("required", True) else " (желательно)"))
+    return out

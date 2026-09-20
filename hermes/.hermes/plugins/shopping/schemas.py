@@ -61,6 +61,7 @@ SHOP_UPDATE_PARAMS = {
         "geo": _GEO, "budget_uah": {"type": "integer"}, "notes": {"type": "string"}, "sites": _STR_LIST,
         "category": {"type": "string", "description": "product category name as the sites call it (from the probe), e.g. Смартфони / Монітори"},
         "reviews": {"type": "string", "enum": ["none", "cards", "full"], "description": "review depth chosen via shop_menu(reviews)"},
+        "criteria": {"type": "array", "description": "criteria authored by the model AFTER reading `observed` (shop_candidates / shop_source_plan sample). Each: {key, any_of:[{min,max,unit}|{eq,unit}], contains:[...], label, required}. Units are compared as written, never converted — list every spelling the category uses in any_of (e.g. [{min:2000,max:3000,unit:\"Вт\"},{min:2,max:3,unit:\"кВт\"}]).", "items": {"type": "object", "properties": {"key": {"type": "string"}, "label": {"type": "string"}, "contains": _STR_LIST, "required": {"type": "boolean"}, "any_of": {"type": "array", "items": {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}, "eq": {"type": "number"}, "unit": {"type": "string"}}}}}, "required": ["key"]}},
         "mode": {"type": "string", "enum": ["exact", "spec", "reference"], "description": "search type chosen via shop_menu(mode)"},
         "condition": {"type": "string", "enum": ["new", "any"], "description": "chosen via shop_menu(condition); new = б/у/відновлений cards dropped"},
         "reference": {"type": "object", "description": "reference mode: result of shop_resolve (title, url, source, spec)"},
@@ -103,17 +104,14 @@ SHOP_SOURCES = {"name": "shop_sources", "description": "Source catalogue (sites,
 SHOP_CANDIDATES = {
     "name": "shop_candidates",
     "description": ("Universal shortlist for ANY product category: searches hotline + e-katalog, keeps cards of `category`, "
-                    "filters by `want` against each card's own characteristics line, dedupes by model, ranks by offers/reviews, "
-                    "stores aggregator findings. Returns ≤40 candidates + `facets` (what parameters this category has, with ranges "
-                    "and common values) + `dropped_by_spec`. Widens a too-narrow query automatically (see query_tried). "
-                    "Use facets when the user does not know which parameters to ask for."),
+                    "filters by `criteria` against each card's own characteristics line, dedupes by model, ranks by offers/reviews, "
+                    "stores aggregator findings. Returns ≤40 candidates + `observed` (the keys, real values and per-unit ranges this "
+                    "result set actually has) + `dropped_by_spec` + `criteria_shown` (wording for the user). Widens a too-narrow query "
+                    "automatically (query_tried). Parameters unknown? Call WITHOUT criteria first and author them from `observed`."),
     "parameters": {"type": "object", "properties": {
         **_TS, "query": {"type": "string", "description": "short product query in Ukrainian, e.g. 'монітор 27 OLED', 'інвертор 24V'"},
         "category": {"type": "string", "description": "aggregator category name from the probe (default: params.category)"},
-        "want": {"type": "object", "description": ("constraints checked against the card's spec line; keys are matched loosely "
-                                                   "('потужність' finds 'номінальна потужність'). Value forms: [min, max] or [min] = numeric range "
-                                                   "in the value's own unit (3 кВт == 3000 Вт), a number = exact ±2%, a string or list of strings = substring. "
-                                                   "Example: {\"потужність\": [2000, 3000], \"форма\": \"синус\", \"напруга\": 24}")},
+        "criteria": {"type": "array", "description": "criteria authored by the model AFTER reading `observed` (shop_candidates / shop_source_plan sample). Each: {key, any_of:[{min,max,unit}|{eq,unit}], contains:[...], label, required}. Units are compared as written, never converted — list every spelling the category uses in any_of (e.g. [{min:2000,max:3000,unit:\"Вт\"},{min:2,max:3,unit:\"кВт\"}]).", "items": {"type": "object", "properties": {"key": {"type": "string"}, "label": {"type": "string"}, "contains": _STR_LIST, "required": {"type": "boolean"}, "any_of": {"type": "array", "items": {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}, "eq": {"type": "number"}, "unit": {"type": "string"}}}}}, "required": ["key"]}},
         "strict": {"type": "boolean", "description": "also drop cards whose spec does not state a constrained parameter (default false: kept and listed in `unverified`)"},
         "pages": {"type": "integer", "description": "hotline pages (default 2, 48 cards each)"}},
         "required": ["topic", "session", "query"]},
@@ -149,6 +147,29 @@ SHOP_MENU = {
     }, "required": ["kind"]},
 }
 
+SHOP_SOURCE_PLAN = {
+    "name": "shop_source_plan",
+    "description": ("Per-source search planning — the same criteria, expressed in each source's own language. "
+                    "action=capabilities → what every source can do (search URL shape, card/reviews support, its notes). "
+                    "action=sample(site, query) → that site's titles + `observed`, so you see ITS wording before writing its criteria. "
+                    "action=probe(plans) → dry-run [{site, query, criteria?, strict?}] in parallel: hits vs kept per plan + a dropped example. "
+                    "action=run(topic, session, plans, model) → execute the plans and store the offers."),
+    "parameters": {"type": "object", "properties": {
+        "action": {"type": "string", "enum": ["capabilities", "sample", "probe", "run"]},
+        "topic": _TOPIC, "session": {"type": "string"},
+        "sites": {**_STR_LIST, "description": "capabilities: limit to these sources"},
+        "site": {"type": "string", "description": "sample: the source to sample"},
+        "query": {"type": "string", "description": "sample: the query to try on that source"},
+        "model": {"type": "string", "description": "run: the model code these plans are for"},
+        "plans": {"type": "array", "description": "probe/run: one plan per source — {site, query, criteria?, strict?}",
+                  "items": {"type": "object", "properties": {"site": {"type": "string"}, "query": {"type": "string"},
+                                                             "strict": {"type": "boolean"},
+                                                             "criteria": {"type": "array", "items": {"type": "object"}}},
+                            "required": ["site", "query"]}},
+        "geo": _GEO, "limit": {"type": "integer"},
+    }, "required": ["action"]},
+}
+
 SHOP_RESOLVE = {
     "name": "shop_resolve",
     "description": "Reference mode: read the owned device from a product URL (rozetka …) or a model name (hotline) → {title, url, source, category_path, spec{}} for deriving what to buy. Store the result with shop_update_params(reference=…).",
@@ -164,4 +185,4 @@ SHOP_REVIEWS = {
 
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE, SHOP_SOURCE_PLAN]

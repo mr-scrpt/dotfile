@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from . import findings, sessions, sources
+from . import findings, sessions, sources, spec
 from .fs import err, now
 
 MAX_REVIEW_CHARS = 350
@@ -85,7 +85,8 @@ def _compact_offer(f: dict) -> dict:
 
 
 def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local", limit: int = 5,
-          store: bool = True, category: str | None = None, condition: str | None = None) -> dict:
+          store: bool = True, category: str | None = None, condition: str | None = None,
+          criteria: list[dict] | None = None, strict: bool = False, query: str | None = None) -> dict:
     """Search `site` for `model`, keep hits whose title carries the model code AND whose site
     category is the product itself (accessories are dropped; `category` — from the probe menu —
     must match when given), store as findings, return compact offers plus review texts (rozetka)
@@ -97,12 +98,16 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
         mod = sources.get(site).module()
     except KeyError as e:
         return err(str(e))
+    search_text = query or model
     try:
-        hits = mod.search(model, limit=limit) if site == "rozetka" else mod.search(model)
+        hits = mod.search(search_text, limit=limit) if site == "rozetka" else mod.search(search_text)
     except Exception as e:  # noqa: BLE001
         sessions.log_event(topic, session, "source_blocked", f"{site}: {model}: {e}")
         return err(f"{site} failed: {e}", site=site, model=model)
-    matched = [h for h in hits if matches_model(h.get("title") or "", model)]
+    # An exact model code filters by title; a parametric search (query != model) filters by the
+    # model's criteria instead, since no single code is expected.
+    by_code = not query or query == model
+    matched = [h for h in hits if matches_model(h.get("title") or "", model)] if by_code else list(hits)
     dropped = []
     keep = []
     condition = condition or (meta.get("params") or {}).get("condition") or "new"
@@ -111,6 +116,10 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
         ok, why = category_ok(h.get("category") or "", category)
         if ok and condition == "new" and is_used(h.get("title") or ""):
             ok, why = False, "б/у или восстановленный (condition=new)"
+        if ok and criteria:
+            passed, failed, unknown = spec.evaluate(h.get("notes") or "", criteria, strict)
+            if not passed:
+                ok, why = False, "; ".join(failed or unknown)[:110]
         (keep if ok else dropped).append((h, why))
     matched = [h for h, _ in keep]
     if geo == "ua_local":
@@ -123,9 +132,9 @@ def fetch(topic: str, session: str, site: str, model: str, geo: str = "ua_local"
         h = dict(h)
         h["model"] = model
         reviews = h.pop("reviews", None)
-        spec = h.pop("spec", None)
-        if spec and not h.get("notes"):
-            h["notes"] = "; ".join(f"{k}={v}" for k, v in spec.items() if v is not None)
+        card_spec = h.pop("spec", None)
+        if card_spec and not h.get("notes"):
+            h["notes"] = "; ".join(f"{k}={v}" for k, v in card_spec.items() if v is not None)
         h = {k: v for k, v in h.items() if k in allowed}
         if reviews:
             extras.setdefault("reviews", []).extend(

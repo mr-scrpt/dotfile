@@ -14,6 +14,11 @@ def root() -> Path:
     return Path(os.environ.get("SHOPPING_HOME") or Path.home() / "shopping").expanduser()
 
 
+def config_dir() -> Path:
+    """~/shopping/.config — user overrides that must survive a plugin update."""
+    return root() / ".config"
+
+
 def now() -> str:
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
