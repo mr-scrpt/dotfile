@@ -285,6 +285,45 @@ class Alternatives(unittest.TestCase):
         self.assertEqual(r["query_tried"], ["монітор OLED", "монітор Mini LED"])  # no widening per alternative
 
 
+class RowFacts(unittest.TestCase):
+    """A row is ONE namespace of stated facts: spec text and the row's own fields, no privileged
+    names. Whatever a source stores today (price) or tomorrow (length, colour) is addressable."""
+
+    def test_scalar_fields_become_addressable_keys(self):
+        row = {"model": "X", "price_min_uah": 24000, "offers_count": 12,
+               "notes": 'дисплей: 27"; частота оновлення: 240 Гц', "url": "https://h/x"}
+        f = spec.facts(row)
+        self.assertEqual(f["pairs"]["price_min_uah"], "24000")
+        self.assertEqual(f["pairs"]["offers_count"], "12")
+        self.assertIn("дисплей", f["pairs"])
+        self.assertNotIn("https://h/x", f["raw"])          # a locator states nothing
+
+    def test_criteria_work_the_same_over_fields_and_spec_text(self):
+        row = {"model": "X", "price_min_uah": 24000,
+               "notes": 'дисплей: 27"; частота оновлення: 240 Гц'}
+        over = {"model": "Y", "price_min_uah": 31000,
+                "notes": 'дисплей: 27"; частота оновлення: 240 Гц'}
+        # the model writes this from `observed`; the engine knows nothing about "price"
+        crit = [{"key": "price_min_uah", "any_of": [{"max": 25000, "unit": ""}], "label": "до 25 000"},
+                {"key": "частота оновлення", "any_of": [{"min": 100, "unit": "Гц"}], "label": "≥100 Гц"}]
+        self.assertTrue(spec.evaluate(row, crit)[0])
+        keep, failed, _ = spec.evaluate(over, crit)
+        self.assertFalse(keep)
+        self.assertIn("до 25 000", failed[0])
+
+    def test_observe_reports_field_keys_too(self):
+        rows = [{"model": f"M{i}", "price_min_uah": 10000 + i, "notes": "матриця: OLED"} for i in range(4)]
+        keys = {o["key"] for o in spec.observe(rows)}
+        self.assertIn("price_min_uah", keys)
+        self.assertIn("матриця", keys)
+
+    def test_row_without_description_stays_unverified(self):
+        row = {"model": "no spec", "offers_count": 3, "notes": ""}
+        keep, failed, unknown = spec.evaluate(row, [{"key": "матриця", "contains": ["OLED"]}])
+        self.assertTrue(keep)          # fields alone are not a description
+        self.assertTrue(unknown)
+
+
 class ReconContract(unittest.TestCase):
     """The research subagent's answer is machine-checked before it can steer the search."""
 

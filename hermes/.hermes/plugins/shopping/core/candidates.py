@@ -159,7 +159,7 @@ def discover(topic: str, session: str, query: str | list[str], category: str | N
         # thing the user allows ("OLED або Mini LED"), and a niche alternative has far fewer
         # offers than a mainstream one, so a plain merge + cut would silently drop it entirely.
         ranked_all = _interleave([rank(rows) for rows in per_query])[:MAX_CANDIDATES]
-        specs_all = [r.get("notes") or "" for r in ranked_all]
+        specs_all = list(ranked_all)
         return {"success": bool(ranked_all), "query": " | ".join(queries), "query_tried": all_tried,
                 "category": category, "scanned": len(merged), "models": len(ranked_all),
                 "categories": [], "errors": [],
@@ -186,7 +186,7 @@ def discover(topic: str, session: str, query: str | list[str], category: str | N
         in_cat = [r for r in rows if _category_ok(r, category)]
         kept: list[dict] = []
         for r in in_cat:
-            ok, failed, unknown = spec.evaluate(r.get("notes") or "", criteria, strict)
+            ok, failed, unknown = spec.evaluate(r, criteria, strict)
             if not ok:
                 dropped_by_spec.append({"model": r.get("model") or r.get("title"),
                                         "why": "; ".join(failed or unknown)[:120]})
@@ -212,16 +212,16 @@ def discover(topic: str, session: str, query: str | list[str], category: str | N
         hint = ("all cards failed the criteria — loosen one or re-read `observed`"
                 if dropped_by_spec else "try a shorter query (brand/type only) or another category")
         return err(f"no candidates for {query!r} — {hint}", scanned=scanned,
-                   observed=spec.observe([r.get("notes") or "" for r in in_cat]),
+                   observed=spec.observe(in_cat),
                    dropped_by_spec=dropped_by_spec[:6])
-    specs_kept = [r.get("notes") or "" for r in ranked]
+    specs_kept = list(ranked)
     return {"success": True, "query": tried[-1], "query_tried": tried, "category": category, "scanned": scanned,
             "models": len(ranked), "categories": cats[:8], "errors": errors,
             "needs_narrowing": len(ranked) > NARROW_ABOVE,
             "narrow_suggestions": narrow_suggestions(specs_kept) if len(ranked) > NARROW_ABOVE else [],
-            "observed": spec.observe([r.get("notes") or "" for r in in_cat]),
+            "observed": spec.observe(in_cat),
             "criteria_shown": spec.describe(criteria),
             "dropped_by_spec": dropped_by_spec[:6], "dropped_count": len(dropped_by_spec),
             "stored": {k: stored[k] for k in ("added", "merged")},
             "candidates": [compact(r) for r in ranked],
-            "_rows": ranked, "_specs": [r.get("notes") or "" for r in in_cat]}
+            "_rows": ranked, "_specs": list(in_cat)}

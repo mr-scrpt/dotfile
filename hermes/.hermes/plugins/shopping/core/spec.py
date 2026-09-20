@@ -106,7 +106,7 @@ def parse(line: str) -> dict:
     """
     raw = re.sub(r"\s+", " ", str(line or "")).strip()
     if not raw:
-        return {"pairs": {}, "flags": [], "raw": ""}
+        return {"pairs": {}, "flags": [], "raw": "", "described": False}
     pairs: dict[str, str] = {}
     flags: list[str] = []
     for segment in (seg.strip() for seg in raw.split(";")):
@@ -132,7 +132,43 @@ def parse(line: str) -> dict:
                 value = f"{value} {marks[i + 1][3]}".strip()      # give the unit back to this value
             if key and value:
                 pairs.setdefault(key, value)
-    return {"pairs": pairs, "flags": flags, "raw": raw}
+    return {"pairs": pairs, "flags": flags, "raw": raw, "described": bool(pairs)}
+
+
+def facts(source) -> dict:
+    """One row → ONE flat namespace of stated facts, in the same shape as :func:`parse`.
+
+    A row states things in two shapes: a free-text spec line, and its own scalar fields. Neither is
+    privileged, and this module knows NO field name — whatever a source happens to store (price
+    today, length and colour tomorrow) becomes an addressable key, `observe` reports what is really
+    there, and the model writes criteria against it. Structural rules only:
+
+    * text values are parsed as spec text (a locator — anything containing "://" — is skipped, it
+      is an address, not prose);
+    * numeric values become a key with the number as its value and no unit token, so a criterion
+      for them is written with `unit: ""`;
+    * booleans / nested structures are ignored — they state nothing comparable.
+    """
+    if not isinstance(source, dict):
+        return parse(source)
+    pairs: dict[str, str] = {}
+    flags: list[str] = []
+    chunks: list[str] = []
+    described = False
+    for key, value in source.items():
+        if isinstance(value, bool) or value is None:
+            continue
+        if isinstance(value, (int, float)):
+            pairs.setdefault(str(key), str(value))
+        elif isinstance(value, str) and value.strip() and "://" not in value:
+            part = parse(value)
+            for k, v in part["pairs"].items():
+                pairs.setdefault(k, v)
+            flags += part["flags"]
+            chunks.append(part["raw"])
+            described = described or part["described"]
+    return {"pairs": pairs, "flags": flags, "raw": " ".join(c for c in chunks if c),
+            "described": described}
 
 
 def find(pairs: dict, key: str) -> tuple[str | None, str | None]:
@@ -195,21 +231,24 @@ def check(spec: dict, criterion: dict) -> tuple[bool | None, str]:
     if contains:
         hay, whole = norm(value if value is not None else haystack), norm(haystack)
         ok = any(norm(c) in hay or norm(c) in whole for c in contains)
-        if not ok and value is None and not spec["pairs"]:
+        if not ok and value is None and not spec.get("described"):
             return None, f"{label}: спека пустая"
         return ok, f"{actual_key or 'спека'}: " + ("есть" if ok else "нет") + f" «{'/'.join(contains)}»"
     return None, f"{label}: пустой критерий"
 
 
-def evaluate(line: str, criteria: list[dict] | None, strict: bool = False) -> tuple[bool, list[str], list[str]]:
-    """Apply the model's criteria to one spec line → (keep, failed, unverifiable).
+def evaluate(source, criteria: list[dict] | None, strict: bool = False) -> tuple[bool, list[str], list[str]]:
+    """Apply the model's criteria to one row → (keep, failed, unverifiable).
 
-    A criterion the spec is silent about does NOT reject the card (aggregator specs are patchy):
-    it is reported instead, unless `strict`.
+    `source` is a spec line or a whole row (see :func:`facts`): criteria address everything the row
+    states, with no distinction between "a parameter" and "a field of the card".
+
+    A criterion the row is silent about does NOT reject it (aggregator specs are patchy): it is
+    reported instead, unless `strict`.
     """
     if not criteria:
         return True, [], []
-    spec = parse(line)
+    spec = facts(source)
     failed, unknown = [], []
     for criterion in criteria:
         ok, why = check(spec, criterion)
@@ -220,17 +259,17 @@ def evaluate(line: str, criteria: list[dict] | None, strict: bool = False) -> tu
     return (not failed and (not unknown or not strict)), failed, unknown
 
 
-def observe(lines: list[str], top: int = 6, min_share: float = 0.1) -> list[dict]:
+def observe(rows: list, top: int = 6, min_share: float = 0.1) -> list[dict]:
     """What this result set actually contains — the material the model needs to author criteria.
 
     → [{"key", "coverage", "values": [{value, count}], "units": [{unit, min, max, count}]}]
     Numeric summaries are grouped BY RAW UNIT TOKEN and never converted, so the model can see
     that the category spells power both as "2000 Вт" and "3 кBт" and cover both in `any_of`.
     """
-    total = max(len(lines), 1)
+    total = max(len(rows), 1)
     buckets: dict[str, dict] = {}
-    for line in lines:
-        for k, v in parse(line)["pairs"].items():
+    for row in rows:
+        for k, v in facts(row)["pairs"].items():
             b = buckets.setdefault(norm(k), {"key": k, "count": 0, "values": {}, "units": {}})
             b["count"] += 1
             b["values"][v] = b["values"].get(v, 0) + 1

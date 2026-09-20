@@ -60,10 +60,9 @@ def sample(site: str, query: str, limit: int = MAX_SAMPLE) -> dict:
         rows = mod.search(query)
     except Exception as e:  # noqa: BLE001
         return err(f"{site}: {e}", site=site)
-    specs = [r.get("notes") or "" for r in rows]
     return {"success": True, "site": site, "query": query, "hits": len(rows),
             "titles": [(r.get("title") or "")[:90] for r in rows[:limit]],
-            "observed": spec.observe(specs)}
+            "observed": spec.observe(rows)}
 
 
 def probe_plans(plans: list[dict], limit: int = MAX_SAMPLE) -> dict:
@@ -80,7 +79,7 @@ def probe_plans(plans: list[dict], limit: int = MAX_SAMPLE) -> dict:
         for r in rows:
             if not (r.get("notes") or "").strip():
                 no_spec += 1
-            ok, failed, unknown = spec.evaluate(r.get("notes") or "", plan.get("criteria"),
+            ok, failed, unknown = spec.evaluate(r, plan.get("criteria"),
                                                 plan.get("strict", False))
             (kept if ok else failed_reasons).append(r if ok else (failed or unknown))
         out = {"site": site, "query": query, "hits": len(rows), "kept": len(kept),

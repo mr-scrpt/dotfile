@@ -47,7 +47,7 @@ def _row_for(topic: str, session: str, model: str, criteria: list[dict] | None) 
     for r in revs:
         complaints += [n for n in (r.get("nuances") or []) if n]
         praise += [p for p in (r.get("pros") or []) if p]
-    _, failed, unknown = spec.evaluate(spec_line, criteria)
+    _, failed, unknown = spec.evaluate(dict(best, notes=spec_line), criteria)
     return {
         "model": model,
         "spec": (spec_line or "")[:200],

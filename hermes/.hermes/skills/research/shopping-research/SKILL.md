@@ -102,7 +102,13 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
        `criteria` (engine format), `queries` (one short query per alternative), `unknowns`
        (facts no aggregator prints — these go to the reviews step, not to the filter).
    4.3 Material check: `shop_candidates(query|queries, category)` WITHOUT criteria returns
-       `observed` — the keys, real values and per-unit ranges of THIS result set. Criteria must
+       `observed` — the keys, real values and per-unit ranges of THIS result set. `observed`
+       covers EVERYTHING a row states: both the spec text and the row's own fields (e.g.
+       `price_min_uah`, `offers_count`), in one flat namespace with no privileged names. Every
+       requirement the user gave — бюджет, диагональ, цвет, длина, что угодно — becomes an
+       ordinary criterion over a key from `observed`; a numeric field carries no unit, so write
+       it as `{"key": "<key from observed>", "any_of": [{"max": N, "unit": ""}]}`. There is no
+       special handling for any parameter anywhere in the plugin, and there must never be one. Criteria must
        match that wording: units are compared AS WRITTEN and never converted, so cover every
        spelling (`any_of` with both "Вт" and "кBт"). Alternatives are ONE criterion with
        `either`, never two separate searches; a branch may be a PROXY when a site does not print
