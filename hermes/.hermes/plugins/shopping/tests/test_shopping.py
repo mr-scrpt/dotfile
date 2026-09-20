@@ -112,6 +112,12 @@ class Findings(Base):
         row = [f for f in core.list_findings("monitor", self.sid)["findings"] if f["url"].endswith("/dec")][0]
         self.assertEqual(row["price_min_uah"], 10796)
 
+    def test_zero_price_becomes_none(self):
+        core.add_findings("monitor", self.sid, [dict(OFFER, url="https://x/zero", price_uah=0, price_min_uah=0)])
+        row = [f for f in core.list_findings("monitor", self.sid)["findings"] if f["url"].endswith("/zero")][0]
+        self.assertIsNone(row["price_uah"])
+        self.assertIsNone(row["price_min_uah"])
+
     def test_filters(self):
         self.add(OFFER, {"group": "review", "model": "lg-27gs95qe-b", "url": "https://r/1", "nuances": ["coil whine"]})
         self.assertEqual(core.list_findings("monitor", self.sid, group="review")["count"], 1)

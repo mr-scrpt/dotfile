@@ -84,7 +84,9 @@ def coerce(raw: dict) -> tuple[dict | None, str | None]:
             v = to_int(f[k])          # shared parser: '10796.55' → 10796, never 1079655
             if v is None:
                 return None, f"{k} must be numeric"
-            f[k] = v
+            # a zero price means "the card shows no price" (out of stock, marketplace stub) — not "free":
+            # keeping 0 would win every "cheapest" sort.
+            f[k] = None if (v == 0 and k in ("price_uah", "price_min_uah", "price_max_uah")) else v
     if f["rating"] is not None:
         try:
             f["rating"] = float(str(f["rating"]).replace(",", "."))
