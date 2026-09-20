@@ -44,6 +44,22 @@ def _category_ok(row: dict, category: str | None) -> bool:
     return not c or category.lower() in c or c in category.lower()
 
 
+def _interleave(groups: list[list[dict]]) -> list[dict]:
+    """Round-robin over per-query result lists, deduped — so every alternative the user allows
+    is represented in the shortlist, not just the one with the most offers on the market."""
+    out: list[dict] = []
+    seen: set[str] = set()
+    for i in range(max((len(g) for g in groups), default=0)):
+        for g in groups:
+            if i >= len(g):
+                continue
+            k = model_key(g[i])
+            if k and k not in seen:
+                seen.add(k)
+                out.append(g[i])
+    return out
+
+
 def rank(rows: list[dict]) -> list[dict]:
     """Dedupe by model (aggregator rows for the same model merge: keep both links in `also`),
     sort by offers count desc, then reviews desc, then price asc."""
@@ -109,7 +125,8 @@ def _search_all(query: str) -> tuple[list[dict], list[dict], list[str]]:
 
 
 def discover(topic: str, session: str, query: str | list[str], category: str | None = None, pages: int = 2,
-             criteria: list[dict] | None = None, strict: bool = False, store: bool = True) -> dict:
+             criteria: list[dict] | None = None, strict: bool = False, store: bool = True,
+             widen: bool = True) -> dict:
     """Search the aggregators and filter by `criteria` — the parameter list the MODEL authored
     (see core.spec). Rows whose spec is silent about a criterion are kept and flagged
     `unverified` unless `strict=True`. The response always carries `observed`: the keys, values
@@ -129,14 +146,19 @@ def discover(topic: str, session: str, query: str | list[str], category: str | N
         all_tried: list[str] = []
         observed_src: list[str] = []
         dropped_all: list[dict] = []
+        per_query: list[list[dict]] = []
         for sub in queries:
-            part = discover(topic, session, sub, category, pages, criteria, strict, store)
+            part = discover(topic, session, sub, category, pages, criteria, strict, store, widen=False)
             all_tried += part.get("query_tried") or [sub]
             dropped_all += part.get("dropped_by_spec") or []
             if part.get("success"):
+                per_query.append(part.get("_rows") or [])
                 merged += part.get("_rows") or []
                 observed_src += part.get("_specs") or []
-        ranked_all = rank(merged)[:MAX_CANDIDATES]
+        # Interleave the alternatives instead of concatenating them: each query is a DIFFERENT
+        # thing the user allows ("OLED або Mini LED"), and a niche alternative has far fewer
+        # offers than a mainstream one, so a plain merge + cut would silently drop it entirely.
+        ranked_all = _interleave([rank(rows) for rows in per_query])[:MAX_CANDIDATES]
         specs_all = [r.get("notes") or "" for r in ranked_all]
         return {"success": bool(ranked_all), "query": " | ".join(queries), "query_tried": all_tried,
                 "category": category, "scanned": len(merged), "models": len(ranked_all),
@@ -171,7 +193,7 @@ def discover(topic: str, session: str, query: str | list[str], category: str | N
                 continue
             kept.append(dict(r, unverified=unknown) if unknown else r)
         ranked = rank(kept)[:MAX_CANDIDATES]
-        nxt = shorter(q)
+        nxt = shorter(q) if widen else None
         if len(ranked) >= MIN_MODELS or not nxt:
             break
         dropped_by_spec = []

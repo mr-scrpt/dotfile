@@ -248,6 +248,43 @@ class CandidatesCriteriaFilter(unittest.TestCase):
         self.assertTrue(r["observed"])
 
 
+class Alternatives(unittest.TestCase):
+    """A niche alternative (Mini-LED) must survive next to a mainstream one (OLED)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = mock.patch.dict(os.environ, {"SHOPPING_HOME": self.tmp.name})
+        self.env.start()
+        from shopping import core
+        core.create_topic("t")
+        self.sid = core.create_session("t", "монітор", "код")["session"]["id"]
+
+    def tearDown(self):
+        self.env.stop()
+        self.tmp.cleanup()
+
+    def test_rare_alternative_is_not_crowded_out(self):
+        from shopping import core
+        from shopping.core import candidates
+        popular = [{"group": "aggregator", "source": "hotline", "model": f"OLED{i}", "title": f"OLED{i}",
+                    "url": f"https://h/o{i}", "offers_count": 50 - i, "notes": "матриця: QD-OLED"}
+                   for i in range(candidates.MAX_CANDIDATES + 5)]
+        rare = [{"group": "aggregator", "source": "ekatalog", "model": "Xiaomi G Pro 27i", "title": "Xiaomi G Pro 27i",
+                 "url": "https://e/x", "offers_count": 1, "notes": "матриця: Mini LED IPS"}]
+        calls = {"n": 0}
+
+        def fake(q):
+            calls["n"] += 1
+            return (popular if "OLED" in q else rare), [], []
+
+        with mock.patch.object(candidates, "_search_all", side_effect=fake):
+            r = core.find_candidates("t", self.sid, ["монітор OLED", "монітор Mini LED"])
+        models = [c["model"] for c in r["candidates"]]
+        self.assertIn("Xiaomi G Pro 27i", models)
+        self.assertLess(models.index("Xiaomi G Pro 27i"), 3)   # interleaved, not appended at the end
+        self.assertEqual(r["query_tried"], ["монітор OLED", "монітор Mini LED"])  # no widening per alternative
+
+
 class ReconContract(unittest.TestCase):
     """The research subagent's answer is machine-checked before it can steer the search."""
 
