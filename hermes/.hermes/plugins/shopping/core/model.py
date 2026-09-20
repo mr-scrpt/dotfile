@@ -31,7 +31,8 @@ def default_params() -> dict:
             "condition": "new",      # new | any
             "reference": None,       # reference mode: {"title", "url", "source", "spec": {...}} of the owned device
             "items": [],             # reference mode with several wanted things: [{"name": "инвертор", "must": [...]}, ...]
-            "shortlist": []}         # models the user picked to compare in depth (candidates menu)
+            "shortlist": [],         # models that passed the criteria and go to offers+reviews
+            "recon": None}           # topic research result (terms/variants/quality/criteria), see core.recon
 
 
 @dataclass(frozen=True)

@@ -41,7 +41,7 @@ HANDLERS: dict[str, Callable[..., str]] = {
     "shop_add_findings": _json(core.add_findings, "topic", "session", "findings"),
     "shop_list_findings": _json(core.list_findings, "topic", "session", "group", "model", "fields"),
     "shop_log": _json(core.log_event, "topic", "session", "event", "detail"),
-    "shop_set_summary": _json(core.set_summary, "topic", "session", "verdict", "picks", "caveats", "status"),
+    "shop_set_summary": _json(core.set_summary, "topic", "session", "verdict", "picks", "caveats", "status", "spec_leaders"),
     "shop_render_report": _json(core.render_report, "topic", "session", "full"),
     "shop_add_followup": _json(core.add_followup, "topic", "session", "title", "question", "answer_md"),
     "shop_sources": _json(core.get_sources, "group", "query"),
@@ -118,6 +118,29 @@ def _source_plan(args: dict, **kw) -> str:
     return json.dumps(res, ensure_ascii=False)
 
 
+def _recon(args: dict, **kw) -> str:
+    """shop_recon — brief for the research subagent, and contract-checked storage of its answer."""
+    del kw
+    try:
+        meta, _ = core.sessions.load(args["topic"], args["session"])
+        if meta is None:
+            res = core.sessions.not_found(args["topic"], args["session"])
+        elif args.get("action") == "brief":
+            res = core.recon_mod.brief(meta.get("params") or {}, args.get("sites"))
+        else:
+            res = core.recon_mod.validate(args.get("payload"))
+            if res.get("success"):
+                r = res["recon"]
+                core.update_params(args["topic"], args["session"], recon=r, criteria=r["criteria"])
+                res["stored"] = {"criteria": len(r["criteria"]), "queries": r["queries"]}
+    except Exception as e:  # noqa: BLE001
+        logger.exception("shop_recon failed")
+        res = {"success": False, "error": f"{type(e).__name__}: {e}"}
+    return json.dumps(res, ensure_ascii=False)
+
+
+HANDLERS["shop_recon"] = _recon
+HANDLERS["shop_compare"] = _json(core.build_comparison, "topic", "session", "models", "sites", "geo", "plans_by_model")
 HANDLERS["shop_source_plan"] = _source_plan
 HANDLERS["shop_menu"] = _menu
 

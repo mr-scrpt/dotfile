@@ -136,9 +136,12 @@ class Report(Base):
                   "nuances": ["coil whine"], "pros": ["чёрный OLED"], "model_match": "exact"},
                  {"group": "marketplace", "source": "moyo", "model": "MSI MAG 271QPX", "url": "https://m/9", "price_uah": 28000, "rating": 4.5, "rating_count": 3})
         core.set_summary("monitor", self.sid, "LG лучше по тексту; MSI дешевле, но глянец.",
-                         [{"model": "LG 27GS95QE-B", "why": "под текст и код", "cons": ["нет KVM"]}], ["цены на 18.09"])
+                         [{"model": "LG 27GS95QE-B", "why": "под текст и код", "cons": ["нет KVM"]}], ["цены на 18.09"],
+                         spec_leaders=[{"model": "MSI MAG 271QPX", "why": "360 Гц против 240",
+                                        "verdict": "жалобы на равномерность подсветки в отзывах"}])
         md = core.render_report("monitor", self.sid, full=True)["markdown"]
-        for h in ("## 1. Лучшие позиции", "## 2. По каждой позиции", "## 3. Сравнение и вывод", "## 4. Остальные кандидаты"):
+        for h in ("## 1. Лучшие позиции", "## 2. По каждой позиции", "## 3. Сравнение и вывод",
+                  "## 3b. Лидеры по характеристикам", "## 4. Все прошедшие критерии"):
             self.assertIn(h, md)
         self.assertIn("1. **LG 27GS95QE-B** — от 30 500 ₴ · [telemart](https://t/1) — под текст и код", md)   # ranked list with the cheapest link
         self.assertIn("### LG 27GS95QE-B — от 30 500 ₴", md)
@@ -149,7 +152,8 @@ class Report(Base):
         self.assertIn("- ⚠ нет KVM", md)                    # pick-level cons from the summary
         self.assertIn("Отзывы: [reddit](https://r/1)", md)
         self.assertIn("LG лучше по тексту", md)
-        self.assertIn("| MSI MAG 271QPX | 28 000 ₴ | [moyo](https://m/9) | 4.5 (3) |", md)   # non-pick → "others" table
+        self.assertIn("| MSI MAG 271QPX | 28 000 ₴ | [moyo](https://m/9) | 4.5 (3) |", md)   # non-pick → full list
+        self.assertIn("| MSI MAG 271QPX | 360 Гц против 240 | жалобы на равномерность подсветки в отзывах |", md)
         self.assertLess(md.index("## 1."), md.index("## 2."))
         compact = core.render_report("monitor", self.sid)
         self.assertNotIn("markdown", compact)

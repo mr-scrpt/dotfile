@@ -16,7 +16,7 @@ from .findings import model_key
 from .fs import err
 
 MAX_CANDIDATES = 40
-SHORTLIST = 3           # how many leaders go to the deep comparison by default
+NARROW_ABOVE = 20       # more survivors than this → go back to the user and narrow the criteria
 MIN_MODELS = 5          # below this the query counts as too narrow → retry with fewer words
 MAX_ATTEMPTS = 3
 
@@ -65,6 +65,18 @@ def rank(rows: list[dict]) -> list[dict]:
                                               r.get("price_min_uah") or 10**9))
 
 
+def narrow_suggestions(lines: list[str], top: int = 6) -> list[dict]:
+    """Which parameters would actually split this result set — the material for asking the user
+    to narrow. Purely statistical: keys most cards state, with several distinct values."""
+    out = []
+    for o in spec.observe(lines, top=4, min_share=0.4):
+        if len(o.get("values") or []) < 2:
+            continue
+        out.append({"key": o["key"], "coverage": o["coverage"],
+                    "values": o["values"], "units": o.get("units")})
+    return out[:top]
+
+
 def compact(r: dict) -> dict:
     out = {"model": r.get("model") or r.get("title"), "price_min_uah": r.get("price_min_uah"),
            "price_max_uah": r.get("price_max_uah"), "offers": r.get("offers_count"), "reviews": r.get("rating_count"),
@@ -96,7 +108,7 @@ def _search_all(query: str) -> tuple[list[dict], list[dict], list[str]]:
     return rows, cats, errors
 
 
-def discover(topic: str, session: str, query: str, category: str | None = None, pages: int = 2,
+def discover(topic: str, session: str, query: str | list[str], category: str | None = None, pages: int = 2,
              criteria: list[dict] | None = None, strict: bool = False, store: bool = True) -> dict:
     """Search the aggregators and filter by `criteria` — the parameter list the MODEL authored
     (see core.spec). Rows whose spec is silent about a criterion are kept and flagged
@@ -108,9 +120,36 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
         return sessions.not_found(topic, session)
     category = category or (meta.get("params") or {}).get("category") or None
     errors: list[str] = []
+    # Several queries = one search: alternatives the user allows ("OLED або Mini LED") cannot be
+    # expressed in ONE site query, because site search is AND-ish. Results are merged and ranked
+    # together, so the user still gets a single comparable list.
+    queries = [query] if isinstance(query, str) else list(query)
+    if len(queries) > 1:
+        merged: list[dict] = []
+        all_tried: list[str] = []
+        observed_src: list[str] = []
+        dropped_all: list[dict] = []
+        for sub in queries:
+            part = discover(topic, session, sub, category, pages, criteria, strict, store)
+            all_tried += part.get("query_tried") or [sub]
+            dropped_all += part.get("dropped_by_spec") or []
+            if part.get("success"):
+                merged += part.get("_rows") or []
+                observed_src += part.get("_specs") or []
+        ranked_all = rank(merged)[:MAX_CANDIDATES]
+        specs_all = [r.get("notes") or "" for r in ranked_all]
+        return {"success": bool(ranked_all), "query": " | ".join(queries), "query_tried": all_tried,
+                "category": category, "scanned": len(merged), "models": len(ranked_all),
+                "categories": [], "errors": [],
+                "needs_narrowing": len(ranked_all) > NARROW_ABOVE,
+                "narrow_suggestions": narrow_suggestions(specs_all) if len(ranked_all) > NARROW_ABOVE else [],
+                "observed": spec.observe(observed_src), "criteria_shown": spec.describe(criteria),
+                "dropped_by_spec": dropped_all[:6], "dropped_count": len(dropped_all),
+                "stored": {"added": 0, "merged": 0},
+                "candidates": [compact(r) for r in ranked_all]}
     tried: list[str] = []
     dropped_by_spec: list[dict] = []
-    q = query
+    q = queries[0]
     rows: list[dict] = []
     cats: list[dict] = []
     ranked: list[dict] = []
@@ -153,14 +192,14 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
         return err(f"no candidates for {query!r} — {hint}", scanned=scanned,
                    observed=spec.observe([r.get("notes") or "" for r in in_cat]),
                    dropped_by_spec=dropped_by_spec[:6])
-    shortlist = [compact(r) for r in ranked[:SHORTLIST]]
+    specs_kept = [r.get("notes") or "" for r in ranked]
     return {"success": True, "query": tried[-1], "query_tried": tried, "category": category, "scanned": scanned,
             "models": len(ranked), "categories": cats[:8], "errors": errors,
-            "shortlist": [c["model"] for c in shortlist],
-            "shortlist_why": "лидеры по числу предложений и отзывов среди прошедших критерии — "
-                             "сравнивай их, полный список идёт в отчёт",
+            "needs_narrowing": len(ranked) > NARROW_ABOVE,
+            "narrow_suggestions": narrow_suggestions(specs_kept) if len(ranked) > NARROW_ABOVE else [],
             "observed": spec.observe([r.get("notes") or "" for r in in_cat]),
             "criteria_shown": spec.describe(criteria),
             "dropped_by_spec": dropped_by_spec[:6], "dropped_count": len(dropped_by_spec),
             "stored": {k: stored[k] for k in ("added", "merged")},
-            "candidates": [compact(r) for r in ranked]}
+            "candidates": [compact(r) for r in ranked],
+            "_rows": ranked, "_specs": [r.get("notes") or "" for r in in_cat]}

@@ -54,6 +54,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("reviews", help="scripted buyer reviews digest for a model"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("model")
     p = sub.add_parser("resolve", help="reference mode: product URL or name → title/spec"); p.add_argument("reference")
     sub.add_parser("capabilities", help="what each source can do")
+    p = sub.add_parser("compare", help="offers+reviews for every surviving model → comparison table")
+    p.add_argument("topic"); p.add_argument("session"); p.add_argument("--models", nargs="*", default=None)
     p = sub.add_parser("sample", help="titles + observed keys for one site/query"); p.add_argument("site"); p.add_argument("query")
     p.add_argument("--sites", nargs="*", default=None)
     p = sub.add_parser("probe", help="parallel hit-count probe on scripted sites"); p.add_argument("query")
@@ -89,6 +91,8 @@ def run(a: argparse.Namespace) -> dict:
     if a.cmd == "candidates":
         return core.find_candidates(a.topic, a.session, a.query, a.category, a.pages,
                                     json.loads(a.criteria) if a.criteria else None, a.strict)
+    if a.cmd == "compare":
+        return core.build_comparison(a.topic, a.session, a.models)
     if a.cmd == "capabilities":
         return core.source_capabilities(None)
     if a.cmd == "sample":

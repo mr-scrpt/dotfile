@@ -33,6 +33,8 @@ Bundled Hermes skills stay in `~/.hermes/skills/` unmanaged; only our own live h
     core/plans.py          shop_source_plan: source capabilities, per-site sample, probe & run plans
     core/throttle.py       politeness: per-host delay+jitter, response cache, cooldown after a block
     core/query.py          AND-ish site search: widen a query until the source answers
+    core/recon.py          shop_recon: contract (schema+prompt+validate) for the topic-research subagent
+    core/compare.py        shop_compare: offers+reviews for EVERY survivor → one comparison table
     core/resolve.py        shop_resolve (owned device → title/spec, reference mode)
     core/reviews.py        shop_reviews (parallel buyer reviews → token-cheap digest)
     core/probe.py          parallel hit-count probe over scripted sites (status per site)

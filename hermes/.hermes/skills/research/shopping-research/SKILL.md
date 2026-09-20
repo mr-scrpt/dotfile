@@ -1,7 +1,7 @@
 ---
 name: shopping-research
 description: "Use when the user wants to find/compare goods to buy in Ukraine."
-version: 0.6.0
+version: 0.7.0
 author: mr-scrpt, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -84,54 +84,41 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
    as the sites call it>)`; `free_text` = extra sites the user typed → add to `notes`.
    Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
 4. Criteria — the ONE artefact all three search types converge on. The plugin never guesses a
-   parameter and never knows a unit; you author `criteria` from what the sources actually print.
-   4.1 Material: `shop_candidates(query, category)` — WITHOUT criteria the first time. It returns
-       candidates plus `observed`: every key this result set has, with its real values and, per
-       RAW unit token, the range seen ("номінальна потужність: кBт 2–4.2", "потужність: Вт 300–5000").
-       For the exact-model case use `shop_resolve`/`shop_source_plan(action="sample")` instead —
-       same idea: read the parameters off the real card.
-   4.1b NEVER declare a variant absent from memory. If the user names an option you are unsure
-       about (Mini-LED, an obscure standard, a niche form factor), FIND OUT before filtering:
-       sample 2–3 sources for it (`shop_source_plan(action="sample")`), look at how they spell it
-       and whether the aggregators expose it as a key, a word in the title, or not at all. Only
-       then decide how to express it. Saying "нет на рынке" without a sample is a hard error.
-   4.2 Author the criteria from `observed`, one entry per parameter:
-       `{"key": "потужність", "label": "2–3 кВт",
-         "any_of": [{"min": 2000, "max": 3000, "unit": "Вт"}, {"min": 2, "max": 3, "unit": "кBт"}],
-         "contains": ["синус"], "required": true}`
-       Units are compared AS WRITTEN and never converted, so cover every spelling `observed`
-       showed (both "Вт" and "кBт"). `contains` is a substring test over the value and the whole
-       spec line. Mark a nice-to-have with `"required": false`.
-       ALTERNATIVES ("OLED или Mini-LED") are ONE criterion with `either`, never two searches:
-         {"label": "OLED или Mini-LED", "either": [
-            {"key": "матриця", "contains": ["OLED"]},
-            {"key": "матриця", "contains": ["Mini LED", "Mini-LED"]},
-            {"key": "яскравість", "any_of": [{"min": 1000, "unit": "кд/м²"}], "label": "прокси"}]}
-       A branch may be a PROXY when a site does not print the parameter itself (hotline never
-       writes "Mini LED", but 1000+ кд/м² separates it from ordinary IPS/VA) — label it as a
-       proxy and verify those hits on a source that does print it before they reach the picks.
-       Per search type: (a) exact model — derive the criteria from the card and check nothing is
-       missing; (b) parameters given — restate the user's words as criteria against `observed`
-       wording; (c) nothing known — read `observed`, pick the parameters that actually separate
-       this category, and say which values are common.
-   4.3 SHOW the criteria to the user before searching (`criteria_shown` gives ready lines) and
-       ask for corrections — always in cases (b) and (c); in case (a) only when something is
-       ambiguous (memory, colour, condition). Then persist: `shop_update_params(criteria=[...])`.
-   4.4 Apply: `shop_candidates(query, category, criteria)` → survivors + `dropped_by_spec` with
-       the reason per model. Aim for 3–15: >15 add a criterion or ask about budget/brand; <2 drop
-       the criterion `dropped_by_spec` blames. A card whose spec is silent is KEPT and flagged
-       `unverified` — never claim such a model lacks the feature (add `strict=true` only when the
-       user insists on verified-only).
-   4.5 The shortlist is YOUR decision, not a question. `shop_candidates` already returns
-       `shortlist` (top-3 by market presence among the survivors); adjust it with judgement —
-       purpose, price, reviews count, variety (e.g. do not take three near-identical MSI) — and
-       store it: `shop_update_params(shortlist=[...])`. Show the user the 3 leaders WITH the
-       reason each is there, and mention that the full list of survivors goes into the report.
-       Only offer `shop_menu(kind="candidates", candidates=rows, picked=shortlist)` when the user
-       asks to change the selection, or when two candidates are genuinely tied for the last slot.
-       NEVER ask "какие модели сравнивать?" as the default step — the user wants an answer, not
-       a quiz. Done: `params.shortlist` has 3 (±1) models and the user knows why.
-   mode=exact: `shortlist = [query]`, no candidates call at all.
+   parameter and never knows a unit; criteria come from real data, in this order.
+   4.1 РАЗВЕДКА ТЕМЫ (mandatory unless the category is trivial and every term is already known):
+       `shop_recon(action="brief")` → a prompt + `output_schema`. Run it as a SUBAGENT:
+       `delegate_task(goal=<prompt>, output_schema=<output_schema>)`. The subagent samples 2–3
+       sources (`shop_source_plan(action="sample")`), searches the web/reviews, and returns
+       `{terms, variants, quality, criteria, queries, unknowns}`. Store it with
+       `shop_recon(action="store", payload=<its JSON>)` — the plugin validates the contract and
+       writes `criteria` + `recon` into the session.
+       This step exists because a named technology is NOT common knowledge: Mini-LED is a
+       backlight, not a panel type; e-katalog prints it inside `Матриця:` while hotline never
+       writes it at all. NEVER decide from memory that a variant "не представлен на рынке" —
+       that error already happened once and cost a whole run.
+   4.2 What the recon result gives you: `terms` (every spelling), `variants` (kinds and how they
+       differ), `quality` (measurable parameters that separate good from bad INSIDE the
+       technology — dimming zones, peak brightness — with the direction that is better),
+       `criteria` (engine format), `queries` (one short query per alternative), `unknowns`
+       (facts no aggregator prints — these go to the reviews step, not to the filter).
+   4.3 Material check: `shop_candidates(query|queries, category)` WITHOUT criteria returns
+       `observed` — the keys, real values and per-unit ranges of THIS result set. Criteria must
+       match that wording: units are compared AS WRITTEN and never converted, so cover every
+       spelling (`any_of` with both "Вт" and "кBт"). Alternatives are ONE criterion with
+       `either`, never two separate searches; a branch may be a PROXY when a site does not print
+       the parameter (hotline: 1000+ кд/м² instead of "Mini LED") — label it as such and verify
+       those hits on a source that does print it.
+   4.4 SHOW the criteria to the user before searching (`criteria_shown` gives ready lines),
+       together with what the recon found (варианты технологии, на что смотреть), and ask for
+       corrections. Then `shop_update_params(criteria=[...])`.
+   4.5 Apply: `shop_candidates(query|queries, category, criteria)`. Survivors are listed with
+       `dropped_by_spec` (reason per rejected model). A card whose spec is silent is KEPT and
+       flagged `unverified` — never claim such a model lacks the feature.
+       If the answer carries `needs_narrowing` (more than 20 survivors), GO BACK TO THE USER with
+       `narrow_suggestions` (which parameters actually split this set, with their values) and
+       tighten the criteria BEFORE collecting reviews. Do not silently cut the list yourself.
+       Store every survivor: `shop_update_params(shortlist=[all survivors])`.
+       mode=exact: `shortlist = [query]`, no candidates call at all.
 4b. Per-source plans — the same criteria, expressed in each source's own language.
    `shop_source_plan(action="capabilities", sites=params.sites)` → what each source can do.
    For a source you have not searched before, or whose wording you are unsure of:
@@ -143,43 +130,30 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
    `shop_source_plan(action="probe", plans)` dry-runs them in parallel: hits vs kept per plan,
    a dropped example, and a `warning` when a source prints no specs (there the query must carry
    everything). Fix the weak queries, then keep the plans for step 5.
-5. Offers — `shop_source_plan(action="run", plans, model)` per shortlisted model (or
-   `shop_fetch(site, model, geo)` when a single site needs a one-off). The tool keeps only cards whose title carries the model code
-   without an extra variant word (Pro ≠ Pro Max) AND whose site category is the product itself
-   (accessories dropped) AND — with `condition=new` — that are not б/у/відновлений; everything
-   dropped is listed in `dropped` with the reason, so say it when a site had only refurbished
-   units. All 14 catalogue sites are scripted (comfy runs through local headless Chromium inside
-   the plugin). The tool stores offers itself and returns compact data; you only read it. A site
-   the user typed as free text (not in the catalogue): open its search in `browser_exec`, take
-   the first exact-model card, store via `shop_add_findings`; on "Just a moment"/empty →
-   `shop_log(source_blocked)` and move on. Never retry a blocked site more than once.
-   Done: each model has ≥1 marketplace finding or a `source_blocked` line per missing site.
-   Parallel option for ≥6 models: `delegate_task`, one child per site group, each child uses the
-   CLI (`python3 ~/.hermes/plugins/shopping/cli.py fetch <topic> <session> <site> "<model>"`).
-   Verify with `shop_get_session` counts after they return.
-6. Reviews — governed by `params.reviews`:
-   `none` → skip this step entirely (verdict from prices/specs/ratings only).
-   `cards` → per shortlisted model ONE call: `shop_reviews(model)`. The plugin reads buyer
-   reviews from every stored offer of that model (rozetka, hotline, comfy, moyo, citrus, allo,
-   prom, epicentr) in parallel and returns a digest: per-site rating stats + only informative
-   sentences (≤2.5k chars, low ratings first, generic praise removed). It stores `<site>-reviews`
-   findings itself. Read the digest, write `nuances` from it — never ask for raw texts.
-   `full` → `cards` + web: `web_search` for each template in `shop_sources(group="reviews",
-   query=<model>)["web_search_queries"]`, limit 5; open at most 3 result pages per model
-   (`web_extract` first; `browser_exec` only if empty and the host is not in
-   `blocked_for_browser`; YouTube → skill `youtube-content`). One `review` finding per source
-   with `model_match` (drop `unclear`), concrete `nuances`, `pros`. Weigh nuances against
-   `purpose` (text/code: fringing, flicker, brightness, matte coating; games: VRR, latency).
-   Done: ≥1 review finding per shortlisted model (or a `note` that none exist) — unless `none`.
-7. Verdict — `shop_set_summary(picks, verdict, caveats, status="done")`. `picks` = the best
-   positions in rank order (1–3 per search; for reference mode 1–3 per item, `why` names the
-   item), each with `why` (how it fits the purpose/brief), `pros`, `cons` (from reviews and
-   specs). `verdict` = the comparison of the picks against each other + the final call.
-   The report then renders itself: 1. ranked picks with the cheapest link → 2. one block per
-   pick (offers table, aggregator links, pros/cons, review links) → 3. comparison → 4. other
-   candidates → 5. follow-ups. `shop_render_report` (returns path + row counts, not the text)
-   → `read_file(path)` → paste the file verbatim to the user + its absolute path.
-   Done: `report_path` set.
+5. Offers + reviews for EVERY survivor — ONE call: `shop_compare(models=params.shortlist,
+   plans_by_model=<from step 4b, optional>)`. It fetches prices and buyer reviews for ALL of them
+   in parallel (politeness is handled by the plugin) and returns one row per model: spec line,
+   best price and shop, offers count, rating + review count, complaint signals, `unverified`
+   criteria. It refuses above 24 models — that means step 4.5 did not narrow enough.
+   NEVER pre-select "finalists" before this step: the model with the best spec sheet may be the
+   one buyers complain about, and the one with modest specs may have excellent reviews.
+   Done: every model in `params.shortlist` has a row (models with no reviews are listed in
+   `no_reviews` — say so rather than hiding them).
+6. Deep reviews (only when a model's row is thin and it is a serious contender):
+   `shop_reviews(model)` for the full digest, or, with `params.reviews == "full"`, `web_search`
+   over `shop_sources(group="reviews", query=<model>)["web_search_queries"]` (limit 5, ≤3 pages
+   per model) — this is also where `recon.unknowns` get checked (dimming zones, real brightness),
+   since aggregators do not print them. One `review` finding per source with concrete `nuances`.
+7. Вердикт — YOU choose the three leaders from the `shop_compare` table, weighing: how well the
+   spec matches the purpose, what buyers complain about, price, and how verified the data is.
+   Reviews may demote a spec leader — that is the point of collecting them for everyone.
+   `shop_set_summary(picks=[3 models with why/pros/cons], verdict=<comparison of the three>,
+   caveats=[...], spec_leaders=[{model, why, verdict}])`, where `spec_leaders` are models that
+   lead ON PAPER but did not make the three — with the reason (e.g. "360 Гц против 240, но
+   жалобы на равномерность подсветки"). The report renders: 1. picks → 2. block per pick →
+   3. comparison → 3b. лидеры по характеристикам → 4. все прошедшие критерии → 5. уточнения.
+   `shop_render_report` → `read_file(path)` → paste verbatim + the absolute path.
+   Done: `report_path` set, picks explained, spec leaders accounted for.
 8. Follow-ups — later questions on the session → research → `shop_add_followup` → answer.
 
 ## Token discipline
@@ -213,10 +187,13 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
 - Aggregator specs are patchy: a missing parameter is `unverified`, NOT a rejection — never
   claim a model lacks a feature just because its spec line is silent.
 - Division of labour, no exceptions: the PLUGIN does everything deterministic (menus, fetching,
-  parsing, criteria checking, dedup, review digests, report rendering); the MODEL only supplies
-  semantics (author criteria from `observed`, word them for the user, split them per source,
-  read the review digest, write the verdict). Never re-implement a plugin step by hand, and
-  never let the plugin guess a parameter.
+  parsing, criteria checking, dedup, review digests, ordering the comparison table, report
+  rendering); the MODEL supplies only semantics (topic recon, criteria from `observed`, wording
+  for the user, per-source plans, and the final choice of three leaders). Never re-implement a
+  plugin step by hand, and never let the plugin decide a trade-off — ranking the leaders is
+  judgement, so the plugin deliberately does not do it.
+- Никогда не сокращай список перед отзывами. Отзывы собираются по ВСЕМ прошедшим критерии; если
+  их больше 20 — вернись к пользователю и сузь критерии, а не отбрасывай модели молча.
 - Site search is AND-ish: a full brief as one query returns zero almost everywhere. The plugin
   widens queries itself (`query_used`/`query_tried` in the probe and in shop_candidates) — so a
   site reporting 0 means "this query shape found nothing", not "this shop has no such goods".

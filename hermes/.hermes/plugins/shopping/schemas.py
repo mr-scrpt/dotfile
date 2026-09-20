@@ -67,7 +67,8 @@ SHOP_UPDATE_PARAMS = {
         "reference": {"type": "object", "description": "reference mode: result of shop_resolve (title, url, source, spec)"},
         "items": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "must": _STR_LIST, "nice": _STR_LIST}, "required": ["name"]},
                   "description": "reference mode: the things to buy, each with its own must/nice (confirmed by the user)"},
-        "shortlist": {**_STR_LIST, "description": "models picked in shop_menu(candidates) to compare in depth"},
+        "shortlist": {**_STR_LIST, "description": "models that passed the criteria (all of them — the 3 leaders are picked after reviews)"},
+        "recon": {"type": "object", "description": "topic research result (shop_recon)"},
     }, "required": ["topic", "session"]},
 }
 
@@ -89,6 +90,11 @@ SHOP_SET_SUMMARY = {
                                                              "pros": _STR_LIST, "cons": _STR_LIST}, "required": ["model", "why"]}},
         "verdict": {"type": "string", "description": "comparison of the picks against each other + the final recommendation (markdown ok)"},
         "caveats": _STR_LIST, "status": {"type": "string", "enum": ["draft", "searching", "done"]},
+        "spec_leaders": {"type": "array", "description": "models that lead ON PAPER but are not in the picks — each "
+                                                         "{model, why (what it wins on the spec sheet), verdict (why it lost, e.g. complaints)}",
+                         "items": {"type": "object", "properties": {"model": {"type": "string"}, "why": {"type": "string"},
+                                                                    "verdict": {"type": "string"}},
+                                   "required": ["model", "why", "verdict"]}},
     }, "required": ["topic", "session"]},
 }
 
@@ -106,10 +112,14 @@ SHOP_CANDIDATES = {
     "description": ("Universal shortlist for ANY product category: searches hotline + e-katalog, keeps cards of `category`, "
                     "filters by `criteria` against each card's own characteristics line, dedupes by model, ranks by offers/reviews, "
                     "stores aggregator findings. Returns ≤40 candidates + `observed` (the keys, real values and per-unit ranges this "
-                    "result set actually has) + `dropped_by_spec` + `criteria_shown` (wording for the user). Widens a too-narrow query "
+                    "result set actually has) + `dropped_by_spec` + `criteria_shown`. When more than 20 models survive it sets "
+                    "`needs_narrowing` + `narrow_suggestions` — go back to the user and narrow BEFORE collecting reviews. Widens a too-narrow query "
                     "automatically (query_tried). Parameters unknown? Call WITHOUT criteria first and author them from `observed`."),
     "parameters": {"type": "object", "properties": {
-        **_TS, "query": {"type": "string", "description": "short product query in Ukrainian, e.g. 'монітор 27 OLED', 'інвертор 24V'"},
+        **_TS, "query": {"description": "short product query in Ukrainian ('монітор 27 OLED'), or a LIST of queries when the "
+                                       "user allows alternatives that no single site query can express "
+                                       "(['монітор 27 OLED', 'монітор 27 Mini LED']) — results are merged and ranked together",
+                         "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
         "category": {"type": "string", "description": "aggregator category name from the probe (default: params.category)"},
         "criteria": {"type": "array", "description": "criteria authored by the model AFTER reading `observed` (shop_candidates / shop_source_plan sample). Each: {key, any_of:[{min,max,unit}|{eq,unit}], contains:[...], label, required}. Units are compared as written, never converted — list every spelling the category uses in any_of (e.g. [{min:2000,max:3000,unit:\"Вт\"},{min:2,max:3,unit:\"кВт\"}]).", "items": {"type": "object", "properties": {"key": {"type": "string"}, "label": {"type": "string"}, "contains": _STR_LIST, "required": {"type": "boolean"}, "any_of": {"type": "array", "items": {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}, "eq": {"type": "number"}, "unit": {"type": "string"}}}}}, "required": ["key"]}},
         "strict": {"type": "boolean", "description": "also drop cards whose spec does not state a constrained parameter (default false: kept and listed in `unverified`)"},
@@ -172,6 +182,33 @@ SHOP_SOURCE_PLAN = {
     }, "required": ["action"]},
 }
 
+SHOP_RECON = {
+    "name": "shop_recon",
+    "description": ("Topic research contract — run BEFORE authoring criteria when the category or a named technology "
+                    "is not trivially understood (Mini-LED, niche standards). action=brief → the prompt + output_schema "
+                    "for a delegate_task subagent that samples sources and searches the web. action=store(payload) → "
+                    "validates that JSON against the contract and stores terms/variants/quality/criteria/queries in the "
+                    "session. Never decide from memory whether a variant exists on the market — run this."),
+    "parameters": {"type": "object", "properties": {
+        "action": {"type": "string", "enum": ["brief", "store"]},
+        **_TS, "payload": {"type": "object", "description": "store: the subagent's JSON answer"},
+        "sites": {**_STR_LIST, "description": "brief: sources already chosen"},
+    }, "required": ["action", "topic", "session"]},
+}
+
+SHOP_COMPARE = {
+    "name": "shop_compare",
+    "description": ("Collect prices AND reviews for EVERY model that passed the criteria (no pre-filtering — a model with "
+                    "worse specs may win on reviews), then return one comparison row per model: spec line, best price, "
+                    "offers, rating + review count, complaint signals, unverified criteria. YOU pick the three leaders from "
+                    "this table. Refuses above 24 models: narrow the criteria first."),
+    "parameters": {"type": "object", "properties": {
+        **_TS, "models": {**_STR_LIST, "description": "models that passed the criteria (default: params.shortlist)"},
+        "sites": _STR_LIST, "geo": _GEO,
+        "plans_by_model": {"type": "object", "description": "optional: model → per-source plans from shop_source_plan"},
+    }, "required": ["topic", "session"]},
+}
+
 SHOP_RESOLVE = {
     "name": "shop_resolve",
     "description": "Reference mode: read the owned device from a product URL (rozetka …) or a model name (hotline) → {title, url, source, category_path, spec{}} for deriving what to buy. Store the result with shop_update_params(reference=…).",
@@ -187,4 +224,4 @@ SHOP_REVIEWS = {
 
 ALL = [SHOP_LIST_TOPICS, SHOP_CREATE_TOPIC, SHOP_LIST_SESSIONS, SHOP_CREATE_SESSION, SHOP_GET_SESSION,
        SHOP_UPDATE_PARAMS, SHOP_ADD_FINDINGS, SHOP_LIST_FINDINGS, SHOP_LOG, SHOP_SET_SUMMARY,
-       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE, SHOP_SOURCE_PLAN]
+       SHOP_RENDER_REPORT, SHOP_ADD_FOLLOWUP, SHOP_SOURCES, SHOP_CANDIDATES, SHOP_FETCH, SHOP_PROBE, SHOP_MENU, SHOP_REVIEWS, SHOP_RESOLVE, SHOP_SOURCE_PLAN, SHOP_RECON, SHOP_COMPARE]

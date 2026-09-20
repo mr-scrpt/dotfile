@@ -124,10 +124,24 @@ def _pick_lines(pk: dict, offers: list[dict], aggs: list[dict], reviews: list[di
     return out + [""]
 
 
+def _spec_leaders_block(s: dict) -> list[str]:
+    """Models that win on paper but did not make the picks — with the reason (usually reviews).
+    Stored by shop_set_summary(spec_leaders=[{model, why, verdict}])."""
+    rows = s.get("spec_leaders") or []
+    if not rows:
+        return []
+    out = ["## 3b. Лидеры по характеристикам", "",
+           "Формально лучшие по параметрам — но в тройку не вошли:", "",
+           "| Модель | Чем лучше на бумаге | Почему не в тройке |", "|---|---|---|"]
+    for r in rows:
+        out.append(f"| {cell(r.get('model'))} | {cell(r.get('why'))} | {cell(r.get('verdict'))} |")
+    return out + [""]
+
+
 def _others_block(models: list[str], by_model: dict[str, list[dict]], aggs_by: dict[str, list[dict]]) -> list[str]:
     if not models:
         return []
-    out = ["## 4. Остальные кандидаты", "", "| Модель | Цена от | Где | Рейтинг |", "|---|---|---|---|"]
+    out = ["## 4. Все прошедшие критерии", "", "| Модель | Цена от | Где | Рейтинг |", "|---|---|---|---|"]
     for mk in models:
         rows = _collapse_offers(by_model.get(mk, [])) + aggs_by.get(mk, [])
         if not rows:
@@ -208,6 +222,7 @@ def render(topic: str, session: str, full: bool = False) -> dict:
     lines += [s["verdict"], ""] if s.get("verdict") else ["_—_", ""]
     if s.get("caveats"):
         lines += ["Оговорки:"] + [f"- {c}" for c in s["caveats"]] + [""]
+    lines += _spec_leaders_block(s)
     lines += _others_block(others, offers_by, aggs_by)
     lines += _followups_block(sp)
     md = "\n".join(lines)

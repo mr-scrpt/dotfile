@@ -49,13 +49,16 @@ def norm_unit(u: str) -> str:
     return re.sub(r"[\s.]", "", norm(u))
 
 
-def numbers(value: str) -> list[dict]:
-    """Scalars of a value with their raw unit token: '12/24 В' → [{n:12,unit:'В'}, {n:24,unit:'В'}].
+def numbers(value: str, first_part_only: bool = False) -> list[dict]:
+    """Every scalar of a value with its raw unit token.
 
-    Only the first meaningful part is read ('26.5 ", 2560x1440' → the diagonal), shapes are
-    skipped, and a number without its own unit borrows the part's only unit.
+    'Mini LED IPS, відгук 1 мс, 180 Гц' → [{1,'мс'}, {180,'Гц'}] — one value often carries several
+    facts, and a criterion picks its own by unit. Shapes (2560x1440) are never scalars; a number
+    without its own unit borrows its part's only unit ('12/24 В').
+    `first_part_only` keeps the old "leading fact" behaviour for display helpers.
     """
     whole = str(value or "").replace("\u00a0", " ")
+    out: list[dict] = []
     for part in re.split(r",(?!\d)|[()]", whole):
         v = part.strip()
         if not v or SHAPE_RE.search(v):
@@ -66,8 +69,18 @@ def numbers(value: str) -> list[dict]:
             continue
         units = {u for _, u in found if u}
         fallback = next(iter(units)) if len(units) == 1 else ""
-        return [{"n": n, "unit": u or fallback} for n, u in found]
-    return []
+        out += [{"n": n, "unit": u or fallback} for n, u in found]
+        if first_part_only:
+            break
+    return out
+
+
+def _split_key(key: str, after_value: bool) -> tuple[str, str]:
+    """(clean key, tail that belongs to the PREVIOUS value).
+    'Гц Відображення кольорів' → ('Відображення кольорів', 'Гц') — the unit trails 280, not the key."""
+    clean = _clean_key(key, after_value)
+    tail = key[: len(key) - len(clean)].strip() if clean and key.endswith(clean) else ""
+    return clean, tail
 
 
 def _clean_key(key: str, tail_of_previous_value: bool = False) -> str:
@@ -103,8 +116,8 @@ def parse(line: str) -> dict:
         marks = []
         for i, m in enumerate(raw_marks):
             # a key that starts right where the previous value ended may have swallowed its tail
-            after_value = i > 0
-            marks.append((m.start(1), m.end(0), _clean_key(m.group(1), after_value)))
+            clean, tail = _split_key(m.group(1), i > 0)
+            marks.append((m.start(1), m.end(0), clean, tail))
         marks = [m for m in marks if m[2]]
         if not marks:
             flags += [t.strip() for t in segment.split(",") if t.strip()]
@@ -112,9 +125,11 @@ def parse(line: str) -> dict:
         head = segment[: marks[0][0]].strip(" ,")
         if head:
             flags += [t.strip() for t in head.split(",") if t.strip()]
-        for i, (_, val_start, key) in enumerate(marks):
+        for i, (_, val_start, key, _tail) in enumerate(marks):
             end = marks[i + 1][0] if i + 1 < len(marks) else len(segment)
             value = segment[val_start:end].strip(" ,.")
+            if i + 1 < len(marks) and marks[i + 1][3]:
+                value = f"{value} {marks[i + 1][3]}".strip()      # give the unit back to this value
             if key and value:
                 pairs.setdefault(key, value)
     return {"pairs": pairs, "flags": flags, "raw": raw}

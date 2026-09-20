@@ -37,7 +37,7 @@ class ParseLine(unittest.TestCase):
 
     def test_ekatalog_inline_style_and_key_cleanup(self):
         p = spec.parse(EKATALOG_MONITOR)
-        self.assertEqual(p["pairs"]["Матриця"], "WOLED, відгук 0.03 мс, 280")
+        self.assertEqual(p["pairs"]["Матриця"], "WOLED, відгук 0.03 мс, 280 Гц")   # unit returned to the value
         self.assertIn("Відображення кольорів", p["pairs"])        # not "280 Гц Відображення кольорів"
         self.assertNotIn("Гц Відображення кольорів", p["pairs"])
 
@@ -61,7 +61,10 @@ class Numbers(unittest.TestCase):
 
     def test_shapes_and_multi_values(self):
         self.assertEqual(spec.numbers("2560x1440"), [])
-        self.assertEqual(spec.numbers('26.5 ", 2560x1440 (16:9)')[0]["n"], 26.5)      # first part wins
+        self.assertEqual(spec.numbers('26.5 ", 2560x1440 (16:9)')[0]["n"], 26.5)      # shapes skipped
+        # one value, several facts: each criterion picks its own by unit
+        self.assertEqual(spec.numbers("Mini LED IPS, відгук 1 мс, 180 Гц"),
+                         [{"n": 1.0, "unit": "мс"}, {"n": 180.0, "unit": "Гц"}])
         self.assertEqual([x["n"] for x in spec.numbers("12/24 В")], [12.0, 24.0])
         self.assertEqual([x["unit"] for x in spec.numbers("12/24 В")], ["В", "В"])    # borrowed unit
         self.assertEqual([x["n"] for x in spec.numbers("220-230 B")], [220.0, 230.0])  # range, not a sign
@@ -220,6 +223,19 @@ class CandidatesCriteriaFilter(unittest.TestCase):
         r = self.run_discover(criteria=[{"key": "форма", "contains": ["синус"]}], strict=True)
         self.assertEqual([c["model"] for c in r["candidates"]], ["B hybrid"])
 
+    def test_many_survivors_ask_to_narrow(self):
+        rows = [{"group": "aggregator", "source": "hotline", "model": f"M{i}", "title": f"M{i}",
+                 "url": f"https://h/{i}", "offers_count": i,
+                 "notes": f"монітор; діагональ: {24 + i % 4}\"; частота оновлення: {100 + i} Гц"} for i in range(25)]
+        from shopping import core
+        from shopping.core import candidates
+        with mock.patch.object(candidates, "_search_all", return_value=(rows, [], [])):
+            r = core.find_candidates("t", self.sid, "монітор")
+        self.assertTrue(r["needs_narrowing"])
+        keys = {n["key"] for n in r["narrow_suggestions"]}
+        self.assertTrue(keys & {"діагональ", "частота оновлення"}, keys)
+        self.assertNotIn("shortlist", r)          # the plugin never pre-picks leaders
+
     def test_observed_always_returned(self):
         keys = {f["key"] for f in self.run_discover()["observed"]}
         self.assertIn("потужність", keys)
@@ -230,6 +246,90 @@ class CandidatesCriteriaFilter(unittest.TestCase):
         self.assertFalse(r["success"])
         self.assertIn("loosen", r["error"])
         self.assertTrue(r["observed"])
+
+
+class ReconContract(unittest.TestCase):
+    """The research subagent's answer is machine-checked before it can steer the search."""
+
+    GOOD = {"terms": ["Mini LED", "MiniLED"],
+            "variants": [{"name": "Mini-LED IPS", "note": "выше контраст, чем у обычного IPS"}],
+            "quality": [{"key": "зони затемнення", "better": "higher", "note": "больше зон — точнее контраст"}],
+            "criteria": [{"label": "OLED или Mini-LED", "either": [{"key": "матриця", "contains": ["OLED"]},
+                                                                   {"key": "матриця", "contains": ["Mini LED"]}]}],
+            "queries": ["монітор 27 OLED", "монітор 27 Mini LED"],
+            "unknowns": ["количество зон подсветки агрегаторы не печатают"]}
+
+    def test_valid_payload_is_normalised(self):
+        from shopping.core import recon
+        r = recon.validate(self.GOOD)
+        self.assertTrue(r["success"])
+        self.assertEqual(r["recon"]["terms"], ["Mini LED", "MiniLED"])
+        self.assertEqual(len(r["recon"]["criteria"]), 1)
+        self.assertEqual(r["recon"]["queries"], ["монітор 27 OLED", "монітор 27 Mini LED"])
+
+    def test_missing_or_broken_parts_are_rejected(self):
+        from shopping.core import recon
+        self.assertFalse(recon.validate("not a dict")["success"])
+        self.assertFalse(recon.validate({**self.GOOD, "terms": []})["success"])
+        self.assertFalse(recon.validate({**self.GOOD, "criteria": []})["success"])
+        self.assertIn("без `key`", recon.validate({**self.GOOD, "criteria": [{"label": "x"}]})["error"])
+        bad_quality = {**self.GOOD, "quality": [{"key": "зони", "better": "more"}]}
+        self.assertFalse(recon.validate(bad_quality)["success"])
+
+    def test_brief_carries_prompt_and_schema(self):
+        from shopping.core import recon
+        b = recon.brief({"query": "монітор 27 OLED або Mini LED", "purpose": "текст и код",
+                         "must": ["27 дюймов"], "sites": ["hotline"]})
+        self.assertIn("монітор 27 OLED або Mini LED", b["prompt"])
+        self.assertIn("shop_source_plan", b["prompt"])
+        self.assertEqual(b["output_schema"]["required"], ["terms", "criteria"])
+
+
+class CompareTable(unittest.TestCase):
+    """Reviews are collected for EVERY survivor; the plugin never pre-picks leaders."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = mock.patch.dict(os.environ, {"SHOPPING_HOME": self.tmp.name})
+        self.env.start()
+        from shopping import core
+        core.create_topic("t")
+        self.sid = core.create_session("t", "монітор", "код")["session"]["id"]
+        core.update_params("t", self.sid, sites=["hotline"], shortlist=["A", "B"])
+
+    def tearDown(self):
+        self.env.stop()
+        self.tmp.cleanup()
+
+    def test_table_merges_specs_price_and_reviews(self):
+        from shopping import core
+        from shopping.core import compare
+        core.add_findings("t", self.sid, [
+            {"group": "aggregator", "source": "hotline", "model": "A", "url": "https://h/a",
+             "notes": "дисплей: 27\"; частота оновлення: 240 Гц", "price_min_uah": 20000, "offers_count": 30},
+            {"group": "marketplace", "source": "rozetka", "model": "A", "url": "https://r/a", "price_uah": 21000},
+            {"group": "review", "source": "rozetka-reviews", "model": "A", "url": "https://r/a?reviews=1",
+             "rating": 4.5, "rating_count": 40, "nuances": ["мерцание на низкой яркости"], "pros": ["контраст"]},
+            {"group": "aggregator", "source": "hotline", "model": "B", "url": "https://h/b",
+             "notes": "дисплей: 27\"; частота оновлення: 360 Гц", "price_min_uah": 25000, "offers_count": 10},
+        ])
+        with mock.patch.object(compare.plans, "run", return_value={"matched_total": 1}), \
+             mock.patch.object(compare.reviews_mod, "collect", return_value={"sources": [], "signals": []}):
+            r = core.build_comparison("t", self.sid)
+        self.assertTrue(r["success"])
+        rows = {x["model"]: x for x in r["table"]}
+        self.assertEqual(rows["A"]["price_uah"], 21000)
+        self.assertEqual((rows["A"]["rating"], rows["A"]["rating_count"]), (4.5, 40))
+        self.assertIn("мерцание на низкой яркости", rows["A"]["complaints"])
+        self.assertEqual(r["no_reviews"], ["B"])            # B has none — stated, not hidden
+        self.assertEqual(r["table"][0]["model"], "A")       # more reviews first, NOT a verdict
+
+    def test_refuses_when_too_many_models(self):
+        from shopping import core
+        core.update_params("t", self.sid, shortlist=[f"M{i}" for i in range(30)])
+        r = core.build_comparison("t", self.sid)
+        self.assertFalse(r["success"])
+        self.assertIn("сузьте критерии", r["error"])
 
 
 if __name__ == "__main__":

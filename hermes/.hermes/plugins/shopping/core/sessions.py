@@ -111,6 +111,8 @@ def update_params(topic: str, session: str, status: str | None = None, **params)
         return err(f"geo must be one of {GEO}")
     if changes.get("reviews") not in (None, *REVIEW_MODES):
         return err(f"reviews must be one of {REVIEW_MODES}")
+    if changes.get("recon") is not None and not isinstance(changes["recon"], dict):
+        return err("recon must be an object (result of shop_recon)")
     if changes.get("mode") not in (None, *MODES):
         return err(f"mode must be one of {MODES}")
     if changes.get("condition") not in (None, *CONDITIONS):
@@ -133,13 +135,15 @@ def log_event(topic: str, session: str, event: str, detail: Any = None) -> dict:
 
 
 def set_summary(topic: str, session: str, verdict: str = "", picks: list[dict] | None = None,
-                caveats: list[str] | None = None, status: str | None = "done") -> dict:
+                caveats: list[str] | None = None, status: str | None = "done",
+                spec_leaders: list[dict] | None = None) -> dict:
     meta, sp = load(topic, session)
     if meta is None:
         return not_found(topic, session)
     if status and status not in STATUSES:
         return err(f"status must be one of {STATUSES}")
-    meta["summary"] = {"verdict": verdict, "picks": picks or [], "caveats": caveats or [], "ts": now()}
+    meta["summary"] = {"verdict": verdict, "picks": picks or [], "caveats": caveats or [],
+                       "spec_leaders": spec_leaders or [], "ts": now()}
     if status:
         meta["status"] = status
     save(meta, sp, "summary_set", {"picks": len(picks or [])})
