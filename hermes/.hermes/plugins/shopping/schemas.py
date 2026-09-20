@@ -144,6 +144,7 @@ SHOP_MENU = {
         "exclude": _STR_LIST, "only": {**_STR_LIST, "description": "sources: probe only these sites (from the probe menu)"},
         "probe": {"type": "boolean", "description": "sources: run the probe before listing (default true when query given)"},
         "candidates": {"type": "array", "items": {"type": "object"}, "description": "candidates: rows from shop_candidates"},
+        "picked": {**_STR_LIST, "description": "candidates: models you already chose (shortlist) — shown as ★ for confirmation"},
     }, "required": ["kind"]},
 }
 

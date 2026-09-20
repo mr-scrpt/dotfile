@@ -11,11 +11,12 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 
-from . import findings, sessions, sources, spec
+from . import findings, query as q, sessions, sources, spec
 from .findings import model_key
 from .fs import err
 
 MAX_CANDIDATES = 40
+SHORTLIST = 3           # how many leaders go to the deep comparison by default
 MIN_MODELS = 5          # below this the query counts as too narrow → retry with fewer words
 MAX_ATTEMPTS = 3
 
@@ -74,10 +75,9 @@ def compact(r: dict) -> dict:
 
 
 def shorter(query: str) -> str | None:
-    """Drop the least selective trailing word (aggregator search is AND-ish: every extra word
-    narrows the result set). 'інвертор 24V чистий синус' → 'інвертор 24V чистий' → 'інвертор 24V'."""
-    words = query.split()
-    return " ".join(words[:-1]) if len(words) > 2 else None
+    """Next, wider variant of a query (see core.query.variants) or None when it cannot widen."""
+    vs = q.variants(query, max_attempts=2)
+    return vs[1] if len(vs) > 1 else None
 
 
 def _search_all(query: str) -> tuple[list[dict], list[dict], list[str]]:
@@ -153,8 +153,12 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
         return err(f"no candidates for {query!r} — {hint}", scanned=scanned,
                    observed=spec.observe([r.get("notes") or "" for r in in_cat]),
                    dropped_by_spec=dropped_by_spec[:6])
+    shortlist = [compact(r) for r in ranked[:SHORTLIST]]
     return {"success": True, "query": tried[-1], "query_tried": tried, "category": category, "scanned": scanned,
             "models": len(ranked), "categories": cats[:8], "errors": errors,
+            "shortlist": [c["model"] for c in shortlist],
+            "shortlist_why": "лидеры по числу предложений и отзывов среди прошедших критерии — "
+                             "сравнивай их, полный список идёт в отчёт",
             "observed": spec.observe([r.get("notes") or "" for r in in_cat]),
             "criteria_shown": spec.describe(criteria),
             "dropped_by_spec": dropped_by_spec[:6], "dropped_count": len(dropped_by_spec),

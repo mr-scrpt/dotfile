@@ -254,9 +254,10 @@ class FetchService(unittest.TestCase):
 
     def test_candidates_retry_shortens_the_query(self):
         from shopping.core import candidates
-        self.assertEqual(candidates.shorter("інвертор 24V чистий синус"), "інвертор 24V чистий")
-        self.assertEqual(candidates.shorter("інвертор 24V чистий"), "інвертор 24V")
-        self.assertIsNone(candidates.shorter("інвертор 24V"))
+        # spec-ish tokens are dropped before meaningful words (see core.query.variants)
+        self.assertEqual(candidates.shorter("інвертор 24V чистий синус"), "інвертор чистий синус")
+        self.assertEqual(candidates.shorter("монітор 27 OLED 2K 100 Гц"), "монітор 27 OLED 2K 100")
+        self.assertIsNone(candidates.shorter("кавомашина"))
         calls: list[str] = []
 
         def fake(q):
@@ -267,8 +268,8 @@ class FetchService(unittest.TestCase):
 
         with mock.patch.object(candidates, "_search_all", side_effect=fake):
             r = core.find_candidates("monitor", self.sid, "інвертор 24V чистий синус")
-        self.assertEqual(r["query_tried"], ["інвертор 24V чистий синус", "інвертор 24V чистий", "інвертор 24V"])
-        self.assertEqual((r["query"], r["models"]), ("інвертор 24V", 8))
+        self.assertEqual(r["query_tried"], ["інвертор 24V чистий синус", "інвертор чистий синус", "інвертор чистий"])
+        self.assertEqual((r["query"], r["models"]), ("інвертор чистий", 8))
 
     def test_fetch_hotline_merges_into_candidate_row(self):
         page_sr, page_pr = gz("hotline_search.html.gz"), gz("hotline_prices.html.gz")

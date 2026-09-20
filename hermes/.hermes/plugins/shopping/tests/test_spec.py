@@ -126,6 +126,40 @@ class Evaluate(unittest.TestCase):
         self.assertIn("(желательно)", lines[2])
 
 
+class EitherGroups(unittest.TestCase):
+    """OR across criteria: "OLED или Mini-LED" — different sites word it in different keys."""
+
+    PANEL = {"label": "OLED или Mini-LED", "either": [
+        {"key": "матриця", "contains": ["OLED"], "label": "OLED"},
+        {"key": "матриця", "contains": ["Mini LED", "Mini-LED"], "label": "Mini-LED"},
+        {"key": "яскравість", "any_of": [{"min": 1000, "unit": "кд/м²"}], "label": "1000+ нит"}]}
+
+    EK_OLED = 'Екран: 26.5 ", 2560x1440 (16:9) Матриця: QD-OLED, відгук 0.03 мс, 240 Гц'
+    EK_MINILED = 'Екран: 27 ", 2560x1440 (16:9) Матриця: Mini LED IPS, відгук 1 мс, 180 Гц'
+    HL_MINILED = 'дисплей: 27"; VA; 2560x1440; 180 Гц; максимальна яскравість: 1000 кд/м²'
+    HL_PLAIN = 'дисплей: 27"; IPS; 2560x1440; 100 Гц; максимальна яскравість: 300 кд/м²'
+
+    def test_any_branch_passes(self):
+        for line in (self.EK_OLED, self.EK_MINILED, self.HL_MINILED):
+            self.assertTrue(spec.evaluate(line, [self.PANEL])[0], line[:40])
+
+    def test_all_branches_fail_rejects(self):
+        ok, failed, _ = spec.evaluate(self.HL_PLAIN, [self.PANEL])
+        self.assertFalse(ok)
+        self.assertIn("OLED или Mini-LED", failed[0])
+
+    def test_silent_spec_is_unverifiable_not_rejected(self):
+        ok, failed, unknown = spec.evaluate("монітор 27", [self.PANEL])
+        self.assertTrue(ok)
+        self.assertEqual(failed, [])
+        self.assertIn("ни одна ветка", unknown[0])
+
+    def test_unit_with_slash_survives(self):
+        self.assertEqual(spec.numbers("1000 кд/м²"), [{"n": 1000.0, "unit": "кд/м²"}])
+        self.assertEqual(spec.numbers("1200 об/хв"), [{"n": 1200.0, "unit": "об/хв"}])
+        self.assertEqual([x["n"] for x in spec.numbers("12/24 В")], [12.0, 24.0])   # still a separator
+
+
 class Observe(unittest.TestCase):
     def test_observe_describes_the_result_set(self):
         lines = [HOTLINE_INVERTER, HOTLINE_HYBRID,

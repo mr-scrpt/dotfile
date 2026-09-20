@@ -28,8 +28,10 @@ import unicodedata
 
 # A unit is whatever token trails the number — never enumerated.
 # A '-' straight after a digit is a range separator ("220-230 В"), not a minus sign.
+# The unit token may itself contain '/' ("кд/м²", "об/хв") — but '/' between two NUMBERS is a
+# separator ("12/24 В"), so a slash is part of the unit only when a digit does not follow it.
 NUM_RE = re.compile(r"((?<![\d,.])-?\d+(?:[.,]\d+)?)\s*"
-                    r"((?:[^\W\d_]|[°%\"″·])[^\s,;()/]{0,11})?(?=[\s,;()/-]|$)")
+                    r"((?:[^\W\d_]|[°%\"″·])(?:[^\s,;()/]|/(?!\d)){0,14})?(?=[\s,;()]|/\d|-\d|$)")
 # "Ключ: " — a few words ending at a colon.
 KEY_RE = re.compile(r"(?:^|[;\u2022]\s*|\s)([A-Za-zА-Яа-яІЇЄҐіїєґ][\w'’\-()/ ]{1,45}?):\s*")
 SHAPE_RE = re.compile(r"\d\s*[xх×]\s*\d")      # 2560x1440, 520 x 240 x 220 — not a scalar
@@ -143,7 +145,22 @@ def _rule_ok(nums: list[dict], rule: dict) -> bool:
 
 
 def check(spec: dict, criterion: dict) -> tuple[bool | None, str]:
-    """(True | False | None = the spec does not state it, human explanation)."""
+    """(True | False | None = the spec does not state it, human explanation).
+
+    A criterion may be a GROUP: {"label": "…", "either": [criterion, criterion, …]} passes when
+    ANY branch passes — that is how "OLED или Mini-LED" is expressed, since a site may spell the
+    two in different keys (Матриця: QD-OLED vs Матриця: Mini LED IPS) or only in the title.
+    """
+    branches = criterion.get("either")
+    if branches:
+        label = criterion.get("label") or " / ".join(b.get("label") or b.get("key", "?") for b in branches)
+        results = [check(spec, b) for b in branches]
+        if any(ok is True for ok, _ in results):
+            why = next(w for ok, w in results if ok is True)
+            return True, f"{label}: {why}"
+        if all(ok is None for ok, _ in results):
+            return None, f"{label}: ни одна ветка не указана в спеке"
+        return False, f"{label}: " + "; ".join(w for ok, w in results if ok is False)[:110]
     key = criterion.get("key") or ""
     label = criterion.get("label") or key or "критерий"
     actual_key, value = find(spec["pairs"], key)

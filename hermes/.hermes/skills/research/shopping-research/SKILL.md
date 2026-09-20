@@ -90,6 +90,11 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
        RAW unit token, the range seen ("номінальна потужність: кBт 2–4.2", "потужність: Вт 300–5000").
        For the exact-model case use `shop_resolve`/`shop_source_plan(action="sample")` instead —
        same idea: read the parameters off the real card.
+   4.1b NEVER declare a variant absent from memory. If the user names an option you are unsure
+       about (Mini-LED, an obscure standard, a niche form factor), FIND OUT before filtering:
+       sample 2–3 sources for it (`shop_source_plan(action="sample")`), look at how they spell it
+       and whether the aggregators expose it as a key, a word in the title, or not at all. Only
+       then decide how to express it. Saying "нет на рынке" without a sample is a hard error.
    4.2 Author the criteria from `observed`, one entry per parameter:
        `{"key": "потужність", "label": "2–3 кВт",
          "any_of": [{"min": 2000, "max": 3000, "unit": "Вт"}, {"min": 2, "max": 3, "unit": "кBт"}],
@@ -97,6 +102,14 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
        Units are compared AS WRITTEN and never converted, so cover every spelling `observed`
        showed (both "Вт" and "кBт"). `contains` is a substring test over the value and the whole
        spec line. Mark a nice-to-have with `"required": false`.
+       ALTERNATIVES ("OLED или Mini-LED") are ONE criterion with `either`, never two searches:
+         {"label": "OLED или Mini-LED", "either": [
+            {"key": "матриця", "contains": ["OLED"]},
+            {"key": "матриця", "contains": ["Mini LED", "Mini-LED"]},
+            {"key": "яскравість", "any_of": [{"min": 1000, "unit": "кд/м²"}], "label": "прокси"}]}
+       A branch may be a PROXY when a site does not print the parameter itself (hotline never
+       writes "Mini LED", but 1000+ кд/м² separates it from ordinary IPS/VA) — label it as a
+       proxy and verify those hits on a source that does print it before they reach the picks.
        Per search type: (a) exact model — derive the criteria from the card and check nothing is
        missing; (b) parameters given — restate the user's words as criteria against `observed`
        wording; (c) nothing known — read `observed`, pick the parameters that actually separate
@@ -109,9 +122,16 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
        the criterion `dropped_by_spec` blames. A card whose spec is silent is KEPT and flagged
        `unverified` — never claim such a model lacks the feature (add `strict=true` only when the
        user insists on verified-only).
-   Then `shop_menu(kind="candidates", candidates=[rows])` → the user ticks models →
-   `shop_update_params(shortlist=values)`. Done: 1–12 models in `params.shortlist`, criteria stored.
-   mode=exact: `shortlist = [query]`, no candidates menu.
+   4.5 The shortlist is YOUR decision, not a question. `shop_candidates` already returns
+       `shortlist` (top-3 by market presence among the survivors); adjust it with judgement —
+       purpose, price, reviews count, variety (e.g. do not take three near-identical MSI) — and
+       store it: `shop_update_params(shortlist=[...])`. Show the user the 3 leaders WITH the
+       reason each is there, and mention that the full list of survivors goes into the report.
+       Only offer `shop_menu(kind="candidates", candidates=rows, picked=shortlist)` when the user
+       asks to change the selection, or when two candidates are genuinely tied for the last slot.
+       NEVER ask "какие модели сравнивать?" as the default step — the user wants an answer, not
+       a quiz. Done: `params.shortlist` has 3 (±1) models and the user knows why.
+   mode=exact: `shortlist = [query]`, no candidates call at all.
 4b. Per-source plans — the same criteria, expressed in each source's own language.
    `shop_source_plan(action="capabilities", sites=params.sites)` → what each source can do.
    For a source you have not searched before, or whose wording you are unsure of:
@@ -197,6 +217,10 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
   semantics (author criteria from `observed`, word them for the user, split them per source,
   read the review digest, write the verdict). Never re-implement a plugin step by hand, and
   never let the plugin guess a parameter.
+- Site search is AND-ish: a full brief as one query returns zero almost everywhere. The plugin
+  widens queries itself (`query_used`/`query_tried` in the probe and in shop_candidates) — so a
+  site reporting 0 means "this query shape found nothing", not "this shop has no such goods".
+  Check `query_used` before concluding a source is empty.
 - Politeness is enforced by the plugin (per-host delay + jitter, response cache, cooldown after a
   block), declared per source in `source.yaml: rate:`. Never loop a site by hand, never retry a
   blocked source: `shop_source_plan(action="state")` shows who is cooling down and for how long.

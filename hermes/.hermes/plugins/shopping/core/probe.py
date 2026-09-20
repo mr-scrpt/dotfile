@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from . import sources
+from . import query as q, sources
 
 SAMPLE = 3
 MAX_CATS = 6            # top categories by count kept per site (what the menu shows)
@@ -22,12 +22,25 @@ def sites(exclude: list[str] | None = None) -> list[dict]:
 
 
 def _probe_one(site: str, query: str) -> dict:
+    """Probe one site, widening the query until it answers: site search is AND-ish, so a full
+    brief ("монітор 27 OLED 2K 100 Гц") returns zero almost everywhere while "монітор 27 OLED"
+    returns the whole category. The query that worked is reported back."""
     meta: dict = {}
-    try:
-        mod = sources.get(site).module()
-        hits = mod.search(query, meta, **(getattr(mod, "PROBE_KWARGS", {}) or {}))
-    except Exception as e:  # noqa: BLE001 — a dead site must not kill the probe
-        return {"site": site, "probed": True, "error": f"{type(e).__name__}: {e}"[:120], "hits": 0, "sample": []}
+    err: str | None = None
+
+    def run(variant: str):
+        nonlocal err, meta
+        meta = {}
+        try:
+            mod = sources.get(site).module()
+            return mod.search(variant, meta, **(getattr(mod, "PROBE_KWARGS", {}) or {}))
+        except Exception as e:  # noqa: BLE001 — a dead site must not kill the probe
+            err = f"{type(e).__name__}: {e}"[:120]
+            return None
+
+    hits, used, tried = q.widen(query, run)
+    if hits is None:
+        return {"site": site, "probed": True, "error": err or "search failed", "hits": 0, "sample": []}
     seen, cats = set(), []
     for c in meta.get("categories") or []:
         if c.get("name") and c["name"] not in seen:
@@ -35,6 +48,7 @@ def _probe_one(site: str, query: str) -> dict:
             cats.append(c)
     cats.sort(key=lambda c: -(c.get("count") or 0))
     return {"site": site, "probed": True, "hits": len(hits), "total_est": meta.get("total_est"),
+            "query_used": used, "query_tried": tried if len(tried) > 1 else None,
             "categories": cats[:MAX_CATS],
             "sample": [{"title": (h.get("title") or "")[:90], "price_uah": h.get("price_uah")} for h in hits[:SAMPLE]]}
 
@@ -52,9 +66,14 @@ def probe(query: str, exclude: list[str] | None = None, only: list[str] | None =
         return {"success": False, "error": "no scripted site left to probe", "sites": []}
     with ThreadPoolExecutor(max_workers=min(8, max(1, len(scripted)))) as pool:
         futs = {pool.submit(_probe_one, s, query): s for s in scripted}
-        for f in as_completed(futs, timeout=TIMEOUT_S):
-            r = f.result()
-            results[r["site"]] = r
+        try:
+            for f in as_completed(futs, timeout=TIMEOUT_S):
+                r = f.result()
+                results[r["site"]] = r
+        except TimeoutError:            # slow/throttled sources: report what came back in time
+            for f, s in futs.items():
+                if f.done() and s not in results:
+                    results[s] = f.result()
     rows = []
     for s in sites():
         r = results.get(s["site"])

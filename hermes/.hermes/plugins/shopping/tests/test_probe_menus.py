@@ -380,6 +380,60 @@ class EkatalogSuggestPath(unittest.TestCase):
         self.assertTrue(meta["suggestions"])
 
 
+class QueryWidening(unittest.TestCase):
+    """Site search is AND-ish: a full brief must be widened until the source answers."""
+
+    def test_variants_drop_spec_tokens_first(self):
+        from shopping.core import query
+        self.assertEqual(query.variants("монітор 27 OLED 2K 100 Гц"),
+                         ["монітор 27 OLED 2K 100 Гц", "монітор 27 OLED 2K 100", "монітор 27 OLED 2K", "монітор 27 OLED"])
+        self.assertEqual(query.variants("кавомашина"), ["кавомашина"])
+
+    def test_widen_stops_at_the_first_answering_variant(self):
+        from shopping.core import query
+        tried = []
+
+        def run(v):
+            tried.append(v)
+            return ["hit"] * (3 if v.count(" ") <= 2 else 0)
+
+        res, used, all_tried = query.widen("монітор 27 OLED 2K 100 Гц", run)
+        self.assertEqual(len(res), 3)
+        self.assertEqual(used, "монітор 27 OLED")
+        self.assertEqual(all_tried, tried)
+
+    def test_probe_widens_per_site_and_reports_the_query(self):
+        from shopping.core import probe as probe_mod2, sources as src
+        calls = []
+
+        class FakeMod:
+            @staticmethod
+            def search(q, meta=None, **kw):
+                calls.append(q)
+                if q.count(" ") > 2:
+                    return []
+                if meta is not None:
+                    meta["total_est"] = 12
+                return [{"title": "Монітор X"}] * 12
+
+        with unittest.mock.patch.object(src, "get", return_value=type("S", (), {"module": lambda self: FakeMod()})()):
+            r = probe_mod2._probe_one("hotline", "монітор 27 OLED 2K 100 Гц")
+        self.assertEqual(r["hits"], 12)
+        self.assertEqual(r["query_used"], "монітор 27 OLED")
+        self.assertTrue(len(calls) > 1)
+
+
+class CandidatesShortlist(unittest.TestCase):
+    def test_menu_marks_the_plugin_choice_for_confirmation(self):
+        rows = [{"model": "A", "price_min_uah": 1, "price_max_uah": 2, "offers": 9},
+                {"model": "B", "price_min_uah": 3, "price_max_uah": 4, "offers": 2}]
+        m = menus.candidates_menu(rows, picked=["A"])
+        self.assertTrue(m["items"][0]["label"].startswith("★ A"))
+        self.assertFalse(m["items"][1]["label"].startswith("★"))
+        self.assertIn("заменить выбор", m["question"])
+        self.assertIn("Какие модели", menus.candidates_menu(rows)["question"])
+
+
 class ModeMenus(unittest.TestCase):
     def test_mode_menu_puts_reference_first_for_urls(self):
         from shopping.core import menus

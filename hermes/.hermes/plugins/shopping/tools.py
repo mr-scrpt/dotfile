@@ -75,7 +75,7 @@ def _menu(args: dict, **kw) -> str:
                 pr = core.probe_sites_search(args["query"], exclude=args.get("exclude"), only=args.get("only"))
             menu = core.menus.sources_menu(pr, exclude=args.get("exclude"))
         elif kind == "candidates":
-            menu = core.menus.candidates_menu(args.get("candidates") or [])
+            menu = core.menus.candidates_menu(args.get("candidates") or [], args.get("picked"))
         elif kind == "reviews":
             menu = core.menus.reviews_menu()
         else:
