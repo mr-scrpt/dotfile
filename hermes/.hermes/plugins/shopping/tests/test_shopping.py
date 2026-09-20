@@ -106,6 +106,12 @@ class Findings(Base):
         self.assertEqual(fmt_rating({"rating": 5.0}), "5")
         self.assertEqual(fmt_rating({}), "—")
 
+    def test_decimal_prices_are_truncated_not_glued(self):
+        r = core.add_findings("monitor", self.sid, [dict(OFFER, url="https://x/dec", price_min_uah=10796.55, price_uah=None)])
+        self.assertEqual(r["added"], 1)
+        row = [f for f in core.list_findings("monitor", self.sid)["findings"] if f["url"].endswith("/dec")][0]
+        self.assertEqual(row["price_min_uah"], 10796)
+
     def test_filters(self):
         self.add(OFFER, {"group": "review", "model": "lg-27gs95qe-b", "url": "https://r/1", "nuances": ["coil whine"]})
         self.assertEqual(core.list_findings("monitor", self.sid, group="review")["count"], 1)

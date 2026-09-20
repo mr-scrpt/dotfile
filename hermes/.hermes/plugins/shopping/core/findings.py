@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from .http import to_int
 from .fs import err, now, read_jsonl, write_jsonl
 from .model import GEO, GROUPS
 from . import sessions
@@ -80,10 +81,10 @@ def coerce(raw: dict) -> tuple[dict | None, str | None]:
         f[k] = _dedupe_ci([str(x).strip() for x in (v or [])])
     for k in INT_FIELDS:
         if f[k] is not None:
-            digits = re.sub(r"[^\d]", "", str(f[k]))
-            if not digits:
+            v = to_int(f[k])          # shared parser: '10796.55' → 10796, never 1079655
+            if v is None:
                 return None, f"{k} must be numeric"
-            f[k] = int(digits)
+            f[k] = v
     if f["rating"] is not None:
         try:
             f["rating"] = float(str(f["rating"]).replace(",", "."))

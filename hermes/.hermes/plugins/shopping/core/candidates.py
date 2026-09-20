@@ -16,6 +16,8 @@ from .findings import model_key
 from .fs import err
 
 MAX_CANDIDATES = 40
+MIN_MODELS = 5          # below this the query counts as too narrow → retry with fewer words
+MAX_ATTEMPTS = 3
 
 
 def _hotline(query: str, pages: int, category: str | None) -> tuple[list[dict], dict]:
@@ -68,6 +70,29 @@ def compact(r: dict) -> dict:
             "spec": (r.get("notes") or "")[:160], "url": r["url"], "category": r.get("category") or ""}
 
 
+def shorter(query: str) -> str | None:
+    """Drop the least selective trailing word (aggregator search is AND-ish: every extra word
+    narrows the result set). 'інвертор 24V чистий синус' → 'інвертор 24V чистий' → 'інвертор 24V'."""
+    words = query.split()
+    return " ".join(words[:-1]) if len(words) > 2 else None
+
+
+def _search_all(query: str) -> tuple[list[dict], list[dict], list[str]]:
+    errors: list[str] = []
+    rows: list[dict] = []
+    cats: list[dict] = []
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        futs = {"hotline": ex.submit(_hotline, query, 2, None), "ekatalog": ex.submit(_ekatalog, query)}
+    for name, fut in futs.items():
+        try:
+            got, m = fut.result()
+            rows += got
+            cats += m.get("categories") or []
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{name}: {e}")
+    return rows, cats, errors
+
+
 def discover(topic: str, session: str, query: str, category: str | None = None, pages: int = 2,
              store: bool = True) -> dict:
     meta, sp = sessions.load(topic, session)
@@ -75,22 +100,24 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
         return sessions.not_found(topic, session)
     category = category or (meta.get("params") or {}).get("category") or None
     errors: list[str] = []
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        fh = ex.submit(_hotline, query, pages, category)
-        fe = ex.submit(_ekatalog, query)
+    tried: list[str] = []
+    q = query
     rows: list[dict] = []
     cats: list[dict] = []
-    for name, fut in (("hotline", fh), ("ekatalog", fe)):
-        try:
-            got, m = fut.result()
-            rows += got
-            cats += m.get("categories") or []
-        except Exception as e:  # noqa: BLE001
-            errors.append(f"{name}: {e}")
-            sessions.log_event(topic, session, "source_blocked", f"{name} candidates: {e}")
-    scanned = len(rows)
-    rows = [r for r in rows if _category_ok(r, category)]
-    ranked = rank(rows)[:MAX_CANDIDATES]
+    ranked: list[dict] = []
+    scanned = 0
+    for _ in range(MAX_ATTEMPTS):
+        tried.append(q)
+        rows, cats, errs = _search_all(q)
+        for e in errs:
+            sessions.log_event(topic, session, "source_blocked", f"candidates {q!r}: {e}")
+        errors = errs
+        scanned = len(rows)
+        ranked = rank([r for r in rows if _category_ok(r, category)])[:MAX_CANDIDATES]
+        nxt = shorter(q)
+        if len(ranked) >= MIN_MODELS or not nxt:
+            break
+        q = nxt
     for r in ranked:
         r.pop("spec", None)
         r.pop("date", None)
@@ -98,9 +125,10 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
     stored = findings.add(topic, session, [{k: v for k, v in r.items() if k in allowed} for r in ranked]) \
         if store and ranked else {"added": 0, "merged": 0}
     sessions.log_event(topic, session, "source_done",
-                       f"candidates {query!r}: {scanned} cards, {len(ranked)} models" + (f" ({', '.join(errors)})" if errors else ""))
+                       f"candidates {tried[-1]!r} (tried {len(tried)}): {scanned} cards, {len(ranked)} models"
+                       + (f" ({', '.join(errors)})" if errors else ""))
     if not ranked and not errors:
         return err(f"no candidates for {query!r} — try a shorter query (brand/type only) or another category", scanned=scanned)
-    return {"success": True, "query": query, "category": category, "scanned": scanned, "models": len(ranked),
+    return {"success": True, "query": tried[-1], "query_tried": tried, "category": category, "scanned": scanned, "models": len(ranked),
             "categories": cats[:8], "errors": errors, "stored": {k: stored[k] for k in ("added", "merged")},
             "candidates": [compact(r) for r in ranked]}

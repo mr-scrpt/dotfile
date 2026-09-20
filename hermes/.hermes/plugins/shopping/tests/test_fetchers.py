@@ -252,6 +252,24 @@ class FetchService(unittest.TestCase):
             r2 = core.find_candidates("monitor", self.sid, "монітор", category="Телевізори", pages=1)
         self.assertTrue(all(c["category"] == "" for c in r2["candidates"]))   # hotline rows (Монітори) all dropped; ekatalog has no category
 
+    def test_candidates_retry_shortens_the_query(self):
+        from shopping.core import candidates
+        self.assertEqual(candidates.shorter("інвертор 24V чистий синус"), "інвертор 24V чистий")
+        self.assertEqual(candidates.shorter("інвертор 24V чистий"), "інвертор 24V")
+        self.assertIsNone(candidates.shorter("інвертор 24V"))
+        calls: list[str] = []
+
+        def fake(q):
+            calls.append(q)
+            rows = [{"group": "aggregator", "source": "hotline", "model": f"M{i}", "title": f"M{i}",
+                     "url": f"https://h/{i}", "offers_count": i} for i in range(1, 9)]
+            return (rows if len(q.split()) <= 2 else rows[:1]), [], []
+
+        with mock.patch.object(candidates, "_search_all", side_effect=fake):
+            r = core.find_candidates("monitor", self.sid, "інвертор 24V чистий синус")
+        self.assertEqual(r["query_tried"], ["інвертор 24V чистий синус", "інвертор 24V чистий", "інвертор 24V"])
+        self.assertEqual((r["query"], r["models"]), ("інвертор 24V", 8))
+
     def test_fetch_hotline_merges_into_candidate_row(self):
         page_sr, page_pr = gz("hotline_search.html.gz"), gz("hotline_prices.html.gz")
         from shopping.core.sources.ekatalog import fetcher as ekatalog
