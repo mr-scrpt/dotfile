@@ -28,6 +28,7 @@ Bundled Hermes skills stay in `~/.hermes/skills/` unmanaged; only our own live h
     core/findings.py       finding schema/coercion, URL dedup + merge, resume context
     core/fetch.py          shop_fetch (scripted offers per model; category/condition filters)
     core/candidates.py     shop_candidates (universal shortlist from hotline + e-katalog)
+    core/spec.py           category-agnostic spec parsing: line → key/value, units, want filter, facets
     core/resolve.py        shop_resolve (owned device → title/spec, reference mode)
     core/reviews.py        shop_reviews (parallel buyer reviews → token-cheap digest)
     core/probe.py          parallel hit-count probe over scripted sites (status per site)

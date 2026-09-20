@@ -64,7 +64,12 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
         rng = re.search(r"Ціни\s*(\d+)\s*від\s*([\d\s\u00a0]+)\s*до\s*([\d\s\u00a0]+)\s*грн", t)
         one = re.search(r"Ціни\s*(\d+)\s*([\d\s\u00a0]{4,})\s*грн", t) if not rng else None
         cnt = re.search(r"Відгуки\s*(\d+)", t)
-        spec = re.search(r"(Екран:.*?)(?:Відгуки|Відео|Фото|Ціни|$)", t)
+        # spec = the card's description block, cut before the media/price tail.
+        # Category-agnostic: works for мониторы, пральні машини, кавомашини alike.
+        desc = re.search(r'class="model-short-description"(.*?)(?:<div class="model-short-price|<table|$)', c, re.S)
+        spec_text = text(desc.group(1)) if desc else ""
+        spec_text = spec_text.lstrip("> ").strip()
+        spec = re.split(r"\s(?:Фото|Відео|Інструкці|Відгуки|Ціни|Порівняти)\b", spec_text)[0].strip()
         out.append({
             "group": GROUP, "source": SITE, "title": text(a.group(2)), "model": model_from_title(text(a.group(2))),
             "url": BASE + a.group(1),
@@ -74,7 +79,7 @@ def parse_search(page: str, meta: dict | None = None) -> list[dict]:
             "rating_count": to_int(cnt.group(1)) if cnt else None,
             "availability": "" if (rng or one) else "нет предложений",
             "delivery_scope": "ua_local",
-            "notes": text(spec.group(1))[:200] if spec else "",
+            "notes": spec[:240],
         })
     return out
 

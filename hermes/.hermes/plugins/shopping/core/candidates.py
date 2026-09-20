@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 
-from . import findings, sessions, sources
+from . import findings, sessions, sources, spec
 from .findings import model_key
 from .fs import err
 
@@ -65,9 +65,12 @@ def rank(rows: list[dict]) -> list[dict]:
 
 
 def compact(r: dict) -> dict:
-    return {"model": r.get("model") or r.get("title"), "price_min_uah": r.get("price_min_uah"),
-            "price_max_uah": r.get("price_max_uah"), "offers": r.get("offers_count"), "reviews": r.get("rating_count"),
-            "spec": (r.get("notes") or "")[:160], "url": r["url"], "category": r.get("category") or ""}
+    out = {"model": r.get("model") or r.get("title"), "price_min_uah": r.get("price_min_uah"),
+           "price_max_uah": r.get("price_max_uah"), "offers": r.get("offers_count"), "reviews": r.get("rating_count"),
+           "spec": (r.get("notes") or "")[:160], "url": r["url"], "category": r.get("category") or ""}
+    if r.get("unverified"):
+        out["unverified"] = r["unverified"]          # constraints this card's spec does not state
+    return out
 
 
 def shorter(query: str) -> str | None:
@@ -94,13 +97,19 @@ def _search_all(query: str) -> tuple[list[dict], list[dict], list[str]]:
 
 
 def discover(topic: str, session: str, query: str, category: str | None = None, pages: int = 2,
-             store: bool = True) -> dict:
+             want: dict | None = None, strict: bool = False, store: bool = True) -> dict:
+    """`want` filters by the aggregator's own characteristics line, e.g.
+    {"потужність": [2000, 3000], "форма": "синус"} — a range, an exact number or a substring.
+    Keys are matched loosely, so the caller needs no knowledge of the category's wording.
+    Rows whose spec is silent about a constraint are kept (listed in `unverified`) unless
+    `strict=True`. The response always carries `facets`: what parameters this category has."""
     meta, sp = sessions.load(topic, session)
     if meta is None:
         return sessions.not_found(topic, session)
     category = category or (meta.get("params") or {}).get("category") or None
     errors: list[str] = []
     tried: list[str] = []
+    dropped_by_spec: list[dict] = []
     q = query
     rows: list[dict] = []
     cats: list[dict] = []
@@ -113,10 +122,19 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
             sessions.log_event(topic, session, "source_blocked", f"candidates {q!r}: {e}")
         errors = errs
         scanned = len(rows)
-        ranked = rank([r for r in rows if _category_ok(r, category)])[:MAX_CANDIDATES]
+        in_cat = [r for r in rows if _category_ok(r, category)]
+        kept: list[dict] = []
+        for r in in_cat:
+            ok, failed, unknown = spec.match(r.get("notes") or "", want, strict)
+            if not ok:
+                dropped_by_spec.append({"model": r.get("model") or r.get("title"), "why": "; ".join(failed or unknown)[:120]})
+                continue
+            kept.append(dict(r, unverified=unknown) if unknown else r)
+        ranked = rank(kept)[:MAX_CANDIDATES]
         nxt = shorter(q)
         if len(ranked) >= MIN_MODELS or not nxt:
             break
+        dropped_by_spec = []
         q = nxt
     for r in ranked:
         r.pop("spec", None)
@@ -126,9 +144,17 @@ def discover(topic: str, session: str, query: str, category: str | None = None, 
         if store and ranked else {"added": 0, "merged": 0}
     sessions.log_event(topic, session, "source_done",
                        f"candidates {tried[-1]!r} (tried {len(tried)}): {scanned} cards, {len(ranked)} models"
+                       + (f", {len(dropped_by_spec)} dropped by want" if dropped_by_spec else "")
                        + (f" ({', '.join(errors)})" if errors else ""))
     if not ranked and not errors:
-        return err(f"no candidates for {query!r} — try a shorter query (brand/type only) or another category", scanned=scanned)
-    return {"success": True, "query": tried[-1], "query_tried": tried, "category": category, "scanned": scanned, "models": len(ranked),
-            "categories": cats[:8], "errors": errors, "stored": {k: stored[k] for k in ("added", "merged")},
+        hint = ("all cards failed `want` — loosen a constraint or check the facets below"
+                if dropped_by_spec else "try a shorter query (brand/type only) or another category")
+        return err(f"no candidates for {query!r} — {hint}", scanned=scanned,
+                   facets=spec.facets([r.get("notes") or "" for r in in_cat]),
+                   dropped_by_spec=dropped_by_spec[:6])
+    return {"success": True, "query": tried[-1], "query_tried": tried, "category": category, "scanned": scanned,
+            "models": len(ranked), "categories": cats[:8], "errors": errors,
+            "facets": spec.facets([r.get("notes") or "" for r in in_cat]),
+            "dropped_by_spec": dropped_by_spec[:6], "dropped_count": len(dropped_by_spec),
+            "stored": {k: stored[k] for k in ("added", "merged")},
             "candidates": [compact(r) for r in ranked]}

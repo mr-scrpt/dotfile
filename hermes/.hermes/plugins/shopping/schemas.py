@@ -102,11 +102,21 @@ SHOP_SOURCES = {"name": "shop_sources", "description": "Source catalogue (sites,
 
 SHOP_CANDIDATES = {
     "name": "shop_candidates",
-    "description": "Universal shortlist discovery: searches hotline (2 pages) + e-katalog with the query, keeps cards in `category` (from the probe), dedupes by model, ranks by offers/reviews, stores aggregator findings. Returns ≤40 {model, price range, offers, reviews, spec line, url}. Check the user's must-list against `spec`, then shop_menu(candidates).",
-    "parameters": {"type": "object", "properties": {**_TS, "query": {"type": "string", "description": "short product query in Ukrainian, e.g. 'монітор 27 OLED', 'інвертор 24V'"},
-                                                    "category": {"type": "string", "description": "aggregator category name from the probe (default: params.category)"},
-                                                    "pages": {"type": "integer", "description": "hotline pages (default 2, 48 cards each)"}},
-                   "required": ["topic", "session", "query"]},
+    "description": ("Universal shortlist for ANY product category: searches hotline + e-katalog, keeps cards of `category`, "
+                    "filters by `want` against each card's own characteristics line, dedupes by model, ranks by offers/reviews, "
+                    "stores aggregator findings. Returns ≤40 candidates + `facets` (what parameters this category has, with ranges "
+                    "and common values) + `dropped_by_spec`. Widens a too-narrow query automatically (see query_tried). "
+                    "Use facets when the user does not know which parameters to ask for."),
+    "parameters": {"type": "object", "properties": {
+        **_TS, "query": {"type": "string", "description": "short product query in Ukrainian, e.g. 'монітор 27 OLED', 'інвертор 24V'"},
+        "category": {"type": "string", "description": "aggregator category name from the probe (default: params.category)"},
+        "want": {"type": "object", "description": ("constraints checked against the card's spec line; keys are matched loosely "
+                                                   "('потужність' finds 'номінальна потужність'). Value forms: [min, max] or [min] = numeric range "
+                                                   "in the value's own unit (3 кВт == 3000 Вт), a number = exact ±2%, a string or list of strings = substring. "
+                                                   "Example: {\"потужність\": [2000, 3000], \"форма\": \"синус\", \"напруга\": 24}")},
+        "strict": {"type": "boolean", "description": "also drop cards whose spec does not state a constrained parameter (default false: kept and listed in `unverified`)"},
+        "pages": {"type": "integer", "description": "hotline pages (default 2, 48 cards each)"}},
+        "required": ["topic", "session", "query"]},
 }
 
 SHOP_FETCH = {

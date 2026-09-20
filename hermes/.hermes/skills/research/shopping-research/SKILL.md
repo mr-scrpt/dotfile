@@ -1,7 +1,7 @@
 ---
 name: shopping-research
 description: "Use when the user wants to find/compare goods to buy in Ukraine."
-version: 0.4.0
+version: 0.5.0
 author: mr-scrpt, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -83,18 +83,30 @@ fields are asked and whether steps 3r / 4 run. The user picks the type — never
    зонда» / «0 — не найдено». Store the answer: `shop_update_params(sites=values, category=<name
    as the sites call it>)`; `free_text` = extra sites the user typed → add to `notes`.
    Done: `params.sites` non-empty. Steps 4–5 run ONLY on `params.sites`.
-4. Candidates (mode=spec, and each reference item) — ONE call:
-   `shop_candidates(query=<short product query in Ukrainian: type + 1–2 key words, e.g.
-   "монітор 27 OLED", "інвертор 24V", "зарядний пристрій LiFePO4 24V">, category=params.category)`.
-   The plugin searches hotline (2 pages) + e-katalog, keeps the chosen category, dedupes by
-   model and returns ≤40 rows ranked by market presence: model, price range, offers, reviews,
-   `spec` (the aggregator's short characteristics line). Works for any product category — there
-   are no per-category filters. Then YOU check each row's `spec` against `must` and keep only
-   rows that satisfy it (or where `spec` is silent); if <2 remain, relax one `must` or re-run
-   with a broader query; if >15 remain, ask the user to narrow (budget / brand / nice) and
-   filter again. Then `shop_menu(kind="candidates", candidates=[kept rows])` → the user ticks
-   the models to compare → `shop_update_params(shortlist=values)`. Done: 1–12 models in
-   `params.shortlist`. mode=exact: `shortlist = [query]`, no menu.
+4. Candidates (mode=spec, and each reference item) — `shop_candidates(query, category, want?)`.
+   `query` = short product query in Ukrainian (type + 1–2 key words: "монітор 27 OLED",
+   "інвертор 24V", "пральна машина"). The plugin searches hotline + e-katalog, dedupes by model,
+   ranks by market presence and returns ≤40 rows (model, price range, offers, reviews, `spec`)
+   plus `facets` — the parameters this category actually has, with units, ranges and the most
+   common values. It also widens a too-narrow query by itself (`query_tried`).
+   Three cases, same call:
+   (a) the user gave hard parameters → pass them as `want`, e.g.
+       `want={"потужність": [2000, 3000], "форма": "синус"}` — [min, max] or [min] is a numeric
+       range in the value's own unit (3 кВт == 3000 Вт), a bare number is exact ±2%, a string or
+       list of strings is a substring. Keys are matched loosely, so use the user's wording.
+       Cards whose spec is silent are KEPT and marked `unverified` (add `strict=true` to drop
+       them); everything rejected is in `dropped_by_spec` with the reason — quote it if the user
+       asks why a model is missing.
+   (b) the user does NOT know which parameters matter → call once WITHOUT `want`, show the top
+       `facets` in 3–6 lines ("частота: 100–500 Гц, чаще 240; матриця: IPS/OLED/VA…"), ask which
+       of them matter, then repeat the call with `want`.
+   (c) mode=reference → derive `want` from the sample's `spec` (step 3r) and say in the report
+       which sample parameter each constraint came from.
+   Aim for 3–15 survivors: >15 → add a constraint or ask about budget/brand; <2 → drop one
+   constraint (`dropped_by_spec` says which one bites). Then
+   `shop_menu(kind="candidates", candidates=[rows])` → the user ticks models →
+   `shop_update_params(shortlist=values)`. Done: 1–12 models in `params.shortlist`.
+   mode=exact: `shortlist = [query]`, no candidates call at all.
 5. Offers — for EVERY model in the shortlist and EVERY site in `params.sites`:
    `shop_fetch(site, model, geo)`. The tool keeps only cards whose title carries the model code
    without an extra variant word (Pro ≠ Pro Max) AND whose site category is the product itself
@@ -159,7 +171,10 @@ curl works); nothing to register. Then `hermes plugins doctor ~/.hermes/plugins/
 - `shop_add_findings` rejects unknown fields / wrong `group`; resend only the failed items.
 - Rozetka blocks headless browsers (Cloudflare) — `shop_fetch("rozetka")` uses its APIs via curl;
   never open rozetka in `browser_exec`.
-- Hotline lists 27" monitors as 26,5" in `spec`; treat ±0.5" as equal when checking `must`.
+- Aggregator specs are patchy: a missing parameter is `unverified`, NOT a rejection — never
+  claim a model lacks a feature just because its spec line is silent.
+- Never hardcode a category: no filter ids, no per-product parsers. Everything goes through
+  `want` + `facets`, which work off whatever the aggregator prints.
 - Browser daemon hung ("timed out waiting for the daemon"): `curl 127.0.0.1:<port>/json/list`,
   `/json/close/<id>` for the stuck tab, then `ensure_real_tab()`.
 - This SKILL.md is a stow symlink; edit with `patch`, not `skill_manage`.

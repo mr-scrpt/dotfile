@@ -120,7 +120,7 @@ class NewParsers(unittest.TestCase):
         r = rows[0]
         self.assertEqual(r["url"], "https://ek.ua/ua/ASUS-ROG-STRIX-OLED-XG27AQWMG.htm")
         self.assertEqual((r["price_min_uah"], r["price_max_uah"], r["offers_count"], r["rating_count"]), (29999, 37799, 12, 1))
-        self.assertTrue(r["notes"].startswith("Екран: 26.5"))
+        self.assertIn("Екран: 26.5", r["notes"])        # spec = whole description block, any category
         meta = {}
         rows = ekatalog.parse_search(gz("ekatalog_item_redirect.html.gz"), meta)   # exact query → product page
         self.assertEqual(meta["total_est"], 1)

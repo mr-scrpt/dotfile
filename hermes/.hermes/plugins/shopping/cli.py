@@ -49,6 +49,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--geo", default="ua_local", choices=core.GEO); p.add_argument("--limit", type=int, default=5)
     p = sub.add_parser("candidates", help="universal shortlist from hotline + e-katalog"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("query")
     p.add_argument("--category", default=None); p.add_argument("--pages", type=int, default=2)
+    p.add_argument("--want", default=None, help='JSON constraints vs the spec line, e.g. \'{"потужність":[2000,3000],"форма":"синус"}\'')
+    p.add_argument("--strict", action="store_true")
     p = sub.add_parser("reviews", help="scripted buyer reviews digest for a model"); p.add_argument("topic"); p.add_argument("session"); p.add_argument("model")
     p = sub.add_parser("resolve", help="reference mode: product URL or name → title/spec"); p.add_argument("reference")
     p.add_argument("--sites", nargs="*", default=None)
@@ -83,7 +85,8 @@ def run(a: argparse.Namespace) -> dict:
     if a.cmd == "fetch":
         return core.fetch_site(a.topic, a.session, a.site, a.model, a.geo, a.limit, category=a.category)
     if a.cmd == "candidates":
-        return core.find_candidates(a.topic, a.session, a.query, a.category, a.pages)
+        return core.find_candidates(a.topic, a.session, a.query, a.category, a.pages,
+                                    json.loads(a.want) if a.want else None, a.strict)
     if a.cmd == "resolve":
         return core.resolve_reference(a.reference)
     if a.cmd == "reviews":
