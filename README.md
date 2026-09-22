@@ -8,11 +8,15 @@ system so `omarchy update` / `omarchy refresh` keep working.
 ## Install
 
     cd ~/Hellkitchen/dotfile
-    stow -t ~ hypr ghostty fish git omarchy bin systemd herdr hass proxmox ssh hermes
+    stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes
     sudo stow -t / system
 
 Stow links individual files, so real directories such as `~/.config/hypr`
 and `~/.local/bin` remain writable by Omarchy and mise.
+
+Fish plugins are not in the repo (fisher writes them into `~/.config/fish/`
+as real files). The list is: `fish/.config/fish/fish_plugins` is stowed, so
+`fish -c 'fisher update'` reinstalls them on a fresh machine.
 
 ## Packages
 
@@ -22,6 +26,7 @@ and `~/.local/bin` remain writable by Omarchy and mise.
 | ghostty | ~/.config/ghostty/config            | font size, fish as the terminal's shell                           |
 | fish    | ~/.config/fish/                     | interactive shell (login shell stays bash): eza/zoxide nav, fzf.fish, atuin on Ctrl+R, herdr layouts, ssh reconnect wrapper |
 | git     | ~/.config/git/config                | user name / email                                                 |
+| starship| ~/.config/starship.toml             | symlink into the active theme's rendered starship.toml (see omarchy/themed) |
 | omarchy | ~/.config/omarchy/                  | shell.json (idle, local-llm widget), bar/modules/local-llm.qml, defaults/agent, themed/starship.toml.tpl |
 | bin     | ~/.local/bin/                       | hermes-local*, llama-local*, llama-probe, llama-speed             |
 | systemd | ~/.config/systemd/user/             | llama-local.service (llama.cpp server for Hermes)                 |
