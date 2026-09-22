@@ -5,37 +5,59 @@ One package per app; each package mirrors `$HOME` (`system` mirrors `/`).
 Only files we actually changed live here — stock Omarchy files stay in the
 system so `omarchy update` / `omarchy refresh` keep working.
 
+## Two kinds of package
+
+Which one a package is decides how it is stowed. Judge by the target directory,
+not by the app:
+
+**Shared directory** — the system also ships files there (`~/.config/hypr` from
+Omarchy, `~/.local/bin` from mise, `~/.config/omarchy`). Only the files we
+changed live here, and stow links them one by one; the directory itself stays
+real so its owner keeps writing into it. Adding a stock file to the repo just
+to "complete" the package is wrong — it would freeze a file `omarchy update`
+maintains.
+
+**Ours entirely** — the system ships nothing there (`~/.config/fish`,
+`~/.config/hass`, `~/.config/proxmox`, `~/.hermes/plugins/*`). The whole
+directory is the package and stow folds it into a single symlink, so anything
+created there later is tracked by default and cannot be forgotten.
+
+That second kind has one condition: **no foreign writer inside the directory**.
+A tool that writes next to our files (fisher installing plugins, a daemon
+rewriting state) would be writing straight into the repo. Point it elsewhere
+first — fisher takes `$fisher_path`, so plugins go to `~/.local/share/fisher`
+and only `fish_plugins` (our list) stays in the repo; `fish -c 'fisher update'`
+restores them on a fresh machine. If a writer cannot be moved out, the package
+falls back to the shared-directory rules.
+
 ## Install
 
     cd ~/Hellkitchen/dotfile
     stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes
     sudo stow -t / system
 
-Stow links individual files, so real directories such as `~/.config/hypr`
-and `~/.local/bin` remain writable by Omarchy and mise.
-
-Fish plugins are not in the repo (fisher writes them into `~/.config/fish/`
-as real files). The list is: `fish/.config/fish/fish_plugins` is stowed, so
-`fish -c 'fisher update'` reinstalls them on a fresh machine.
+Shared-directory packages must be stowed with `--no-folding` if their whole
+subtree happens to be new, otherwise stow folds them into a directory symlink
+and the system's own files would land in the repo.
 
 ## Packages
 
-| package | target                              | what                                                              |
-|---------|-------------------------------------|-------------------------------------------------------------------|
-| hypr    | ~/.config/hypr/                     | bindings.lua (us/ru on Ctrl+Space, scrolling layout keys, local LLM), input.lua, looknfeel.lua |
-| ghostty | ~/.config/ghostty/config            | font size, fish as the terminal's shell                           |
-| fish    | ~/.config/fish/                     | interactive shell (login shell stays bash): eza/zoxide nav, fzf.fish, atuin on Ctrl+R, herdr layouts, ssh reconnect wrapper |
-| git     | ~/.config/git/config                | user name / email                                                 |
-| starship| ~/.config/starship.toml             | symlink into the active theme's rendered starship.toml (see omarchy/themed) |
-| omarchy | ~/.config/omarchy/                  | shell.json (idle, local-llm widget), bar/modules/local-llm.qml, defaults/agent, themed/starship.toml.tpl |
-| bin     | ~/.local/bin/                       | hermes-local*, llama-local*, llama-probe, llama-speed             |
-| systemd | ~/.config/systemd/user/             | llama-local.service (llama.cpp server for Hermes)                 |
-| herdr   | ~/.config/herdr/                    | config.toml (prefix ctrl+a) + devspace plugin (dotfile/config/work workspaces, fzf dev picker) |
-| hass    | ~/.config/hass/                     | Home Assistant CLI config                                         |
-| proxmox | ~/.config/proxmox/                  | Proxmox API config                                                |
-| ssh     | ~/.ssh/config                       | hosts for the homelab                                             |
-| hermes  | ~/.hermes/plugins/, ~/.hermes/skills/ | custom Hermes plugins + skills (shopping research); see hermes/README.md |
-| system  | /etc/                               | mnt-station SMB automount, chromium password-manager policy       |
+| package | kind | target                              | what                                                              |
+|---------|------|-------------------------------------|-------------------------------------------------------------------|
+| hypr    | shared | ~/.config/hypr/                   | bindings.lua (us/ru on Ctrl+Space, scrolling layout keys, local LLM), input.lua, looknfeel.lua |
+| ghostty | shared | ~/.config/ghostty/config          | font size, fish as the terminal's shell                           |
+| fish    | ours | ~/.config/fish/                     | interactive shell (login shell stays bash): eza/zoxide nav, fzf.fish, atuin on Ctrl+R, herdr layouts, ssh reconnect wrapper |
+| git     | shared | ~/.config/git/config              | user name / email                                                 |
+| starship| shared | ~/.config/starship.toml           | symlink into the active theme's rendered starship.toml (see omarchy/themed) |
+| omarchy | shared | ~/.config/omarchy/                | shell.json (idle, local-llm widget), bar/modules/local-llm.qml, defaults/agent, themed/starship.toml.tpl |
+| bin     | shared | ~/.local/bin/                     | hermes-local*, llama-local*, llama-probe, llama-speed             |
+| systemd | shared | ~/.config/systemd/user/           | llama-local.service (llama.cpp server for Hermes)                 |
+| herdr   | shared | ~/.config/herdr/                  | config.toml (prefix ctrl+a) + devspace plugin (dotfile/config/work workspaces, fzf dev picker) |
+| hass    | ours | ~/.config/hass/                     | Home Assistant CLI config                                         |
+| proxmox | ours | ~/.config/proxmox/                  | Proxmox API config                                                |
+| ssh     | shared | ~/.ssh/config                     | hosts for the homelab                                             |
+| hermes  | ours | ~/.hermes/plugins/, ~/.hermes/skills/ | custom Hermes plugins + skills (shopping research); see hermes/README.md |
+| system  | shared | /etc/                             | mnt-station SMB automount, chromium password-manager policy       |
 
 ## Rules
 
@@ -49,5 +71,13 @@ as real files). The list is: `fish/.config/fish/fish_plugins` is stowed, so
   never hardcode a palette (it would break the other themes).
 - After `omarchy refresh <x>` on a stowed file, Omarchy writes through the
   symlink into this repo: review with `git diff`, keep or revert.
-- Add a package = create `<pkg>/<path-under-home>`, move the file in, `stow -t ~ <pkg>`.
-  The herdr `dotfile` workspace picks new packages up automatically.
+- Nothing we own is ever created directly in `~/.config` — it goes into a
+  package and reaches `$HOME` through stow. That includes a file whose content
+  is not ours, such as the `starship.toml` symlink into the theme.
+- Add a package = decide its kind first (see above), create
+  `<pkg>/<path-under-home>`, move the file in, `stow -t ~ <pkg>` (add
+  `--no-folding` for a shared-directory package). The herdr `dotfile` workspace
+  picks new packages up automatically.
+- Audit the convention with `readlink -f`, not `stat -c %i` (`%i` does not
+  follow symlinks, so every correct link looks like a mismatch):
+  `readlink -f <repo file>` must equal `readlink -f ~/<rel path>`.
