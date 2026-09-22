@@ -17,7 +17,7 @@ if command -q starship
 end
 
 # История — atuin (SQLite: фильтр по каталогу и коду возврата, статистика).
-# Up оставлен родному fish (поиск по префиксу), atuin только на Ctrl+R.
+# Меню открывается стрелкой вверх (на первой строке команды) и на Ctrl+R.
 if command -q atuin
-    atuin init fish --disable-up-arrow | source
+    atuin init fish | source
 end
