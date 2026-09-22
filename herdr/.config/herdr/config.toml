@@ -13,6 +13,9 @@ auto_switch = false
 panel_bg = "black"
 
 [terminal]
+# Шелл для новых панелей. Логин-шелл системы остаётся bash.
+default_shell = "/usr/bin/fish"
+
 # Matches -c "#{pane_current_path}" on every split, window, and session
 new_cwd = "follow"
 

@@ -1,6 +1,11 @@
 # Dynamic theme colors
 config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
 
+# Shell
+# Логин-шелл системы остаётся bash (Omarchy построена на нём: /etc/profile.d,
+# SDDM, default/bash/rc). Fish запускается только здесь, для нашей работы.
+command = /usr/bin/fish
+
 # Font
 font-family = "JetBrainsMono Nerd Font"
 font-style = Regular

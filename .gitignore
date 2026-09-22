@@ -6,3 +6,7 @@
 lianli-src/target/
 __pycache__/
 *.pyc
+
+# fish: состояние и плагины, ставящиеся fisher'ом
+fish/.config/fish/fish_variables
+fish/.config/fish/.plugins.lock
