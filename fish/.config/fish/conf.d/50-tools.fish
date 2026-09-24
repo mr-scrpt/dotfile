@@ -3,6 +3,7 @@
 abbr -a d docker
 abbr -a r rails
 abbr -a h herdr
+abbr -a hm hermes
 abbr -a a 'omarchy-agent --inline'
 abbr -a mup 'MISE_MINIMUM_RELEASE_AGE=0 mise up'
 
