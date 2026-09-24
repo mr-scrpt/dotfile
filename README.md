@@ -35,6 +35,15 @@ falls back to the shared-directory rules.
     cd ~/Hellkitchen/dotfile
     stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes
     sudo stow -t / system
+    herdr integration install claude && herdr integration install hermes
+
+The last line is a step, not a package: herdr generates those integrations
+(a SessionStart hook in `~/.claude`, a plugin in `~/.hermes/plugins`, one entry
+each in `~/.claude/settings.json` and `~/.hermes/config.yaml`) and overwrites
+them on every herdr update, so they are never stored here. They let herdr
+reopen each pane's claude/hermes conversation after a reboot
+(`[session] resume_agents_on_restore`, on by default); check with
+`herdr integration status`.
 
 Shared-directory packages must be stowed with `--no-folding` if their whole
 subtree happens to be new, otherwise stow folds them into a directory symlink
