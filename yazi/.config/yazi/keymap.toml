@@ -1,0 +1,113 @@
+# --- DUAL PANE (split-tabs.yazi) ---
+# A pane is a yazi tab; both are drawn side by side in one process, so
+# yank/paste between them uses the shared yazi clipboard.
+# The plugin starts with the preview off, so the toggle turns it on in the same step.
+
+[[mgr.prepend_keymap]]
+on   = "<C-s>"
+run  = [ "plugin split-tabs spl_toggle", "plugin split-tabs spl_preview" ]
+desc = "Dual pane: toggle two panes (with preview)"
+
+[[mgr.prepend_keymap]]
+on   = "<Tab>"
+run  = "plugin split-tabs spl_switch_tab"
+desc = "Dual pane: switch to the other pane"
+
+[[mgr.prepend_keymap]]
+on   = "<C-p>"
+run  = "plugin split-tabs spl_preview"
+desc = "Dual pane: toggle full-width preview"
+
+[[mgr.prepend_keymap]]
+on   = "<F5>"
+run  = [ "escape --visual", "plugin split-tabs spl_copy" ]
+desc = "Dual pane: copy to the other pane"
+
+[[mgr.prepend_keymap]]
+on   = "<F6>"
+run  = [ "escape --visual", "plugin split-tabs spl_move" ]
+desc = "Dual pane: move to the other pane"
+
+# <Tab> was "spot" by default; keep it reachable.
+[[mgr.prepend_keymap]]
+on   = "<A-s>"
+run  = "spot"
+desc = "Spot hovered file (was <Tab>)"
+
+# --- FILES ↔ DESKTOP ---
+# Drag files out of yazi into a GUI app. Ghostty has no terminal drag-and-drop
+# protocol yet (yazi's native DnD needs it), so ripdrag opens a small drag source
+# window with the selection; it closes after the drop.
+[[mgr.prepend_keymap]]
+on   = "<C-n>"
+run  = "shell -- ripdrag -x -A -n %s"
+desc = "Drag and drop the selection (ripdrag)"
+
+# Yank also puts the files on the Wayland clipboard as a uri-list, so they paste
+# into Nautilus, a browser upload or a chat.
+[[mgr.prepend_keymap]]
+on   = "y"
+run  = [ 'shell -- for path in %s; do echo "file://$path"; done | wl-copy -t text/uri-list', "yank" ]
+desc = "Yank (copy) and put the files on the system clipboard"
+
+# --- ARCHIVES ---
+# Pack: compress.yazi archives the selection by relative names from its own
+# directory, so a folder packs as folder/… (the same shape Finder/Explorer make).
+# Unpack: Enter / `o` on an archive runs the `extract` opener (yazi.toml, unar).
+[[mgr.prepend_keymap]]
+on   = [ "c", "a" ]
+run  = "plugin compress"
+desc = "Archive selected files"
+
+[[mgr.prepend_keymap]]
+on   = [ "c", "p" ]
+run  = "plugin compress -p"
+desc = "Archive selected files (password)"
+
+# --- GO TO ---
+# Three-key groups; `g d`, `g h`, `g c` stop being stock single jumps and become
+# prefixes. Stock `g t` (trash), `g f` (follow), `g <Space>` (jump) stay.
+[[mgr.prepend_keymap]]
+on   = [ "g", "d", "d" ]
+run  = "cd ~/Downloads"
+desc = "Go to Downloads"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "d", "t" ]
+run  = "cd '~/Downloads/Telegram Desktop'"
+desc = "Go to Telegram downloads"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "h", "h" ]
+run  = "cd ~/Hellkitchen"
+desc = "Go to Hellkitchen"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "h", "w" ]
+run  = "cd ~/Hellkitchen/workspace"
+desc = "Go to Hellkitchen/workspace"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "h", "p" ]
+run  = "cd ~/Hellkitchen/project"
+desc = "Go to Hellkitchen/project"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "r", "r" ]
+run  = "cd ~"
+desc = "Go to Home (~)"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "c", "c" ]
+run  = "cd ~/.config"
+desc = "Go to ~/.config"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "s", "r" ]
+run  = "cd /"
+desc = "Go to Root (/)"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "s", "m" ]
+run  = "cd /run/media"
+desc = "Go to drives / USB"

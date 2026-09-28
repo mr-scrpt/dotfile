@@ -7,6 +7,10 @@ lianli-src/target/
 __pycache__/
 *.pyc
 
+# yazi: плагины ставит `ya pkg install` по package.toml; свои — исключения ниже
+yazi/.config/yazi/plugins/*
+!yazi/.config/yazi/plugins/folder-rules.yazi/
+
 # fish: состояние и плагины, ставящиеся fisher'ом
 fish/.config/fish/fish_variables
 fish/.config/fish/.plugins.lock

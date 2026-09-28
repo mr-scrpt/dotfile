@@ -1,0 +1,15 @@
+[mgr]
+linemode = "size"
+
+# Archives are extracted with unar instead of the built-in 7z-based extractor:
+#  - legacy name encodings are detected (a Windows zip with Cyrillic names in
+#    cp866 comes out readable; 7z turns them into mojibake);
+#  - `-k skip` drops macOS resource forks (no ._* / .rsrc files).
+# Placement: always into a folder named after the archive, next to it (`-d`),
+# so nothing in the archive's directory can be overwritten and loose files never
+# spill out. `-r` renames on a clash (a second extract gives name-1).
+[opener]
+extract = [
+	{ run = 'for f in %s; do unar -q -k skip -d -r -o "$(dirname "$f")" "$f" || exit; done', desc = "Extract here", for = "unix" },
+	{ run = 'printf "Password for %%s: " "$(basename %s1)"; read -rs p; echo; unar -q -k skip -d -r -p "$p" -o "$(dirname %s1)" %s1', desc = "Extract with password", for = "unix", block = true },
+]
