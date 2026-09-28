@@ -1,0 +1,19 @@
+# pyprland: bottom widgets — apps that slide in from the bottom edge of the
+# screen, the counterpart of the bar at the top. Each widget is its own
+# scratchpad: launched on first toggle, then shown/hidden.
+# Hotkeys: SUPER+CTRL + bottom keyboard row (bindings.lua).
+
+[pyprland]
+plugins = ["scratchpads"]
+
+# Shared shape of every bottom widget; a widget inherits it with `use`.
+[scratchpads.bottom]
+animation = "fromBottom"
+size = "90% 70%"
+margin = 10               # = general:gaps_out
+unfocus = "hide"          # hide when focus leaves, like a bar panel
+
+[scratchpads.yazi]
+use = "bottom"
+command = "uwsm-app -- xdg-terminal-exec --app-id=mr.widget.yazi --dir=\"$HOME\" -e env YAZI_DUAL_PANE=1 yazi"
+class = "mr.widget.yazi"
