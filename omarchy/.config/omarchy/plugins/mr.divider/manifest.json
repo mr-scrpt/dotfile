@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "mr.divider",
+  "name": "Divider",
+  "version": "1.0.0",
+  "author": "mr",
+  "description": "Thin themed rule that separates groups of bar widgets",
+  "kinds": ["bar-widget"],
+  "entryPoints": { "barWidget": "Widget.qml" },
+  "barWidget": {
+    "displayName": "Divider",
+    "description": "Thin themed rule that separates groups of bar widgets",
+    "category": "Layout",
+    "allowMultiple": true,
+    "defaultSection": "right",
+    "defaults": { "thickness": 1, "extent": 12, "gap": 8, "strength": 0.35 },
+    "schema": [
+      { "key": "thickness", "type": "number", "label": "Line thickness (px)" },
+      { "key": "extent", "type": "number", "label": "Line length across the bar (px)" },
+      { "key": "gap", "type": "number", "label": "Padding on each side (px)" },
+      { "key": "strength", "type": "number", "label": "Opacity of the line (0-1)" }
+    ]
+  }
+}

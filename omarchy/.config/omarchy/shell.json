@@ -42,10 +42,10 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "omarchy.agents"
+          "id": "mr.divider"
         },
         {
-          "id": "mr.local-llm"
+          "id": "omarchy.agents"
         },
         {
           "id": "omarchy.bluetooth"
@@ -57,13 +57,16 @@
           "id": "omarchy.audio"
         },
         {
-          "id": "mr.big-monitor"
-        },
-        {
           "id": "omarchy.monitor"
         },
         {
-          "id": "omarchy.power"
+          "id": "mr.divider"
+        },
+        {
+          "id": "mr.local-llm"
+        },
+        {
+          "id": "mr.big-monitor"
         }
       ]
     }
