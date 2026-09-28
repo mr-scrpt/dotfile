@@ -33,11 +33,19 @@ falls back to the shared-directory rules.
 ## Install
 
     cd ~/Hellkitchen/dotfile
-    stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes
+    stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes pypr yazi
     sudo stow -t / system
+    sed -i 's/^-- omarchy_default_bindings = false/omarchy_default_bindings = false/' ~/.config/hypr/hyprland.lua
     herdr integration install claude && herdr integration install hermes
+    ya pkg install
 
-The last line is a step, not a package: herdr generates those integrations
+The `sed` line switches Omarchy's stock keybindings off with its own flag: the
+whole keymap lives in `hypr/.config/hypr/bindings.lua` (see `hypr/README.md`).
+`hyprland.lua` itself is not stored here because Omarchy migrations rewrite it.
+
+The last two lines are steps, not packages. `ya pkg install` fetches the yazi
+plugins pinned in `yazi/.config/yazi/package.toml` (the plugin code itself is
+gitignored). herdr generates its integrations
 (a SessionStart hook in `~/.claude`, a plugin in `~/.hermes/plugins`, one entry
 each in `~/.claude/settings.json` and `~/.hermes/config.yaml`) and overwrites
 them on every herdr update, so they are never stored here. They let herdr
@@ -53,7 +61,7 @@ and the system's own files would land in the repo.
 
 | package | kind | target                              | what                                                              |
 |---------|------|-------------------------------------|-------------------------------------------------------------------|
-| hypr    | shared | ~/.config/hypr/                   | bindings.lua (us/ru on Ctrl+Space, scrolling layout keys, local LLM), input.lua, looknfeel.lua |
+| hypr    | shared | ~/.config/hypr/                   | bindings.lua — the whole keymap (stock bindings off, see hypr/README.md), input.lua, looknfeel.lua (scrolling width presets), monitors.lua, autostart.lua (starts pypr) |
 | ghostty | shared | ~/.config/ghostty/config          | font size, fish as the terminal's shell                           |
 | fish    | ours | ~/.config/fish/                     | interactive shell (login shell stays bash): eza/zoxide nav, fzf.fish, atuin on Ctrl+R, herdr layouts, ssh reconnect wrapper |
 | git     | shared | ~/.config/git/config              | user name / email                                                 |
@@ -66,6 +74,8 @@ and the system's own files would land in the repo.
 | proxmox | ours | ~/.config/proxmox/                  | Proxmox API config                                                |
 | ssh     | shared | ~/.ssh/config                     | hosts for the homelab                                             |
 | hermes  | ours | ~/.hermes/plugins/, ~/.hermes/skills/ | custom Hermes plugins + skills (shopping research); see hermes/README.md |
+| pypr    | ours | ~/.config/pypr/                     | pyprland (AUR `pyprland`): bottom widgets — scratchpads sliding in from the bottom edge (yazi on SUPER+CTRL+N) |
+| yazi    | ours | ~/.config/yazi/                     | dual pane via split-tabs.yazi (Ctrl+S toggle, Tab switch, F5/F6 copy/move), on at startup when `YAZI_DUAL_PANE=1` (the bottom widget); archives: pack with compress.yazi (`c a`, `c p` with password), unpack with unar into a folder named after the archive (legacy name encodings, no `__MACOSX`); `g`-groups for jumps; Downloads sorted newest first; `y` also puts files on the Wayland clipboard; Ctrl+N drags via ripdrag (AUR). Plugins from package.toml are restored by `ya pkg install`; only our own `folder-rules.yazi` is stored |
 | system  | shared | /etc/                             | mnt-station SMB automount, chromium password-manager policy       |
 
 ## Rules

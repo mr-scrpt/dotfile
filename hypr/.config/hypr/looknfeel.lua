@@ -35,8 +35,9 @@ hl.config({
 -- https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
 hl.config({
   scrolling = {
-    -- One column per screen (niri-like); SUPER+R cycles the presets below.
+    -- One column per screen (niri-like). SUPER+ALT+R cycles the presets below,
+    -- starting from full width: 0.62 / 0.38 is a 1:1.6 pair, 0.5 splits in half.
     column_width = 0.98,
-    explicit_column_widths = "0.33, 0.5, 0.67, 0.98",
+    explicit_column_widths = "0.98, 0.62, 0.5, 0.38",
   },
 })
