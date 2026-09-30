@@ -34,6 +34,7 @@ falls back to the shared-directory rules.
 
     cd ~/Hellkitchen/dotfile
     stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes pypr yazi
+    stow --no-folding -t ~ nvim
     sudo stow -t / system
     sed -i 's/^-- omarchy_default_bindings = false/omarchy_default_bindings = false/' ~/.config/hypr/hyprland.lua
     herdr integration install claude && herdr integration install hermes
@@ -76,6 +77,7 @@ and the system's own files would land in the repo.
 | hermes  | ours | ~/.hermes/plugins/, ~/.hermes/skills/ | custom Hermes plugins + skills (shopping research); see hermes/README.md |
 | pypr    | ours | ~/.config/pypr/                     | pyprland (AUR `pyprland`): bottom widgets — scratchpads sliding in from the bottom edge (yazi on SUPER+CTRL+N) |
 | yazi    | ours | ~/.config/yazi/                     | dual pane via split-tabs.yazi (Ctrl+S toggle, Tab switch, F5/F6 copy/move), on at startup when `YAZI_DUAL_PANE=1` (the bottom widget); archives: pack with compress.yazi (`c a`, `c p` with password), unpack with unar into a folder named after the archive (legacy name encodings, no `__MACOSX`); `g`-groups for jumps; Downloads sorted newest first; `y` also puts files on the Wayland clipboard; Ctrl+N drags via ripdrag (AUR). Plugins from package.toml are restored by `ya pkg install`; only our own `folder-rules.yazi` is stored |
+| nvim    | shared | ~/.config/nvim/                   | additions to Omarchy's LazyVim: neo-tree as a float, render-markdown, en+ru spell; see nvim/README.md |
 | system  | shared | /etc/                             | mnt-station SMB automount, chromium password-manager policy       |
 
 ## Rules
