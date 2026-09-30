@@ -9,6 +9,13 @@ return {
   },
   opts = {
     popup_border_style = "rounded",
+    -- metadata columns appear once the window is wide enough
+    default_component_configs = {
+      file_size = { enabled = true, required_width = 64 },
+      last_modified = { enabled = true, required_width = 88 },
+      created = { enabled = true, required_width = 110 },
+      type = { enabled = true, required_width = 122 },
+    },
     window = {
       position = "float",
       mappings = {
