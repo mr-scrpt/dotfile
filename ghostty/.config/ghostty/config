@@ -42,5 +42,9 @@ keybind = super+control+shift+alt+arrow_right=resize_split:right,100
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 
+# Mouse selection goes to the system clipboard too (default `true` fills only
+# PRIMARY, so Ctrl+V got nothing) — same as herdr's copy_on_select.
+copy-on-select = clipboard
+
 # Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
 async-backend = epoll

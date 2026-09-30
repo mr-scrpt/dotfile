@@ -63,7 +63,7 @@ and the system's own files would land in the repo.
 | package | kind | target                              | what                                                              |
 |---------|------|-------------------------------------|-------------------------------------------------------------------|
 | hypr    | shared | ~/.config/hypr/                   | bindings.lua — the whole keymap (stock bindings off, see hypr/README.md), input.lua, looknfeel.lua (scrolling width presets), monitors.lua, autostart.lua (starts pypr) |
-| ghostty | shared | ~/.config/ghostty/config          | font size, fish as the terminal's shell                           |
+| ghostty | shared | ~/.config/ghostty/config          | font size, fish as the terminal's shell, copy-on-select to the clipboard                           |
 | fish    | ours | ~/.config/fish/                     | interactive shell (login shell stays bash): eza/zoxide nav, fzf.fish, atuin on Ctrl+R, herdr layouts, ssh reconnect wrapper |
 | git     | shared | ~/.config/git/config              | user name / email                                                 |
 | starship| shared | ~/.config/starship.toml           | symlink into the active theme's rendered starship.toml (see omarchy/themed) |
@@ -77,7 +77,7 @@ and the system's own files would land in the repo.
 | hermes  | ours | ~/.hermes/plugins/, ~/.hermes/skills/ | custom Hermes plugins + skills (shopping research); see hermes/README.md |
 | pypr    | ours | ~/.config/pypr/                     | pyprland (AUR `pyprland`): bottom widgets — scratchpads sliding in from the bottom edge (yazi on SUPER+CTRL+N) |
 | yazi    | ours | ~/.config/yazi/                     | dual pane via split-tabs.yazi (Ctrl+S toggle, Tab switch, F5/F6 copy/move), on at startup when `YAZI_DUAL_PANE=1` (the bottom widget); archives: pack with compress.yazi (`c a`, `c p` with password), unpack with unar into a folder named after the archive (legacy name encodings, no `__MACOSX`); `g`-groups for jumps; Downloads sorted newest first; `y` also puts files on the Wayland clipboard; Ctrl+N drags via ripdrag (AUR). Plugins from package.toml are restored by `ya pkg install`; only our own `folder-rules.yazi` is stored |
-| nvim    | shared | ~/.config/nvim/                   | additions to Omarchy's LazyVim: neo-tree as a float + favorites, render-markdown, en+ru spell; see nvim/README.md |
+| nvim    | shared | ~/.config/nvim/                   | additions to Omarchy's LazyVim: neo-tree as a float + favorites, render-markdown, en+ru spell, copy on mouse select; see nvim/README.md |
 | system  | shared | /etc/                             | mnt-station SMB automount, chromium password-manager policy       |
 
 ## Rules
