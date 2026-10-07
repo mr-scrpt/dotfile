@@ -1,0 +1,3 @@
+[submodule "homeassistant"]
+	path = homeassistant
+	url = git@github.com:mr-scrpt/homeassistant.git

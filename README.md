@@ -32,6 +32,7 @@ falls back to the shared-directory rules.
 
 ## Install
 
+    git clone --recurse-submodules git@github.com:mr-scrpt/dotfile.git ~/Hellkitchen/dotfile
     cd ~/Hellkitchen/dotfile
     stow -t ~ hypr ghostty fish starship git omarchy bin systemd herdr hass proxmox ssh hermes pypr yazi
     stow --no-folding -t ~ nvim
@@ -79,6 +80,14 @@ and the system's own files would land in the repo.
 | yazi    | ours | ~/.config/yazi/                     | dual pane via split-tabs.yazi (Ctrl+S toggle, Tab switch, F5/F6 copy/move), on at startup when `YAZI_DUAL_PANE=1` (the bottom widget); archives: pack with compress.yazi (`c a`, `c p` with password), unpack with unar into a folder named after the archive (legacy name encodings, no `__MACOSX`); `g`-groups for jumps; Downloads sorted newest first; `y` also puts files on the Wayland clipboard; Ctrl+N drags via ripdrag (AUR). Plugins from package.toml are restored by `ya pkg install`; only our own `folder-rules.yazi` is stored |
 | nvim    | shared | ~/.config/nvim/                   | additions to Omarchy's LazyVim: neo-tree as a float + favorites, render-markdown, en+ru spell, copy on mouse select; see nvim/README.md |
 | system  | shared | /etc/                             | mnt-station SMB automount, chromium password-manager policy       |
+
+Not a stow package: `homeassistant/` is a **private git submodule**
+(`mr-scrpt/homeassistant`) — the Home Assistant config (packages, blueprints,
+tools) deployed to the HA host by `homeassistant/deploy.sh`, not into `$HOME`.
+It stays private because it maps the house: devices, presence logic, the
+webhook domain. Without access to it, a clone simply leaves the folder empty.
+After committing inside it, pin the new revision here with
+`git add homeassistant && git commit`.
 
 ## Rules
 
