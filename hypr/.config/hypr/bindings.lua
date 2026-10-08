@@ -55,11 +55,51 @@ o.bind("SUPER + F", "Click with the keyboard",
 o.bind("SUPER + S", "Toggle scratchpad", hl.dsp.workspace.toggle_special("scratchpad"))
 
 -- The exception: universal copy / paste / cut are too frequent to take two
--- modifiers. Omarchy's own module is loaded as is (it sends Ctrl+Insert /
--- Shift+Insert to terminals and Ctrl+C/V/X elsewhere); its clipboard-manager
--- chord is dropped here and rebound under SUPER + SHIFT + V.
-require("default.hypr.bindings.clipboard")
-hl.unbind("SUPER + CTRL + V")
+-- modifiers. Same logic as Omarchy's default.hypr.bindings.clipboard (Ctrl+Insert
+-- / Shift+Insert to terminals, Ctrl+C/V/X elsewhere), but the keys are sent by
+-- KEYCODE. The stock module names them as letters ("V"), and Hyprland resolves
+-- a name through the ACTIVE layout: with Russian active there is no "V", so
+-- paste into a browser fails with "send_key_state: key not found" (terminals
+-- were fine — Insert exists in every layout). XKB codes: 53 X, 54 C, 55 V,
+-- 118 Insert. The clipboard manager moved to SUPER + SHIFT + V (below).
+local KEY = { X = "code:53", C = "code:54", V = "code:55", INSERT = "code:118" }
+
+-- Down/up split with a timer, as upstream: send_shortcut can leave synthetic
+-- key state stuck (hyprwm/Hyprland discussions/14099).
+local function send_shortcut_once(mods, key)
+  return function()
+    hl.dispatch(hl.dsp.send_key_state({ mods = mods, key = key, state = "down" }))
+    hl.timer(function()
+      hl.dispatch(hl.dsp.send_key_state({ mods = mods, key = key, state = "up" }))
+    end, { timeout = 50, type = "oneshot" })
+  end
+end
+
+-- "terminal" tag comes from Omarchy's default/hypr/apps/terminals.lua; dynamic
+-- tags carry a trailing "*".
+local function active_window_is_terminal()
+  local window = hl.get_active_window()
+  for _, tag in ipairs(window and window.tags or {}) do
+    if tag:gsub("%*$", "") == "terminal" then
+      return true
+    end
+  end
+  return false
+end
+
+local function universal_clipboard_shortcut(mods, key, terminal_mods, terminal_key)
+  return function()
+    if active_window_is_terminal() then
+      send_shortcut_once(terminal_mods, terminal_key)()
+    else
+      send_shortcut_once(mods, key)()
+    end
+  end
+end
+
+o.bind("SUPER + C", "Universal copy", universal_clipboard_shortcut("CTRL", KEY.C, "CTRL", KEY.INSERT))
+o.bind("SUPER + V", "Universal paste", universal_clipboard_shortcut("CTRL", KEY.V, "SHIFT", KEY.INSERT))
+o.bind("SUPER + X", "Universal cut", send_shortcut_once("CTRL", KEY.X))
 
 -------------------------------------------------------------------------------
 -- SUPER + thumb keys — menus (left thumb) and system utilities (right thumb)
