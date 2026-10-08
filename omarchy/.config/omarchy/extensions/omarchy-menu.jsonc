@@ -9,4 +9,8 @@
   "trigger.hardware.lianli.profile-main":  {"icon":"","label":"Profile Cyan",  "action":"~/.config/lianli/scripts/rgb_profile.sh main",  "checked":"[ \"$(cat ~/.config/lianli/current_rgb_profile 2>/dev/null)\" = main ]"},
   "trigger.hardware.lianli.profile-white": {"icon":"","label":"Profile White", "action":"~/.config/lianli/scripts/rgb_profile.sh white", "checked":"[ \"$(cat ~/.config/lianli/current_rgb_profile 2>/dev/null)\" = white ]"},
   "trigger.hardware.lianli.reset":     {"icon":"󰑓","label":"Reset",     "action":"gtk-launch lianli-reset","description":"Restart daemon, re-apply RGB, reboot pump LCD"},
+
+  // Ukrainian keyboard layout on demand: Go -> Trigger -> Toggle -> Ukrainian Layout
+  // (or: omarchy menu summon ua). Resets on reboot; see ~/.local/bin/omarchy-ua-layout.
+  "trigger.toggle.ukrainian-layout": {"icon":"󰌌","label":"Ukrainian Layout","aliases":["ua","ukrainian","layout"],"description":"Add UA to Ctrl+Space, or remove it","action":"~/.local/bin/omarchy-ua-layout toggle","checked":"~/.local/bin/omarchy-ua-layout status"},
 }

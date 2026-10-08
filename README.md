@@ -69,7 +69,7 @@ and the system's own files would land in the repo.
 | git     | shared | ~/.config/git/config              | user name / email                                                 |
 | starship| shared | ~/.config/starship.toml           | symlink into the active theme's rendered starship.toml (see omarchy/themed) |
 | omarchy | shared | ~/.config/omarchy/                | shell.json (idle, local-llm widget), bar/modules/local-llm.qml, defaults/agent, themed/starship.toml.tpl |
-| bin     | shared | ~/.local/bin/                     | hermes-local*, llama-local*, llama-probe, llama-speed             |
+| bin     | shared | ~/.local/bin/                     | hermes-local*, llama-local*, llama-probe, llama-speed, omarchy-big-monitor, omarchy-ua-layout (UA layout on demand: menu Trigger → Toggle → Ukrainian Layout, `omarchy menu summon ua`; flag in XDG_RUNTIME_DIR read by hypr/input.lua, resets on reboot) |
 | systemd | shared | ~/.config/systemd/user/           | llama-local.service (llama.cpp server for Hermes)                 |
 | herdr   | shared | ~/.config/herdr/                  | config.toml (prefix ctrl+a) + devspace plugin (dotfile/config/work workspaces, fzf dev picker) |
 | hass    | ours | ~/.config/hass/                     | Home Assistant CLI config                                         |

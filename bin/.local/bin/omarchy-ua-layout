@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Add or remove the Ukrainian keyboard layout on demand, so Ctrl+Space cycles
+# through two layouts (us, ru) normally and three (us, ru, ua) only while it is
+# needed.
+# State lives in XDG_RUNTIME_DIR, so it resets to "off" on every reboot.
+# ~/.config/hypr/input.lua reads the same flag on every Hyprland reload and
+# appends "ua" to kb_layout while it is set (same pattern as omarchy-big-monitor).
+#
+# Usage: omarchy-ua-layout [toggle|on|off|status]   (default: toggle)
+#        status exits 0 when the layout is active — used by the menu's "checked".
+
+LAYOUT="ua"
+FLAG="${XDG_RUNTIME_DIR:-/tmp}/omarchy-ua-layout-enabled"
+
+is_on() { [[ -e $FLAG ]]; }
+
+notify() {
+  omarchy notification send -g 󰌌 "$1" "$2" >/dev/null 2>&1 || true
+}
+
+# Index of $LAYOUT in the live kb_layout list (empty when absent).
+layout_index() {
+  hyprctl getoption input:kb_layout -j | jq -r --arg l "$LAYOUT" \
+    '.str | split(",") | index($l) // empty'
+}
+
+on() {
+  touch "$FLAG"
+  hyprctl reload >/dev/null
+  local idx
+  idx=$(layout_index)
+  [[ -n $idx ]] && hyprctl switchxkblayout all "$idx" >/dev/null
+  notify "Украинская раскладка включена" "Ctrl+Space: EN → RU → UA"
+}
+
+off() {
+  rm -f "$FLAG"
+  hyprctl reload >/dev/null
+  notify "Украинская раскладка убрана" "Ctrl+Space: EN ↔ RU"
+}
+
+case "${1:-toggle}" in
+  on) on ;;
+  off) off ;;
+  toggle) if is_on; then off; else on; fi ;;
+  status) is_on ;;
+  *)
+    echo "Usage: omarchy-ua-layout [toggle|on|off|status]" >&2
+    exit 1
+    ;;
+esac

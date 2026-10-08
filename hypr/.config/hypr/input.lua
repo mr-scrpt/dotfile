@@ -3,9 +3,15 @@
 
 -- Keyboard layout and options.
 -- Switch: Ctrl+Space (see bindings.lua)
+-- Ukrainian is added on demand by `omarchy-ua-layout` (menu: Trigger → Toggle →
+-- Ukrainian Layout): it sets a flag in XDG_RUNTIME_DIR and reloads Hyprland, and
+-- this file appends "ua" while the flag exists. Gone again after a reboot.
+local ua_flag = io.open((os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/omarchy-ua-layout-enabled")
+if ua_flag then ua_flag:close() end
+
 hl.config({
   input = {
-    kb_layout = "us,ru",
+    kb_layout = ua_flag and "us,ru,ua" or "us,ru",
 
     -- Change speed of keyboard repeat.
     repeat_rate = 40,
